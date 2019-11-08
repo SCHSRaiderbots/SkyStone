@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -54,6 +55,9 @@ public class BasicIterative extends OpMode
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
+    private Servo hookLeft = null;
+    private Servo hookRight = null;
+    private Servo servoGrab = null;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -72,6 +76,13 @@ public class BasicIterative extends OpMode
         // Reverse the motor that runs backwards when connected directly to the battery
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
         rightDrive.setDirection(DcMotor.Direction.REVERSE);
+
+        // The foundation hooks
+        hookLeft = hardwareMap.get(Servo.class, "hookLeft");
+        hookRight = hardwareMap.get(Servo.class, "hookRight");
+
+        // The grabber actuator
+        servoGrab = hardwareMap.get(Servo.class, "servoGrab");
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -119,6 +130,27 @@ public class BasicIterative extends OpMode
         // Send calculated power to wheels
         leftDrive.setPower(leftPower);
         rightDrive.setPower(rightPower);
+
+        // simple servo hacks
+        if (gamepad1.dpad_up) {
+            telemetry.addData("grab", "released");
+            servoGrab.setPosition(0.1);
+        } else {
+            telemetry.addData("grab", "gripping");
+            servoGrab.setPosition(0.6);
+        }
+
+        // control the hooks
+        if (gamepad1.left_bumper) {
+            telemetry.addData("hook", "set hook");
+            hookLeft.setPosition(0.4);
+            hookRight.setPosition(0.6);
+        } else {
+            telemetry.addData("hook", "release hook");
+            hookLeft.setPosition(0.0);
+            hookRight.setPosition(1.0);
+        }
+
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
