@@ -76,6 +76,9 @@ public class BasicIterative extends OpMode
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
 
+    // arm motor
+    private DcMotor motorArm = null;
+
     private Servo servoHookLeft = null;
     private Servo servoHookRight = null;
     private Servo servoGrab = null;
@@ -134,6 +137,7 @@ public class BasicIterative extends OpMode
         // start initializing
         imu.initialize(parameters);
 
+        // find the drive motors
         leftDrive  = hardwareMap.get(DcMotor.class, "motorLeft");
         rightDrive = hardwareMap.get(DcMotor.class, "motorRight");
 
@@ -142,10 +146,21 @@ public class BasicIterative extends OpMode
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
         rightDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        // I do not know if the Direction also affects the encoder counts
+        // Direction also affects the encoder counts
         // remember the current encoder counts
         cEncoderLeft = leftDrive.getCurrentPosition();
         cEncoderRight = rightDrive.getCurrentPosition();
+
+        // The arm motor
+        motorArm = hardwareMap.get(DcMotor.class, "motorArm");
+        // use the arm as a servo
+        motorArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // assume it is at position 0 right now
+        motorArm.setTargetPosition(0);
+        // do not ask for a lot of power yet
+        motorArm.setPower(0.2);
+        // choose FLOAT or BRAKE
+        motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
 
         // The foundation hooks
         servoHookLeft = hardwareMap.get(Servo.class, "hookLeft");
@@ -183,6 +198,8 @@ public class BasicIterative extends OpMode
     /**
      * Update the robot pose.
      * Uses small angle approximations.
+     * See COS495-Odometry by Chris Clark, 2011,
+     * <a href="https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf">https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf</a>
      */
     private void updateRobotPose() {
         // several calculations are needed
@@ -250,7 +267,7 @@ public class BasicIterative extends OpMode
                         gravity.yAccel * gravity.yAccel +
                         gravity.zAccel * gravity.zAccel));
 
-        // Setup a variable for each drive wheel to save power level for telemetry
+        // variable for each drive wheel to save power level for telemetry
         double leftPower;
         double rightPower;
 
@@ -274,13 +291,17 @@ public class BasicIterative extends OpMode
         rightDrive.setPower(rightPower);
 
         // simple servo hacks
-        if (gamepad1.dpad_up) {
+        if (gamepad1.right_bumper) {
             telemetry.addData("grab", "released");
             servoGrab.setPosition(0.1);
         } else {
             telemetry.addData("grab", "gripping");
             servoGrab.setPosition(0.6);
         }
+
+        // set arm position hack
+        /** @TODO set scale */
+        motorArm.setTargetPosition((int)(gamepad1.right_trigger * 50));
 
         // control the hooks
         if (gamepad1.left_bumper) {
@@ -304,6 +325,10 @@ public class BasicIterative extends OpMode
      */
     @Override
     public void stop() {
+
+        // turn off the drive motors
+        leftDrive.setPower(0);
+        rightDrive.setPower(0);
     }
 
 }
