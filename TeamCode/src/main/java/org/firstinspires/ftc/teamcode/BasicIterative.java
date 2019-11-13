@@ -110,6 +110,7 @@ public class BasicIterative extends OpMode
 
     /*
      * Code to run ONCE when the driver hits INIT
+     * @TODO Zero the arm position
      */
     @Override
     public void init() {
@@ -135,7 +136,7 @@ public class BasicIterative extends OpMode
         // imu = hardwareMap.get(Gyroscope.class, "imu");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         // start initializing
-        imu.initialize(parameters);
+        // imu.initialize(parameters);
 
         // find the drive motors
         leftDrive  = hardwareMap.get(DcMotor.class, "motorLeft");
@@ -153,10 +154,11 @@ public class BasicIterative extends OpMode
 
         // The arm motor
         motorArm = hardwareMap.get(DcMotor.class, "motorArm");
-        // use the arm as a servo
-        motorArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         // assume it is at position 0 right now
         motorArm.setTargetPosition(0);
+        // use the arm as a servo
+        // target position must be set before RUN_TO_POSITION is invoked
+        motorArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         // do not ask for a lot of power yet
         motorArm.setPower(0.2);
         // choose FLOAT or BRAKE
@@ -192,7 +194,7 @@ public class BasicIterative extends OpMode
         // may want to set the robot pose here...
 
         // Start the logging of measured acceleration
-        imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+        // imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
     }
 
     /**
@@ -247,6 +249,7 @@ public class BasicIterative extends OpMode
         // update the robot pose
         updateRobotPose();
 
+        /*
         // query the imu
         // Acquiring the angles is relatively expensive; we don't want
         // to do that in each of the three items that need that info, as that's
@@ -266,6 +269,8 @@ public class BasicIterative extends OpMode
                 Math.sqrt(gravity.xAccel * gravity.xAccel +
                         gravity.yAccel * gravity.yAccel +
                         gravity.zAccel * gravity.zAccel));
+
+         */
 
         // variable for each drive wheel to save power level for telemetry
         double leftPower;
