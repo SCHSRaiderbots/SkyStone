@@ -113,6 +113,8 @@ public class BasicIterative extends OpMode
     //   HardwareDevice.Manufacturer .getManufacturer()
     //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
     //       possibly uninteresting
+    //   DcMotorEx has .getVelocity(AngleUnit unit), so it presumably knows the ticks per revolution
+    //     however, there is not a .getCurrentPostion(AngleUnit unit)
     private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (4 * 72);
     private final double distpertickRight = mWheelDiameterRight * Math.PI / (4 * 72);
 
