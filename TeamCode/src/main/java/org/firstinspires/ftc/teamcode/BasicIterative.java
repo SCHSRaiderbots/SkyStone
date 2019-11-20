@@ -62,28 +62,37 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 public class BasicIterative extends OpMode
 {
     // Declare OpMode members.
+    // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
     private ElapsedTime runtime = new ElapsedTime();
 
+    /** @TODO gyroscope mess */
     // I thought I had this working, but apparently lost...
     // private Gyroscope imu;
     private BNO055IMU imu;
-
     // State used for updating telemetry
     private Orientation angles;
     private Acceleration gravity;
 
     // drive motors
+    // abstract to a class (eg, Robot) where attributes can be static and shared by other Opmodes
+    //   the class can have methods such as .setDrivePower()
     private DcMotor leftDrive = null;
     private DcMotor rightDrive = null;
 
     // arm motor
+    // abstract to a class (eg, Robot) where attributes can be static
     private DcMotor motorArm = null;
 
+    // abstract to a class (eg, Robot) where attributes can be static
+    // and static methods can .setHook()
     private Servo servoHookLeft = null;
     private Servo servoHookRight = null;
+
+    // abstract to a class (eg, Robot) where attributes can be static
     private Servo servoGrab = null;
 
     // robot parameters
+    // abstract to a class (eg, Robot) where static parameters describe the robot
     // the wheel diameters
     private final double mWheelDiameterLeft = 0.090;
     private final double mWheelDiameterRight = 0.090;
@@ -95,16 +104,35 @@ public class BasicIterative extends OpMode
     //   leaving the units vague at this point
     // Currently using direct drive with a CoreHex motor
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
-    //   that should be in the DcMotor class
+    //   those attributes should be in the DcMotor class
+    // The DcMotor class can allow some help
+    //   MotorConfigurationType .getMotorType()
+    //     MotorConfigurationType#getUnspecifiedMotorType()
+    //       do not know where the enum is
+    //   java.lang.String .getDeviceName() (not the config name)
+    //   HardwareDevice.Manufacturer .getManufacturer()
+    //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
+    //       possibly uninteresting
     private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (4 * 72);
     private final double distpertickRight = mWheelDiameterRight * Math.PI / (4 * 72);
 
     // the robot pose
+    // abstract to a class (eg, Robot) with static parameters
+    //   that class can have .updatePose(), .getPose()
+    //   such a step may allow the Pose to be carried over from Autonomous to Teleop
+    //     Autonomous can set the initial pose
+    //     When Teleop starts, it can use the existing Pose
+    //        If there was no teleop, then initial Pose is random
+    //        A button press during teleop's init_loop can set a known Pose
     private double xPose = 0.0;
     private double yPose = 0.0;
     private double thetaPose = 0.0;
 
     // encoder counts
+    // abstract to a class coupled to the drive motors (eg, Robot) as static
+    // There's a subtle issue here
+    //    If robot is not moving, it is OK to set these values to the current encoder counts
+    //    That could always happen during .init()
     private int cEncoderLeft;
     private int cEncoderRight;
 
@@ -114,7 +142,7 @@ public class BasicIterative extends OpMode
      */
     @Override
     public void init() {
-        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Status", "Initializing");
 
         // parameters for the imu
         // Set up the parameters with which we will use our IMU. Note that integration
@@ -139,6 +167,7 @@ public class BasicIterative extends OpMode
         // imu.initialize(parameters);
 
         // find the drive motors
+        // abstract to a common Class (eg, Robot)
         leftDrive  = hardwareMap.get(DcMotor.class, "motorLeft");
         rightDrive = hardwareMap.get(DcMotor.class, "motorRight");
 
@@ -147,20 +176,26 @@ public class BasicIterative extends OpMode
         leftDrive.setDirection(DcMotor.Direction.FORWARD);
         rightDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        // Direction also affects the encoder counts
+        // DcMotor Direction also affects the encoder counts
         // remember the current encoder counts
+        // Should always do this (even if not resetting the Pose)
         cEncoderLeft = leftDrive.getCurrentPosition();
         cEncoderRight = rightDrive.getCurrentPosition();
 
         // The arm motor
+        //   See comments at https://ftc-tricks.com/dc-motors/
+        //     .setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //   abstract to a common class (eg, Robot)
         motorArm = hardwareMap.get(DcMotor.class, "motorArm");
         // assume it is at position 0 right now
+        // Maybe use DcMotor.getCurrentPosition() as initial value?
         motorArm.setTargetPosition(0);
         // use the arm as a servo
         // target position must be set before RUN_TO_POSITION is invoked
         motorArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         // do not ask for a lot of power yet
-        motorArm.setPower(0.2);
+        motorArm.setPower(1.0);
         // choose FLOAT or BRAKE
         motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
 
@@ -189,9 +224,14 @@ public class BasicIterative extends OpMode
     @Override
     public void start() {
         // reset the clock
+        //   this may be superfluous becauee Opmode.time is reset at start of an Opmode
+        //   Opmode.getRuntime() may also be reset
+        //   In other words, I think Opmode supplies a reasonable time.
         runtime.reset();
 
         // may want to set the robot pose here...
+        //   but more likely the Pose should carry over from last Opmode or
+        //   be set during init_loop()
 
         // Start the logging of measured acceleration
         // imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
@@ -202,6 +242,7 @@ public class BasicIterative extends OpMode
      * Uses small angle approximations.
      * See COS495-Odometry by Chris Clark, 2011,
      * <a href="https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf">https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf</a>
+     * @TODO Move to a common class (eg, Robot)
      */
     private void updateRobotPose() {
         // several calculations are needed
@@ -276,11 +317,25 @@ public class BasicIterative extends OpMode
         double leftPower;
         double rightPower;
 
+        // Drive should be abstracted to a class
+        //   drive commands are often nonlinear
+        //   sharing same nonlinearity across all Opmodes presents consistent interface to the driver
         // Choose to drive using either Tank Mode, or POV Mode
         // Comment out the method that's not used.  The default below is POV.
+        //   Uh, that's poor coding; have an attribute choose between the modes
+        //      static boolean bTankMode = false;
 
         // POV Mode uses left stick to go forward, and right stick to turn.
         // - This uses basic math to combine motions and is easier to drive straight.
+        // pushing joystick forward is negative y
+        //   https://ftc-tricks.com/dc-motors/ :
+        //   "Did you know that the Y-axis of the joysticks is negative when pushed up, and positive when pushed down?"
+        //   Perhaps that comes from an airplane stick: pushing the stick forward causes plane to descend
+        //   Gamepad joystick:
+        //        -y
+        //     -x  0  +x
+        //        +y
+        //       need to check that x values are not reversed
         double drive = -gamepad1.left_stick_y;
         double turn  =  gamepad1.right_stick_x;
         leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
@@ -305,10 +360,17 @@ public class BasicIterative extends OpMode
         }
 
         // set arm position hack
+        // this needs a lot of work, but hardware has been removed
         /** @TODO set scale */
-        motorArm.setTargetPosition((int)(gamepad1.right_trigger * 50));
+        if (motorArm.isBusy()) {
+            telemetry.addData("arm", "is busy");
+        } else {
+            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 10));
+        }
 
         // control the hooks
+        // abstract to a class (eg, Robot)
+        //   .setHook(true), .setHook(false)
         if (gamepad1.left_bumper) {
             telemetry.addData("hook", "set hook");
             servoHookLeft.setPosition(0.4);
@@ -318,7 +380,6 @@ public class BasicIterative extends OpMode
             servoHookLeft.setPosition(0.0);
             servoHookRight.setPosition(1.0);
         }
-
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
@@ -330,8 +391,8 @@ public class BasicIterative extends OpMode
      */
     @Override
     public void stop() {
-
         // turn off the drive motors
+        //   abstract to a common class (eg, Robot)
         leftDrive.setPower(0);
         rightDrive.setPower(0);
     }
