@@ -65,7 +65,7 @@ public class BasicIterative extends OpMode
     // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
     private ElapsedTime runtime = new ElapsedTime();
 
-    /** @TODO gyroscope mess */
+    // TODO: gyroscope mess
     // I thought I had this working, but apparently lost...
     // private Gyroscope imu;
     private BNO055IMU imu;
@@ -242,7 +242,7 @@ public class BasicIterative extends OpMode
      * Uses small angle approximations.
      * See COS495-Odometry by Chris Clark, 2011,
      * <a href="https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf">https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf</a>
-     * @TODO Move to a common class (eg, Robot)
+     * TODO: Move to a common class (eg, Robot)
      */
     private void updateRobotPose() {
         // several calculations are needed
@@ -361,7 +361,7 @@ public class BasicIterative extends OpMode
 
         // set arm position hack
         // this needs a lot of work, but hardware has been removed
-        /** @TODO set scale */
+        // TODO: set scale
         if (motorArm.isBusy()) {
             telemetry.addData("arm", "is busy");
         } else {
