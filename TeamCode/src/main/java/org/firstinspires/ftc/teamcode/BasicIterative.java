@@ -152,12 +152,15 @@ public class BasicIterative extends OpMode
         // provide positional information.
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
 
+        // set typical parameters
+        parameters.mode                = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
         parameters.loggingEnabled      = false;
-        parameters.loggingTag          = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+        // deal with these parameters later
+        // parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        // parameters.loggingTag          = "IMU";
+        // parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
@@ -165,8 +168,10 @@ public class BasicIterative extends OpMode
 
         // imu = hardwareMap.get(Gyroscope.class, "imu");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
+
         // start initializing
-        // imu.initialize(parameters);
+        telemetry.addData("IMU", "initialize");
+        imu.initialize(parameters);
 
         // find the drive motors
         // abstract to a common Class (eg, Robot)
@@ -175,8 +180,8 @@ public class BasicIterative extends OpMode
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        leftDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightDrive.setDirection(DcMotor.Direction.FORWARD);
 
         // DcMotor Direction also affects the encoder counts
         // remember the current encoder counts
@@ -221,6 +226,12 @@ public class BasicIterative extends OpMode
     @Override
     public void init_loop() {
         telemetry.addData("init", "looping; look for config info");
+
+        if (imu.isGyroCalibrated()) {
+            telemetry.addData("IMU", "calibrated");
+        } else {
+            telemetry.addData("IMU", "calibrating");
+        }
     }
 
     /*
@@ -310,21 +321,22 @@ public class BasicIterative extends OpMode
         // update the robot pose
         updateRobotPose();
 
-        /*
         // query the imu
         // Acquiring the angles is relatively expensive; we don't want
         // to do that in each of the three items that need that info, as that's
         // three times the necessary expense.
         angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        gravity  = imu.getGravity();
+        // gravity  = imu.getGravity();
 
-        telemetry.addData("imu status", imu.getSystemStatus().toShortString());
-        telemetry.addData("imu calib", imu.getCalibrationStatus().toString());
+        // telemetry.addData("imu status", imu.getSystemStatus().toShortString());
+        // telemetry.addData("imu calib", imu.getCalibrationStatus().toString());
 
         telemetry.addData("imu", "heading %.1f roll %.1f pitch %.1f",
                 angles.firstAngle,
                 angles.secondAngle,
                 angles.thirdAngle);
+
+        /*
         telemetry.addData("gravity", gravity.toString());
         telemetry.addData("gravmag", "%0.3",
                 Math.sqrt(gravity.xAccel * gravity.xAccel +
@@ -359,8 +371,8 @@ public class BasicIterative extends OpMode
         // TOPDO: In Odemetry, angles are reported negative turning right is positive
         double drive = -gamepad1.left_stick_y;
         double turn  =  gamepad1.right_stick_x;
-        leftPower    = Range.clip(drive - turn, -1.0, 1.0) ;
-        rightPower   = Range.clip(drive + turn, -1.0, 1.0) ;
+        leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+        rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
 
         // Tank Mode uses one stick to control each wheel.
         // - This requires no math, but it is hard to drive forward slowly and keep straight.
@@ -398,6 +410,10 @@ public class BasicIterative extends OpMode
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
+        // time and getRuntime() are high precision, but they are from the start of the opmode
+        // (i think init sets time to zero, but it may be even earlier)
+        telemetry.addData("time", time);
+        telemetry.addData("getRuntime()", getRuntime());
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
     }
 
