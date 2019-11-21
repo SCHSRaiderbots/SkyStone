@@ -205,6 +205,9 @@ public class BasicIterative extends OpMode
         servoHookLeft = hardwareMap.get(Servo.class, "hookLeft");
         servoHookRight = hardwareMap.get(Servo.class, "hookRight");
 
+        // set hooks to known state
+        setHookState(false);
+
         // The grabber actuator
         servoGrab = hardwareMap.get(Servo.class, "servoGrab");
 
@@ -237,6 +240,21 @@ public class BasicIterative extends OpMode
 
         // Start the logging of measured acceleration
         // imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+    }
+
+    /**
+     * Set Hooks to a known state
+     * Tte values are different, so thre is probably bias in servo horn.
+     * Set for a small change now to avoid hitting the elevator winch.
+     */
+    private void setHookState (boolean state) {
+        if (state) {
+            servoHookLeft.setPosition(0.3);
+            servoHookRight.setPosition(0.8);
+        } else {
+            servoHookLeft.setPosition(0.15);
+            servoHookRight.setPosition(0.95);
+        }
     }
 
     /**
@@ -338,10 +356,11 @@ public class BasicIterative extends OpMode
         //     -x  0  +x
         //        +y
         //       need to check that x values are not reversed
+        // TOPDO: In Odemetry, angles are reported negative turning right is positive
         double drive = -gamepad1.left_stick_y;
         double turn  =  gamepad1.right_stick_x;
-        leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
-        rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+        leftPower    = Range.clip(drive - turn, -1.0, 1.0) ;
+        rightPower   = Range.clip(drive + turn, -1.0, 1.0) ;
 
         // Tank Mode uses one stick to control each wheel.
         // - This requires no math, but it is hard to drive forward slowly and keep straight.
@@ -371,16 +390,10 @@ public class BasicIterative extends OpMode
         }
 
         // control the hooks
-        // abstract to a class (eg, Robot)
-        //   .setHook(true), .setHook(false)
         if (gamepad1.left_bumper) {
-            telemetry.addData("hook", "set hook");
-            servoHookLeft.setPosition(0.4);
-            servoHookRight.setPosition(0.6);
+            setHookState(true);
         } else {
-            telemetry.addData("hook", "release hook");
-            servoHookLeft.setPosition(0.0);
-            servoHookRight.setPosition(1.0);
+            setHookState(false);
         }
 
         // Show the elapsed game time and wheel power.
@@ -397,6 +410,9 @@ public class BasicIterative extends OpMode
         //   abstract to a common class (eg, Robot)
         leftDrive.setPower(0);
         rightDrive.setPower(0);
+
+        // make sure hooks are in known state
+        setHookState(false);
     }
 
 }
