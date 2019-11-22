@@ -34,6 +34,7 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -43,6 +44,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
@@ -138,6 +140,11 @@ public class BasicIterative extends OpMode
     private int cEncoderLeft;
     private int cEncoderRight;
 
+    // add distance sensor and attack mode
+    private DistanceSensor sensorRange2m;
+    private double distAttack = 0.0;
+    private boolean bAttack = false;
+
     /*
      * Code to run ONCE when the driver hits INIT
      * @TODO Zero the arm position
@@ -215,6 +222,9 @@ public class BasicIterative extends OpMode
 
         // The grabber actuator
         servoGrab = hardwareMap.get(Servo.class, "servoGrab");
+
+        // find the distance sensor
+        sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -379,9 +389,23 @@ public class BasicIterative extends OpMode
         // leftPower  = -gamepad1.left_stick_y ;
         // rightPower = -gamepad1.right_stick_y ;
 
-        // Send calculated power to wheels
-        leftDrive.setPower(leftPower);
-        rightDrive.setPower(rightPower);
+        if (bAttack) {
+            // monitor if done
+            if (!leftDrive.isBusy() && !rightDrive.isBusy()) {
+                // the attack is done
+                leftDrive.setPower(0.0);
+                rightDrive.setPower(0.0);
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                bAttack = false;
+            }
+        } else {
+            // Send calculated power to wheels
+            leftDrive.setPower(leftPower);
+            rightDrive.setPower(rightPower);
+        }
 
         // simple servo hacks
         if (gamepad1.right_bumper) {
@@ -408,12 +432,38 @@ public class BasicIterative extends OpMode
             setHookState(false);
         }
 
+        // try an attack mode
+        if (gamepad1.dpad_down) {
+            // run just once
+            if (!bAttack) {
+                // calculate the attack distance
+                distAttack = sensorRange2m.getDistance(DistanceUnit.CM);
+                // should only attack if distance is reasonable
+                if (distAttack < 60) {
+                    // distance is less than 40 cm.
+                    int cEncoder = -(int)((distAttack - 5) * 0.01 / distpertickLeft);
+
+                    // set the target positions
+                    leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + cEncoder);
+                    rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + cEncoder);
+
+                    leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                    leftDrive.setPower(0.3);
+                    rightDrive.setPower(0.3);
+                }
+                bAttack = true;
+            }
+        }
+
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         // time and getRuntime() are high precision, but they are from the start of the opmode
         // (i think init sets time to zero, but it may be even earlier)
         telemetry.addData("time", time);
         telemetry.addData("getRuntime()", getRuntime());
+        telemetry.addData("Attack", "%.2f cm", distAttack);
         telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
     }
 
