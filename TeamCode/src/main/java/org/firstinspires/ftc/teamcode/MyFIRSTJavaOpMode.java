@@ -46,7 +46,7 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
         servoTest = hardwareMap.get(Servo.class, "servoTest");
 
         // HSV values
-        float hsvValues[] = {0F, 0F, 0F};
+        float [] hsvValues = {0F, 0F, 0F};
 
         // scale values
         final double SCALE_FACTOR = 255;
