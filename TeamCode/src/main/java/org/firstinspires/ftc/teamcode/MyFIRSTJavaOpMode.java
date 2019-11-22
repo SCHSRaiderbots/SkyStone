@@ -59,7 +59,6 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
         telemetry.addData("sensorColor", sensorColor.getDeviceName());
         telemetry.addData("sensorDistance", sensorDistance.getDeviceName());
         telemetry.addData("sensor2m", sensorRange2m.getDeviceName());
-        telemetry.addData("radioBuild", "true dat now");
         telemetry.update();
 
         // wait for start
@@ -78,9 +77,13 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
                             sensorDistance.getDistance(DistanceUnit.CM)));
 
             // try the 2m sensor
+            double tau = getRuntime();
+            double d = sensorRange2m.getDistance(DistanceUnit.CM);
+            // raw time is about 17  to 20 ms
+            tau = getRuntime() - tau;
+
             telemetry.addData("distance2m",
-                    String.format(Locale.US, "%8.02f cm",
-                            sensorRange2m.getDistance(DistanceUnit.CM))
+                    String.format(Locale.US, "%8.02f cm, % 8.02f ms", d, tau * 1000)
                     );
             // Rev2mDistanceSensor specific methods.
             // this reports "ee"
@@ -89,17 +92,40 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
             telemetry.addData("did time out", Boolean.toString(sensorTimeOfFlight.didTimeoutOccur()));
 
             // color sensor status
-            telemetry.addData("RGB",
-                    String.format(Locale.US, "%d %d %d / %d",
-                            sensorColor.red(),
-                            sensorColor.green(),
-                            sensorColor.blue(),
-                            sensorColor.alpha()));
-            Color.RGBToHSV(
-                    (int) (sensorColor.red() * SCALE_FACTOR / 0.86),
-                    (int) (sensorColor.green() * SCALE_FACTOR / 0.95),
-                    (int) (sensorColor.blue() * SCALE_FACTOR / 0.61),
-                    hsvValues);
+            // color sensor is Rev v 3
+            // white point 2cm away 4640 8563 4095
+            // black point           125 238 105
+
+            // had used graph to scale red / 0.86, green / 0.98, and blue / 0.61
+            // get values
+            double tColor = getRuntime();
+            int rColor = sensorColor.red();
+            int gColor = sensorColor.green();
+            int bColor = sensorColor.blue();
+            int aColor = sensorColor.alpha();
+
+            // time to get values is about 50 microseconds
+            tColor = getRuntime() - tColor;
+
+            telemetry.addData("raw RGB",
+                    String.format(Locale.US, "%d %d %d / %d in %8.02f ms",
+                            rColor, gColor, bColor, aColor,
+                            tColor));
+
+            int rCC = (int) ((rColor-125) * SCALE_FACTOR * (8563.0/4640.0));
+            int gCC = (int) ((gColor-238) * SCALE_FACTOR);
+            int bCC = (int) ((bColor-105) * SCALE_FACTOR * (8563.0/4095.0));
+
+            rCC = Math.max(rCC, 0);
+            gCC = Math.max(gCC, 0);
+            bCC = Math.max(bCC, 0);
+
+            // convert to HSV
+            // yellow should be H = 60; I'm getting 40
+            // stone: 40 (yellow should be 60 .. halfway to green at 120)
+            // red gaffer tape: 12 (red should be 0; that red is decidely orange)
+            // blue gaffer tape: 230 (blue should be 240)
+            Color.RGBToHSV(rCC, gCC, bCC, hsvValues);
             telemetry.addData("HSV",
                     String.format(Locale.US, "%6.1f %6.3f %6.3f",
                             hsvValues[0],
