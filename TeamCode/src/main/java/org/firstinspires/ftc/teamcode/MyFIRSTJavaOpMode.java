@@ -28,13 +28,12 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
     private DistanceSensor sensorDistance;
     private DistanceSensor sensorRange2m;
     private ColorSensor sensorColor;
-    private Servo servoTest;
 
     @Override
     public void runOpMode() {
         // these throw errors if the device does not exist
         imu = hardwareMap.get(Gyroscope.class, "imu");
-        motorLeft = hardwareMap.get(DcMotor.class, "motorLeft");
+        motorLeft = hardwareMap.get(DcMotor.class, "leftMotor");
         digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
         sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
@@ -42,8 +41,6 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
         sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
         // or cast as more exotic sensor
         Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)sensorRange2m;
-
-        servoTest = hardwareMap.get(Servo.class, "servoTest");
 
         // HSV values
         float [] hsvValues = {0F, 0F, 0F};

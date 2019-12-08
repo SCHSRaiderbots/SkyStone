@@ -85,6 +85,10 @@ public class BasicIterative extends OpMode
     // abstract to a class (eg, Robot) where attributes can be static
     private DcMotor motorArm = null;
 
+    // elevator motor
+    // abstract to a class
+    private DcMotor motorElevator = null;
+
     // abstract to a class (eg, Robot) where attributes can be static
     // and static methods can .setHook()
     private Servo servoHookLeft = null;
@@ -153,6 +157,14 @@ public class BasicIterative extends OpMode
     public void init() {
         telemetry.addData("Status", "Initializing");
 
+        // for I2C busses
+        // for glr
+        //   I2C-Bus-0
+        //     "imu"
+        //     "sensorColorRange", Rev Color Sensor v3.
+        //   I2C-Bus-3
+        //      "rev2meter", REV 2M Distance Sensor
+
         // parameters for the imu
         // Set up the parameters with which we will use our IMU. Note that integration
         // algorithm here just reports accelerations to the logcat log; it doesn't actually
@@ -182,8 +194,19 @@ public class BasicIterative extends OpMode
 
         // find the drive motors
         // abstract to a common Class (eg, Robot)
-        leftDrive  = hardwareMap.get(DcMotor.class, "motorLeft");
-        rightDrive = hardwareMap.get(DcMotor.class, "motorRight");
+        // was motorLeft and motorRight for glr
+        // for glr
+        //    0: motorRight
+        //    1: motorLeft
+        //    2: (nothing)
+        //    3:
+        // for SCHSConfig
+        //    0: rightMotor
+        //    1: leftMotor
+        //    2: armExtenderMotor
+        //    3: elevatorMotor
+        leftDrive  = hardwareMap.get(DcMotor.class, "leftMotor");
+        rightDrive = hardwareMap.get(DcMotor.class, "rightMotor");
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -201,8 +224,9 @@ public class BasicIterative extends OpMode
         //     .setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //   abstract to a common class (eg, Robot)
-        motorArm = hardwareMap.get(DcMotor.class, "motorArm");
+        motorArm = hardwareMap.get(DcMotor.class, "armExtenderMotor");
         // assume it is at position 0 right now
+        motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         // Maybe use DcMotor.getCurrentPosition() as initial value?
         motorArm.setTargetPosition(0);
         // use the arm as a servo
@@ -213,17 +237,36 @@ public class BasicIterative extends OpMode
         // choose FLOAT or BRAKE
         motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
 
+        // The elevator motor
+        motorElevator = hardwareMap.get(DcMotor.class, "elevatorMotor");
+        // assume it is at position 0 right now
+        motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorElevator.setTargetPosition(0);
+        motorElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorElevator.setPower(0.4);
+        motorElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
         // The foundation hooks
-        servoHookLeft = hardwareMap.get(Servo.class, "hookLeft");
-        servoHookRight = hardwareMap.get(Servo.class, "hookRight");
+        // for glr
+        //   0: servoGrab
+        //   1: hookLeft
+        //   2: hookRight
+        //   3: servoTest
+        // for SCHSConfig
+        //   0: leftHook
+        //   1: rightHook
+        //   2: grabberServo
+        servoHookLeft = hardwareMap.get(Servo.class, "leftHook");
+        servoHookRight = hardwareMap.get(Servo.class, "rightHook");
 
         // set hooks to known state
         setHookState(false);
 
         // The grabber actuator
-        servoGrab = hardwareMap.get(Servo.class, "servoGrab");
+        servoGrab = hardwareMap.get(Servo.class, "grabberServo");
 
         // find the distance sensor
+        // for glr:
         sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
 
         // Tell the driver that initialization is complete.
@@ -267,12 +310,16 @@ public class BasicIterative extends OpMode
      * Set Hooks to a known state
      * Tte values are different, so thre is probably bias in servo horn.
      * Set for a small change now to avoid hitting the elevator winch.
+     * TODO provide a tracking variable or read servo position
+     * TODO remember the time the command was issue so completion can be estimated
      */
     private void setHookState (boolean state) {
         if (state) {
+            // set the hook
             servoHookLeft.setPosition(0.3);
             servoHookRight.setPosition(0.8);
         } else {
+            // release the hook
             servoHookLeft.setPosition(0.15);
             servoHookRight.setPosition(0.95);
         }
@@ -419,11 +466,17 @@ public class BasicIterative extends OpMode
         // set arm position hack
         // this needs a lot of work, but hardware has been removed
         // TODO: set scale
+        // it is taking too long for isBusy() to report success, so just set the desired position.
         if (motorArm.isBusy()) {
             telemetry.addData("arm", "is busy");
+            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
         } else {
-            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 10));
+            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
         }
+
+        // set elevator position
+        // TODO: set scale
+        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 500));
 
         // control the hooks
         if (gamepad1.left_bumper) {
