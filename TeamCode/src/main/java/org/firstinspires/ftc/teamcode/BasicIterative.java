@@ -181,12 +181,14 @@ public class BasicIterative extends OpMode
 
         // dump information about the PIDF coefficients
         PIDFCoefficients pidf = motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+        // 4.96, 0.496, 0, 49.6
         Log.d(TAG, "  PIDF(rue) = " + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f);
-        Log.d(TAG, "  where is tolerance?");
 
         pidf = motor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+        // 5, 0, 0, 0
         Log.d(TAG, "  PIDF(r2p) = " + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f);
-        Log.d(TAG, "  where is tolerance?");
+        // tolerance is 5 ticks.
+        Log.d(TAG, "    TargetPositionTolerance = " + motor.getTargetPositionTolerance());
     }
 
     private void logDeviceInfo(String name, Servo servo) {
@@ -301,7 +303,7 @@ public class BasicIterative extends OpMode
         motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorElevator.setTargetPosition(0);
         motorElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorElevator.setPower(0.4);
+        motorElevator.setPower(1.0);
         motorElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // The foundation hooks
@@ -516,6 +518,7 @@ public class BasicIterative extends OpMode
 
                 // attack is finished; resume normal driving
                 bAttack = false;
+                Log.d(TAG, "Attack finished");
             }
         } else {
             // Send calculated power to wheels
@@ -556,7 +559,7 @@ public class BasicIterative extends OpMode
         // Thus 500 counts should be about 5 inches.
         // Elevator is continuous, so height is 1:1.
         // So 500 counts raises elevator about 5 inches.
-        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 500));
+        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 1500));
 
         // control the hooks
         if (gamepad1.left_bumper) {
@@ -569,6 +572,8 @@ public class BasicIterative extends OpMode
         if (gamepad1.dpad_down) {
             // run just once
             if (!bAttack) {
+                Log.d(TAG, "Attack start");
+
                 // calculate the attack distance
                 distAttack = sensorRange2m.getDistance(DistanceUnit.CM);
                 // should only attack if distance is reasonable
