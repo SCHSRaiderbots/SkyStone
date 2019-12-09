@@ -29,13 +29,18 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -60,10 +65,15 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
  * It includes all the skeletal structure that all iterative OpModes contain.
  */
 
-@TeleOp(name="Basic: Iterative OpMode", group="Iterative Opmode")
+@TeleOp(name="Basic Drive", group="Test")
 public class BasicIterative extends OpMode
 {
     // Declare OpMode members.
+
+    // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html
+    private static final String TAG = "Testbot";
+    // so use Log.d(TAG, <string>) to log debugging messages
+
     // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -78,16 +88,16 @@ public class BasicIterative extends OpMode
     // drive motors
     // abstract to a class (eg, Robot) where attributes can be static and shared by other Opmodes
     //   the class can have methods such as .setDrivePower()
-    private DcMotor leftDrive = null;
-    private DcMotor rightDrive = null;
+    private DcMotorEx leftDrive = null;
+    private DcMotorEx rightDrive = null;
 
     // arm motor
     // abstract to a class (eg, Robot) where attributes can be static
-    private DcMotor motorArm = null;
+    private DcMotorEx motorArm = null;
 
     // elevator motor
     // abstract to a class
-    private DcMotor motorElevator = null;
+    private DcMotorEx motorElevator = null;
 
     // abstract to a class (eg, Robot) where attributes can be static
     // and static methods can .setHook()
@@ -149,12 +159,55 @@ public class BasicIterative extends OpMode
     private double distAttack = 0.0;
     private boolean bAttack = false;
 
+    /**
+     * Log information about this motor
+     *
+     * @param name describes which motor
+     * @param motor specifies the motor to describe
+     */
+    private void logMotor(String name, DcMotorEx motor) {
+        Log.d(TAG, "motor characteristics for " + name);
+        // not very interesting: just says "Motor"
+        Log.d(TAG, "  device name: " + motor.getDeviceName());
+        // not very interesting: just says "Lynx"
+        Log.d(TAG, "  manufacturer: " + motor.getManufacturer());
+        Log.d(TAG, "  type: " + motor.getMotorType());
+        // reports into which port the device is plugged
+        Log.d(TAG, "  port: " + motor.getPortNumber());
+        // reports direction
+        Log.d(TAG, "  direction: " + motor.getDirection());
+        // reports current position
+        Log.d(TAG, "  position: " + motor.getCurrentPosition());
+
+        // dump information about the PIDF coefficients
+        PIDFCoefficients pidf = motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
+        Log.d(TAG, "  PIDF(rue) = " + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f);
+        Log.d(TAG, "  where is tolerance?");
+
+        pidf = motor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+        Log.d(TAG, "  PIDF(r2p) = " + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f);
+        Log.d(TAG, "  where is tolerance?");
+    }
+
+    private void logDeviceInfo(String name, Servo servo) {
+        Log.d(TAG, "servo information for " + name);
+        // not very interesting: just says "Servo"
+        Log.d(TAG, "  device name: " + servo.getDeviceName());
+        // not very interesting: just says "Lynx"
+        Log.d(TAG, "  manufacturer: " + servo.getManufacturer());
+        // reports into which port the servo is plugged
+        Log.d(TAG, "  port number: " + servo.getPortNumber());
+        // reports current position
+        Log.d(TAG, "  position: " + servo.getPosition());
+    }
+
     /*
      * Code to run ONCE when the driver hits INIT
      * @TODO Zero the arm position
      */
     @Override
     public void init() {
+        Log.d(TAG, "init()");
         telemetry.addData("Status", "Initializing");
 
         // for I2C busses
@@ -205,8 +258,11 @@ public class BasicIterative extends OpMode
         //    1: leftMotor
         //    2: armExtenderMotor
         //    3: elevatorMotor
-        leftDrive  = hardwareMap.get(DcMotor.class, "leftMotor");
-        rightDrive = hardwareMap.get(DcMotor.class, "rightMotor");
+        leftDrive  = hardwareMap.get(DcMotorEx.class, "leftMotor");
+        rightDrive = hardwareMap.get(DcMotorEx.class, "rightMotor");
+
+        logMotor("motorLeft", leftDrive);
+        logMotor("motorRight", rightDrive);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -224,7 +280,8 @@ public class BasicIterative extends OpMode
         //     .setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //   abstract to a common class (eg, Robot)
-        motorArm = hardwareMap.get(DcMotor.class, "armExtenderMotor");
+        motorArm = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
+        logMotor("motorArm", motorArm);
         // assume it is at position 0 right now
         motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         // Maybe use DcMotor.getCurrentPosition() as initial value?
@@ -238,7 +295,8 @@ public class BasicIterative extends OpMode
         motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
 
         // The elevator motor
-        motorElevator = hardwareMap.get(DcMotor.class, "elevatorMotor");
+        motorElevator = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
+        logMotor("motorElevator", motorElevator);
         // assume it is at position 0 right now
         motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorElevator.setTargetPosition(0);
@@ -259,18 +317,23 @@ public class BasicIterative extends OpMode
         servoHookLeft = hardwareMap.get(Servo.class, "leftHook");
         servoHookRight = hardwareMap.get(Servo.class, "rightHook");
 
+        // dump information about the servos
+        logDeviceInfo("servoHookLeft", servoHookLeft);
+        logDeviceInfo("servoHookRight", servoHookRight);
+
         // set hooks to known state
         setHookState(false);
 
         // The grabber actuator
         servoGrab = hardwareMap.get(Servo.class, "grabberServo");
 
-        // find the distance sensor
-        // for glr:
+        // find the REV 2m distance sensor
         sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
+
+        Log.d(TAG, "init() complete");
     }
 
     /*
@@ -292,8 +355,10 @@ public class BasicIterative extends OpMode
      */
     @Override
     public void start() {
+        Log.d(TAG, "start()");
+
         // reset the clock
-        //   this may be superfluous becauee Opmode.time is reset at start of an Opmode
+        //   this may be superfluous because Opmode.time is reset at start of an Opmode
         //   Opmode.getRuntime() may also be reset
         //   In other words, I think Opmode supplies a reasonable time.
         runtime.reset();
@@ -304,11 +369,13 @@ public class BasicIterative extends OpMode
 
         // Start the logging of measured acceleration
         // imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
+
+        Log.d(TAG, "start() complete");
     }
 
     /**
      * Set Hooks to a known state
-     * Tte values are different, so thre is probably bias in servo horn.
+     * Tte values are different, so there is probably bias in servo horn.
      * Set for a small change now to avoid hitting the elevator winch.
      * TODO provide a tracking variable or read servo position
      * TODO remember the time the command was issue so completion can be estimated
@@ -443,9 +510,11 @@ public class BasicIterative extends OpMode
                 leftDrive.setPower(0.0);
                 rightDrive.setPower(0.0);
 
+                // restore normal driving mode
                 leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+                // attack is finished; resume normal driving
                 bAttack = false;
             }
         } else {
@@ -466,6 +535,11 @@ public class BasicIterative extends OpMode
         // set arm position hack
         // this needs a lot of work, but hardware has been removed
         // TODO: set scale
+        // The arm is driven by a Core Hex motor with 288 counts per revolution.
+        // The winch spool is made from 60-tooth gears.
+        // The screws are at the 16 mm positions, but they do not form an equilateral triangle.
+        // Distance will vary until that is fixed.
+        // Mechanism is single stage with 1:1 spool to extension distance.
         // it is taking too long for isBusy() to report success, so just set the desired position.
         if (motorArm.isBusy()) {
             telemetry.addData("arm", "is busy");
@@ -476,6 +550,12 @@ public class BasicIterative extends OpMode
 
         // set elevator position
         // TODO: set scale
+        // the elevator is drivien by a Core Hex motor with 288 counts pre revolution.
+        // the motor drives spools made from 45 tooth gears with screws at 3 8mm positions.
+        // say a wrap averages 3 * 7/8 inches = 21/8 = 2 5/8 inches.
+        // Thus 500 counts should be about 5 inches.
+        // Elevator is continuous, so height is 1:1.
+        // So 500 counts raises elevator about 5 inches.
         motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 500));
 
         // control the hooks
@@ -525,6 +605,8 @@ public class BasicIterative extends OpMode
      */
     @Override
     public void stop() {
+        Log.d(TAG, "stop()");
+
         // turn off the drive motors
         //   abstract to a common class (eg, Robot)
         leftDrive.setPower(0);
@@ -532,6 +614,22 @@ public class BasicIterative extends OpMode
 
         // make sure hooks are in known state
         setHookState(false);
+
+        Log.d(TAG, "stop() complete");
+    }
+
+    // Read the battery voltage
+    // Put this is the robot class
+    // put the sensor in a class variable
+    double getBatteryVoltage() {
+        double result = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                result = Math.min(result, voltage);
+            }
+        }
+        return result;
     }
 
 }
