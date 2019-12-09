@@ -121,6 +121,13 @@ public class BasicIterative extends OpMode
     // Currently using direct drive with a CoreHex motor
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
     //   those attributes should be in the DcMotor class
+    // The HD Hex Motor has 56 ticks per revolution
+    //    the 20:1 is geared 20 to 1
+    //    the 40:1 is geared 40 to 1
+    // The HD Hex Motor is also used with the Ultraplanetary gearbox
+    //    the 3:1 cartridge is actually 84:29 (2.9...)
+    //    the 4:1 cartridge is actually 76:21 (3.6...)
+    //    the 5:1 cartridge is actually 68:13 (5.2...)
     // The DcMotor class can allow some help
     //   MotorConfigurationType .getMotorType()
     //     MotorConfigurationType#getUnspecifiedMotorType()
