@@ -166,6 +166,13 @@ public class BasicIterative extends OpMode
     private double distAttack = 0.0;
     private boolean bAttack = false;
 
+    // try complicated initialization
+    private int markovElevator = -1;
+
+    // average period statistics
+    private int cLoop = 0;
+    private double timeLoop = 0;
+
     /**
      * Log information about this motor
      *
@@ -342,6 +349,13 @@ public class BasicIterative extends OpMode
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
 
+        // elevator initialization state
+        markovElevator = -1;
+
+        // update statistics vars
+        cLoop = 0;
+        timeLoop = time;
+
         Log.d(TAG, "init() complete");
     }
 
@@ -352,11 +366,81 @@ public class BasicIterative extends OpMode
     public void init_loop() {
         telemetry.addData("init", "looping; look for config info");
 
+        // update statistics for loop period
+        cLoop++;
+        telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
+
         if (imu.isGyroCalibrated()) {
             telemetry.addData("IMU", "calibrated");
         } else {
             telemetry.addData("IMU", "calibrating");
         }
+
+        /* */
+        // do complicated initialization of elevator
+        switch (markovElevator) {
+            case -1:
+                if (gamepad1.a) {
+                    // if the button is pressed, start initialization
+
+                    // move the elevator up to clear elevator motor
+                    // TODO make this an absolute position
+                    motorElevator.setTargetPosition(500);
+
+                    // advance the state
+                    markovElevator++;
+                }
+                break;
+
+            case 0:
+                // the elevator should be rising
+                // when it gets high enough, start the next step
+                if (motorElevator.getCurrentPosition() > 400) {
+                    // extend the arm
+                    motorArm.setTargetPosition(400);
+
+                    // advance the state
+                    markovElevator++;
+                }
+                break;
+
+            case 1:
+                // the arm is extending
+                // when it has gone far enouch, start the next step
+                if (motorArm.getCurrentPosition() > 300) {
+                    // should be able to slowly lower the elevator onto the limit switch
+                    // just bring it to 0 for now
+                    motorElevator.setTargetPosition(0);
+
+                    // advance the tate
+                    markovElevator++;
+                }
+                break;
+
+            case 2:
+                // elevator is lowering onto switch
+                if (motorElevator.getCurrentPosition() < 20) {
+                    // figure we are done.
+                    // send Elevator back up
+                    motorElevator.setTargetPosition(300);
+
+                    // advance the state
+                    markovElevator++;
+                }
+                break;
+
+            case 3:
+                // elevator is rising again
+                if (motorElevator.getCurrentPosition() > 250) {
+                    // retract arm
+                    motorArm.setTargetPosition(0);
+
+                    // terminate the calibration
+                    markovElevator = -1;
+                }
+                break;
+        }
+        /**/
     }
 
     /*
@@ -372,6 +456,10 @@ public class BasicIterative extends OpMode
         //   In other words, I think Opmode supplies a reasonable time.
         runtime.reset();
 
+        // reset timer statistics
+        cLoop = 0;
+        timeLoop = time;
+
         // may want to set the robot pose here...
         //   but more likely the Pose should carry over from last Opmode or
         //   be set during init_loop()
@@ -385,6 +473,7 @@ public class BasicIterative extends OpMode
     /**
      * Set Hooks to a known state
      * Tte values are different, so there is probably bias in servo horn.
+     * The servo horn has 25 teeth, so it can only be positioned to 360/25 = 14.4 degrees
      * Set for a small change now to avoid hitting the elevator winch.
      * TODO provide a tracking variable or read servo position
      * TODO remember the time the command was issue so completion can be estimated
@@ -392,12 +481,12 @@ public class BasicIterative extends OpMode
     private void setHookState (boolean state) {
         if (state) {
             // set the hook
-            servoHookLeft.setPosition(0.3);
-            servoHookRight.setPosition(0.8);
+            servoHookLeft.setPosition(0.5);     // larger is lower down
+            servoHookRight.setPosition(0.55);    // smaller is lower down
         } else {
             // release the hook
-            servoHookLeft.setPosition(0.15);
-            servoHookRight.setPosition(0.95);
+            servoHookLeft.setPosition(0.0);
+            servoHookRight.setPosition(1.0);
         }
     }
 
@@ -451,6 +540,10 @@ public class BasicIterative extends OpMode
      */
     @Override
     public void loop() {
+        // update statistics for loop period
+        cLoop++;
+        telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
+
         // update the robot pose
         updateRobotPose();
 
@@ -606,10 +699,9 @@ public class BasicIterative extends OpMode
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         // time and getRuntime() are high precision, but they are from the start of the opmode
         // (i think init sets time to zero, but it may be even earlier)
-        telemetry.addData("time", time);
-        telemetry.addData("getRuntime()", getRuntime());
+        // telemetry.addData("time", time);
+        // telemetry.addData("getRuntime()", getRuntime());
         telemetry.addData("Attack", "%.2f cm", distAttack);
-        telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
     }
 
     /*
