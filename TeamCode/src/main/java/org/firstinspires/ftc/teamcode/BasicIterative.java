@@ -33,10 +33,13 @@ import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -54,6 +57,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
+import java.util.Locale;
+
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
  * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
@@ -65,7 +70,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
  * It includes all the skeletal structure that all iterative OpModes contain.
  */
 
-@TeleOp(name="Basic Drive", group="Test")
+@TeleOp(name="testbot", group="Test")
 public class BasicIterative extends OpMode
 {
     // Declare OpMode members.
@@ -161,10 +166,18 @@ public class BasicIterative extends OpMode
     private int cEncoderLeft;
     private int cEncoderRight;
 
-    // add distance sensor and attack mode
+    // REV 2m distance sensor and attack mode
+    // Also Rev2mDistanceSensor
     private DistanceSensor sensorRange2m;
     private double distAttack = 0.0;
     private boolean bAttack = false;
+
+    // Color distance sensor
+    private DistanceSensor sensorDistance;
+    private ColorSensor sensorColor;
+
+    // REV touch sensor as digital channel
+    private DigitalChannel digitalTouch;
 
     // try complicated initialization
     private int markovElevator = -1;
@@ -346,7 +359,14 @@ public class BasicIterative extends OpMode
         // find the REV 2m distance sensor
         sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
 
-        // Tell the driver that initialization is complete.
+        // The color/distance sensor
+        sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
+        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
+
+        // touch sensor
+        digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
+
+        // Tell the driver station that initialization is complete.
         telemetry.addData("Status", "Initialized");
 
         // elevator initialization state
@@ -367,14 +387,59 @@ public class BasicIterative extends OpMode
         telemetry.addData("init", "looping; look for config info");
 
         // update statistics for loop period
+        // TODO why is this loop taking 100 ms?
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
+        // look at the imu
         if (imu.isGyroCalibrated()) {
             telemetry.addData("IMU", "calibrated");
         } else {
             telemetry.addData("IMU", "calibrating");
         }
+
+        // report digital touch sensor
+        telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
+
+        // report color
+        // had used graph to scale red / 0.86, green / 0.98, and blue / 0.61
+        // get values
+        double tColor = getRuntime();
+        int rColor = sensorColor.red();
+        int gColor = sensorColor.green();
+        int bColor = sensorColor.blue();
+        int aColor = sensorColor.alpha();
+        // the hue... in unknown units
+        int hColor = sensorColor.argb();
+        // time to get values is about 50 microseconds
+        tColor = getRuntime() - tColor;
+
+        telemetry.addData("raw RGB",
+                String.format(Locale.US, "%d %d %d / %d %d in %8.02f ms",
+                        rColor, gColor, bColor, aColor, hColor,
+                        tColor));
+
+        // measure distance in cm
+        telemetry.addData("distance",
+                String.format(Locale.US, "%.02f cm",
+                        sensorDistance.getDistance(DistanceUnit.CM)));
+
+        // try the 2m sensor
+        double tau = getRuntime();
+        double d = sensorRange2m.getDistance(DistanceUnit.CM);
+        // raw time is about 17  to 20 ms
+        tau = getRuntime() - tau;
+
+        telemetry.addData("distance2m",
+                String.format(Locale.US, "%8.02f cm, % 8.02f ms",d, tau * 1000));
+        // Rev2mDistanceSensor specific methods.
+        // or cast as more exotic sensor
+        Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)sensorRange2m;
+
+        // this reports "ee"
+        // telemetry.addData("ID", String.format("%x", sensorTimeOfFlight.getModelID()));
+        // this is always "false" (even with distance = 819cm (8 meters out)
+        // telemetry.addData("did time out", Boolean.toString(sensorTimeOfFlight.didTimeoutOccur()));
 
         /* */
         // do complicated initialization of elevator
