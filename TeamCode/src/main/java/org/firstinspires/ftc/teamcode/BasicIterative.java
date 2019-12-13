@@ -232,12 +232,6 @@ public class BasicIterative extends OpMode
 
         // find the drive motors
         // abstract to a common Class (eg, Robot)
-        // was motorLeft and motorRight for glr
-        // for glr
-        //    0: motorRight
-        //    1: motorLeft
-        //    2: (nothing)
-        //    3:
         // for SCHSConfig
         //    0: rightMotor
         //    1: leftMotor
@@ -290,11 +284,6 @@ public class BasicIterative extends OpMode
         motorElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // The foundation hooks
-        // for glr
-        //   0: servoGrab
-        //   1: hookLeft
-        //   2: hookRight
-        //   3: servoTest
         // for SCHSConfig
         //   0: leftHook
         //   1: rightHook

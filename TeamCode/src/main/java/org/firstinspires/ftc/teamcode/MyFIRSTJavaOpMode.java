@@ -20,7 +20,7 @@ import java.util.Locale;
  * Recreated by GLR 8 October 2019
  * TODO: Move code to common class (eg, Robot) and specific Opmodes; Lousy name for class
  */
-@TeleOp
+@TeleOp(name="SensorTest", group="Test")
 public class MyFIRSTJavaOpMode extends LinearOpMode {
     private Gyroscope imu;
     private DcMotor motorLeft;
