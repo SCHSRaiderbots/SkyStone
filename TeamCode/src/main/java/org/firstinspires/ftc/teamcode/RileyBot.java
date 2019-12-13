@@ -32,51 +32,40 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 import java.util.Locale;
 
 /**
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
+ * RileyBot -- the team's 2018 Robot repurposed for testing.
  */
 
-@TeleOp(name="testbot", group="Test")
-public class BasicIterative extends OpMode
+@TeleOp(name="Riley", group="Test")
+public class RileyBot extends OpMode
 {
     // Declare OpMode members.
 
     // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html
-    private static final String TAG = "Testbot";
+    private static final String TAG = "RileyBot";
     // so use Log.d(TAG, <string>) to log debugging messages
 
     // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
@@ -96,29 +85,13 @@ public class BasicIterative extends OpMode
     private DcMotorEx leftDrive = null;
     private DcMotorEx rightDrive = null;
 
-    // arm motor
-    // abstract to a class (eg, Robot) where attributes can be static
-    private DcMotorEx motorArm = null;
-
-    // elevator motor
-    // abstract to a class
-    private DcMotorEx motorElevator = null;
-
-    // abstract to a class (eg, Robot) where attributes can be static
-    // and static methods can .setHook()
-    private Servo servoHookLeft = null;
-    private Servo servoHookRight = null;
-
-    // abstract to a class (eg, Robot) where attributes can be static
-    private Servo servoGrab = null;
-
     // robot parameters
     // abstract to a class (eg, Robot) where static parameters describe the robot
     // the wheel diameters
     private final double mWheelDiameterLeft = 0.090;
     private final double mWheelDiameterRight = 0.090;
     // half the distance between the wheels
-    private final double distWheel = 0.305 / 2;
+    private final double distWheel = 0.295 / 2;
 
     // derived robot parameters
     // Distance per tick
@@ -166,6 +139,10 @@ public class BasicIterative extends OpMode
     private int cEncoderLeft;
     private int cEncoderRight;
 
+    private DcMotorEx motorArm;
+
+    private DcMotorEx motorExtend;
+
     // REV 2m distance sensor and attack mode
     // Also Rev2mDistanceSensor
     private DistanceSensor sensorRange2m;
@@ -178,9 +155,6 @@ public class BasicIterative extends OpMode
 
     // REV touch sensor as digital channel
     private DigitalChannel digitalTouch;
-
-    // try complicated initialization
-    private int markovElevator = -1;
 
     // average period statistics
     private int cLoop = 0;
@@ -254,65 +228,41 @@ public class BasicIterative extends OpMode
         cEncoderLeft = leftDrive.getCurrentPosition();
         cEncoderRight = rightDrive.getCurrentPosition();
 
-        // The arm motor
-        //   See comments at https://ftc-tricks.com/dc-motors/
-        //     .setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //   abstract to a common class (eg, Robot)
-        motorArm = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
-        LogDevice.logMotor("motorArm", motorArm);
-        // assume it is at position 0 right now
+        // the Arm
+        motorArm = hardwareMap.get(DcMotorEx.class, "mineralTurnArm");
         motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        // Maybe use DcMotor.getCurrentPosition() as initial value?
+        // direction is reversed
+        motorArm.setDirection(DcMotorSimple.Direction.REVERSE);
         motorArm.setTargetPosition(0);
-        // use the arm as a servo
-        // target position must be set before RUN_TO_POSITION is invoked
+        // use run to position
         motorArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         // do not ask for a lot of power yet
         motorArm.setPower(1.0);
         // choose FLOAT or BRAKE
-        motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
+        motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
 
-        // The elevator motor
-        motorElevator = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
-        LogDevice.logMotor("motorElevator", motorElevator);
-        // assume it is at position 0 right now
-        motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorElevator.setTargetPosition(0);
-        motorElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorElevator.setPower(1.0);
-        motorElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        // The foundation hooks
-        // for SCHSConfig
-        //   0: leftHook
-        //   1: rightHook
-        //   2: grabberServo
-        servoHookLeft = hardwareMap.get(Servo.class, "leftHook");
-        servoHookRight = hardwareMap.get(Servo.class, "rightHook");
-
-        // dump information about the servos
-        LogDevice.logServo("servoHookLeft", servoHookLeft);
-        LogDevice.logServo("servoHookRight", servoHookRight);
-
-        // set hooks to known state
-        setHookState(false);
-
-        // The grabber actuator
-        servoGrab = hardwareMap.get(Servo.class, "grabberServo");
+        // the extender
+        motorExtend = hardwareMap.get(DcMotorEx.class, "mineralExtendArm");
+        motorExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // direction is reversed
+        motorExtend.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorExtend.setTargetPosition(0);
+        // use run to position
+        motorExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // do not ask for a lot of power yet
+        motorExtend.setPower(1.0);
+        // choose FLOAT or BRAKE
+        motorExtend.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
 
         // find the REV 2m distance sensor
         sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
 
         // The color/distance sensor
-        sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
+        // sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
+        // sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
 
         // touch sensor
-        digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
-
-        // elevator initialization state
-        markovElevator = -1;
+        // digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
 
         // update statistics vars
         cLoop = 0;
@@ -344,8 +294,9 @@ public class BasicIterative extends OpMode
         }
 
         // report digital touch sensor
-        telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
+        // telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
 
+        /*
         // report color
         // had used graph to scale red / 0.86, green / 0.98, and blue / 0.61
         // get values
@@ -386,71 +337,7 @@ public class BasicIterative extends OpMode
         // this is always "false" (even with distance = 819cm (8 meters out)
         // telemetry.addData("did time out", Boolean.toString(sensorTimeOfFlight.didTimeoutOccur()));
 
-        /* */
-        // do complicated initialization of elevator
-        switch (markovElevator) {
-            case -1:
-                if (gamepad1.a) {
-                    // if the button is pressed, start initialization
-
-                    // move the elevator up to clear elevator motor
-                    // TODO make this an absolute position
-                    motorElevator.setTargetPosition(500);
-
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
-
-            case 0:
-                // the elevator should be rising
-                // when it gets high enough, start the next step
-                if (motorElevator.getCurrentPosition() > 400) {
-                    // extend the arm
-                    motorArm.setTargetPosition(400);
-
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
-
-            case 1:
-                // the arm is extending
-                // when it has gone far enough, start the next step
-                if (motorArm.getCurrentPosition() > 300) {
-                    // should be able to slowly lower the elevator onto the limit switch
-                    // just bring it to 0 for now
-                    motorElevator.setTargetPosition(0);
-
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
-
-            case 2:
-                // elevator is lowering onto switch
-                if (motorElevator.getCurrentPosition() < 20) {
-                    // figure we are done.
-                    // send Elevator back up
-                    motorElevator.setTargetPosition(300);
-
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
-
-            case 3:
-                // elevator is rising again
-                if (motorElevator.getCurrentPosition() > 250) {
-                    // retract arm
-                    motorArm.setTargetPosition(0);
-
-                    // terminate the calibration
-                    markovElevator = -1;
-                }
-                break;
-        }
-        /**/
+         */
     }
 
     /*
@@ -478,26 +365,6 @@ public class BasicIterative extends OpMode
         // imu.startAccelerationIntegration(new Position(), new Velocity(), 1000);
 
         Log.d(TAG, "start() complete");
-    }
-
-    /**
-     * Set Hooks to a known state
-     * Tte values are different, so there is probably bias in servo horn.
-     * The servo horn has 25 teeth, so it can only be positioned to 360/25 = 14.4 degrees
-     * Set for a small change now to avoid hitting the elevator winch.
-     * TODO provide a tracking variable or read servo position
-     * TODO remember the time the command was issue so completion can be estimated
-     */
-    private void setHookState (boolean state) {
-        if (state) {
-            // set the hook
-            servoHookLeft.setPosition(0.5);     // larger is lower down
-            servoHookRight.setPosition(0.55);    // smaller is lower down
-        } else {
-            // release the hook
-            servoHookLeft.setPosition(0.0);
-            servoHookRight.setPosition(1.0);
-        }
     }
 
     /**
@@ -542,7 +409,7 @@ public class BasicIterative extends OpMode
         thetaPose = thetaPose + dtheta;
 
         // change radians to degrees
-        telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
+        telemetry.addData("pose", "%8.3f %8.3f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
     }
 
     /*
@@ -636,46 +503,10 @@ public class BasicIterative extends OpMode
             rightDrive.setPower(rightPower);
         }
 
-        // simple servo hacks
-        if (gamepad1.right_bumper) {
-            telemetry.addData("grab", "released");
-            servoGrab.setPosition(0.1);
-        } else {
-            telemetry.addData("grab", "gripping");
-            servoGrab.setPosition(0.6);
-        }
-
-        // set arm position hack
-        // this needs a lot of work, but hardware has been removed
-        // TODO: set scale
-        // The arm is driven by a Core Hex motor with 288 counts per revolution.
-        // The winch spool is made from 60-tooth gears.
-        // The screws are at the 16 mm positions, but they do not form an equilateral triangle.
-        // Distance will vary until that is fixed.
-        // Mechanism is single stage with 1:1 spool to extension distance.
-        // it is taking too long for isBusy() to report success, so just set the desired position.
-        if (motorArm.isBusy()) {
-            telemetry.addData("arm", "is busy");
-            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
-        } else {
-            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
-        }
-
-        // set elevator position
-        // TODO: set scale
-        // the elevator is drivien by a Core Hex motor with 288 counts pre revolution.
-        // the motor drives spools made from 45 tooth gears with screws at 3 8mm positions.
-        // say a wrap averages 3 * 7/8 inches = 21/8 = 2 5/8 inches.
-        // Thus 500 counts should be about 5 inches.
-        // Elevator is continuous, so height is 1:1.
-        // So 500 counts raises elevator about 5 inches.
-        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 1500));
-
-        // control the hooks
-        if (gamepad1.left_bumper) {
-            setHookState(true);
-        } else {
-            setHookState(false);
+        // measure and report a distance
+        if (gamepad1.x) {
+            // make the measurement (continually while button down)
+            distAttack = sensorRange2m.getDistance(DistanceUnit.CM);
         }
 
         // try an attack mode
@@ -705,6 +536,12 @@ public class BasicIterative extends OpMode
             }
         }
 
+        // set arm position
+        motorArm.setTargetPosition((int)(gamepad1.left_trigger * 600));
+
+        // set extend position
+        motorExtend.setTargetPosition((int)(gamepad1.right_trigger * 1000));
+
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         // time and getRuntime() are high precision, but they are from the start of the opmode
@@ -725,9 +562,6 @@ public class BasicIterative extends OpMode
         //   abstract to a common class (eg, Robot)
         leftDrive.setPower(0);
         rightDrive.setPower(0);
-
-        // make sure hooks are in known state
-        setHookState(false);
 
         Log.d(TAG, "stop() complete");
     }
