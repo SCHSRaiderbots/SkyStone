@@ -186,50 +186,6 @@ public class BasicIterative extends OpMode
     private int cLoop = 0;
     private double timeLoop = 0;
 
-    /**
-     * Log information about this motor
-     *
-     * @param name describes which motor
-     * @param motor specifies the motor to describe
-     */
-    private void logMotor(String name, DcMotorEx motor) {
-        Log.d(TAG, "motor characteristics for " + name);
-        // not very interesting: just says "Motor"
-        Log.d(TAG, "  device name: " + motor.getDeviceName());
-        // not very interesting: just says "Lynx"
-        Log.d(TAG, "  manufacturer: " + motor.getManufacturer());
-        Log.d(TAG, "  type: " + motor.getMotorType());
-        // reports into which port the device is plugged
-        Log.d(TAG, "  port: " + motor.getPortNumber());
-        // reports direction
-        Log.d(TAG, "  direction: " + motor.getDirection());
-        // reports current position
-        Log.d(TAG, "  position: " + motor.getCurrentPosition());
-
-        // dump information about the PIDF coefficients
-        PIDFCoefficients pidf = motor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER);
-        // 4.96, 0.496, 0, 49.6
-        Log.d(TAG, "  PIDF(rue) = " + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f);
-
-        pidf = motor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
-        // 5, 0, 0, 0
-        Log.d(TAG, "  PIDF(r2p) = " + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f);
-        // tolerance is 5 ticks.
-        Log.d(TAG, "    TargetPositionTolerance = " + motor.getTargetPositionTolerance());
-    }
-
-    private void logDeviceInfo(String name, Servo servo) {
-        Log.d(TAG, "servo information for " + name);
-        // not very interesting: just says "Servo"
-        Log.d(TAG, "  device name: " + servo.getDeviceName());
-        // not very interesting: just says "Lynx"
-        Log.d(TAG, "  manufacturer: " + servo.getManufacturer());
-        // reports into which port the servo is plugged
-        Log.d(TAG, "  port number: " + servo.getPortNumber());
-        // reports current position
-        Log.d(TAG, "  position: " + servo.getPosition());
-    }
-
     /*
      * Code to run ONCE when the driver hits INIT
      * @TODO Zero the arm position
@@ -290,8 +246,8 @@ public class BasicIterative extends OpMode
         leftDrive  = hardwareMap.get(DcMotorEx.class, "leftMotor");
         rightDrive = hardwareMap.get(DcMotorEx.class, "rightMotor");
 
-        logMotor("motorLeft", leftDrive);
-        logMotor("motorRight", rightDrive);
+        LogDevice.logMotor("motorLeft", leftDrive);
+        LogDevice.logMotor("motorRight", rightDrive);
 
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
@@ -310,7 +266,7 @@ public class BasicIterative extends OpMode
         //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //   abstract to a common class (eg, Robot)
         motorArm = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
-        logMotor("motorArm", motorArm);
+        LogDevice.logMotor("motorArm", motorArm);
         // assume it is at position 0 right now
         motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         // Maybe use DcMotor.getCurrentPosition() as initial value?
@@ -325,7 +281,7 @@ public class BasicIterative extends OpMode
 
         // The elevator motor
         motorElevator = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
-        logMotor("motorElevator", motorElevator);
+        LogDevice.logMotor("motorElevator", motorElevator);
         // assume it is at position 0 right now
         motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorElevator.setTargetPosition(0);
@@ -347,8 +303,8 @@ public class BasicIterative extends OpMode
         servoHookRight = hardwareMap.get(Servo.class, "rightHook");
 
         // dump information about the servos
-        logDeviceInfo("servoHookLeft", servoHookLeft);
-        logDeviceInfo("servoHookRight", servoHookRight);
+        LogDevice.logServo("servoHookLeft", servoHookLeft);
+        LogDevice.logServo("servoHookRight", servoHookRight);
 
         // set hooks to known state
         setHookState(false);
@@ -471,13 +427,13 @@ public class BasicIterative extends OpMode
 
             case 1:
                 // the arm is extending
-                // when it has gone far enouch, start the next step
+                // when it has gone far enough, start the next step
                 if (motorArm.getCurrentPosition() > 300) {
                     // should be able to slowly lower the elevator onto the limit switch
                     // just bring it to 0 for now
                     motorElevator.setTargetPosition(0);
 
-                    // advance the tate
+                    // advance the state
                     markovElevator++;
                 }
                 break;
