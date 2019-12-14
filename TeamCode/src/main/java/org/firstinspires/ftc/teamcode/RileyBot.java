@@ -515,22 +515,27 @@ public class RileyBot extends OpMode
             if (!bAttack) {
                 Log.d(TAG, "Attack start");
 
-                // calculate the attack distance
+                // calculate the attack distance (takes about 20 ms)
                 distAttack = sensorRange2m.getDistance(DistanceUnit.CM);
-                // should only attack if distance is reasonable
+
+                // attack if we are close
                 if (distAttack < 60) {
-                    // distance is less than 40 cm.
-                    int cEncoder = -(int)((distAttack - 5) * 0.01 / distpertickLeft);
+                    // distance is a reasonable value.
+
+                    // calculate encodeer values to move that distance
+                    int cEncoder = (int)((distAttack - 5) * 0.01 / distpertickLeft);
 
                     // set the target positions
                     leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + cEncoder);
                     rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + cEncoder);
 
+                    // use run to position
                     leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                    leftDrive.setPower(0.3);
-                    rightDrive.setPower(0.3);
+                    // collides with standard PIDF and 0.3
+                    leftDrive.setPower(0.2);
+                    rightDrive.setPower(0.2);
                 }
                 bAttack = true;
             }
@@ -540,7 +545,7 @@ public class RileyBot extends OpMode
         motorArm.setTargetPosition((int)(gamepad1.left_trigger * 600));
 
         // set extend position
-        motorExtend.setTargetPosition((int)(gamepad1.right_trigger * 1000));
+        motorExtend.setTargetPosition((int)(gamepad1.right_trigger * 1600));
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
