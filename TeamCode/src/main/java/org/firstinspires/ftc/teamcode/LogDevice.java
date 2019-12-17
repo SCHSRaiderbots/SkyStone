@@ -15,8 +15,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Used to explore DcMotorEx configuration (e.g., PIDF coefficients)
  * Used to describe Servo
  *
- * It might be better to overload some of these methods.
- * Might also make use of device hierarchy
+ * TODO: It might be better to overload some of these methods and make use of device hierarchy
  */
 class LogDevice {
     // String used for the log
@@ -82,7 +81,8 @@ class LogDevice {
      * @param pidf - the PIDF coefficients to dump
      */
     static void logPIDF(String msg, PIDFCoefficients pidf) {
-        Log.d(TAG, msg + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f);
+        Log.d(TAG, msg + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f +
+                " algorithm: " + pidf.algorithm);
     }
 
     /**

@@ -356,6 +356,14 @@ public class BasicIterative extends OpMode
         int aColor = sensorColor.alpha();
         // the hue... in unknown units
         int hColor = sensorColor.argb();
+        // A github issue says argb is not the hue but rather the alpha/R/G/B packed into bytes
+        //    .see https://github.com/FIRST-Tech-Challenge/SkyStone/issues/140
+        //   suggests
+        //     float[] hsvValues = new float[3];
+        //     Color.colorToHSV(color_sensor.argb(), hsvValues);
+        //     float hue = hsvValues[0];  // [0, 360]
+        //     float sat = hsvValues[1];  // [0, 1]
+        //     float val = hsvValues[2];  // [0, 1]
         // time to get values is about 50 microseconds
         tColor = getRuntime() - tColor;
 

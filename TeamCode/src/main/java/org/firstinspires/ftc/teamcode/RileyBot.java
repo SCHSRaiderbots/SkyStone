@@ -41,6 +41,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -214,6 +215,15 @@ public class RileyBot extends OpMode
         leftDrive  = hardwareMap.get(DcMotorEx.class, "leftMotor");
         rightDrive = hardwareMap.get(DcMotorEx.class, "rightMotor");
 
+        // 16 December 2019: PIDF coefficients could not be set to 5,0,0,0 in logcat
+        //   PIDF(rue) = 9.999847412109375, 2.9999542236328125, 0.0, 0.0
+        //   PIDF(r2p) = 9.999847412109375, 0.04998779296875, 0.0, 0.0
+        // 17 December 2019: Updated Expansion Hub firmware to 1.8.2
+        // still get an error message
+        //   eg, 2019-12-17 10:12:06.021 13370-13425/com.qualcomm.ftcrobotcontroller W/LynxMotor: not supported: setPIDFCoefficients(0, RUN_TO_POSITION, PIDFCoefficients(p=5.000000 i=0.000000 d=0.000000 f=0.000000 alg=PIDF))
+        // but report is now
+        //   PIDF(rue) = 4.9600067138671875, 0.496002197265625, 0.0, 49.600006103515625 algorithm: PIDF
+        //   PIDF(r2p) = 5.0, 0.0, 0.0, 0.0 algorithm: PIDF
         LogDevice.logMotor("motorLeft", leftDrive);
         LogDevice.logMotor("motorRight", rightDrive);
 
@@ -497,6 +507,11 @@ public class RileyBot extends OpMode
                 bAttack = false;
                 Log.d(TAG, "Attack finished");
             }
+        } else if (gamepad1.y) {
+            // try running an arc
+            // ah, there is a max speed
+            leftDrive.setVelocity(200);
+            rightDrive.setVelocity(400);
         } else {
             // Send calculated power to wheels
             leftDrive.setPower(leftPower);
@@ -529,13 +544,24 @@ public class RileyBot extends OpMode
                     leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + cEncoder);
                     rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + cEncoder);
 
+                    // TODO: set pidf globally; no reason to keep changing it unless there is a load (such as the foundation)
+                    // the standard PIDF is just 5, 0, 0, 0
+                    PIDFCoefficients pidf = new PIDFCoefficients(5.0, 0.0, 0.0, 0.0);
+
+                    leftDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidf);
+                    rightDrive.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION, pidf);
+
                     // use run to position
+                    // is there a good description of this mode somewhere?
+                    //   the documentation suggests it is not the expected PIDF algorithm
                     leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                    // collides with standard PIDF and 0.3
-                    leftDrive.setPower(0.2);
-                    rightDrive.setPower(0.2);
+                    // collides with target standard PIDF and 0.3
+                    //  want to find settings that allow max power for the approach
+                    leftDrive.setPower(1.0);
+                    rightDrive.setPower(1.0);
+
                 }
                 bAttack = true;
             }
