@@ -92,7 +92,7 @@ public class RileyBot extends OpMode
     private final double mWheelDiameterLeft = 0.090;
     private final double mWheelDiameterRight = 0.090;
     // half the distance between the wheels
-    private final double distWheel = 0.295 / 2;
+    private final double distWheel = 0.302 / 2;
 
     // derived robot parameters
     // Distance per tick
@@ -383,6 +383,10 @@ public class RileyBot extends OpMode
      * See COS495-Odometry by Chris Clark, 2011,
      * <a href="https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf">https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf</a>
      * TODO: Move to a common class (eg, Robot)
+     * for soft pads...
+     *   the wheels sink into the surface
+     * For Riley...
+     *   wheels are angled
      */
     private void updateRobotPose() {
         // several calculations are needed
@@ -494,6 +498,7 @@ public class RileyBot extends OpMode
 
         if (bAttack) {
             // monitor if done
+            // TODO: The .isBusy may never finish; that locks up the controls
             if (!leftDrive.isBusy() && !rightDrive.isBusy()) {
                 // the attack is done
                 leftDrive.setPower(0.0);
@@ -508,10 +513,19 @@ public class RileyBot extends OpMode
                 Log.d(TAG, "Attack finished");
             }
         } else if (gamepad1.y) {
-            // try running an arc
-            // ah, there is a max speed
+            // run a forward arc
+            // ah, there is a max speed. If we go above it, then the arc widens
+            //   120 RPM is 2 rev/second
+            //   for the Core Hex motor, there are 288 counts/revolution
+            //   so keep the count below 576 counts/second
+
+            // continual update of velocity command
             leftDrive.setVelocity(200);
             rightDrive.setVelocity(400);
+        } else if (gamepad1.b) {
+            // run a backward arc
+            leftDrive.setVelocity(-200);
+            rightDrive.setVelocity(-400);
         } else {
             // Send calculated power to wheels
             leftDrive.setPower(leftPower);
@@ -558,9 +572,11 @@ public class RileyBot extends OpMode
                     rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                     // collides with target standard PIDF and 0.3
+                    // with updated firmware, can run at power 1.0
+                    // dial it down for moderation
                     //  want to find settings that allow max power for the approach
-                    leftDrive.setPower(1.0);
-                    rightDrive.setPower(1.0);
+                    leftDrive.setPower(0.6);
+                    rightDrive.setPower(0.6);
 
                 }
                 bAttack = true;
