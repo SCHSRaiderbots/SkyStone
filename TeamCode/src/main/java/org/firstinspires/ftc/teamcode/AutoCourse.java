@@ -86,8 +86,14 @@ public class AutoCourse extends LinearOpMode {
     private DcMotorEx leftDrive;
     private DcMotorEx rightDrive;
 
-    private BNO055IMU   gyro    = null;                    // Additional Gyro device
+    private BNO055IMU   gyro    = null;
 
+    // this raises another issue with using Core Hex (4 ticks/rev) vs Hex Core (56 ticks/rev)
+    // The Core Hex will have 288 ticks / rev at 2 rev /second,
+    // so max ticks/sec is 576.
+    // If processing is done every 20 ms, then encoder increments < 12 ticks
+    // That makes quantization noise an issue.
+    // Using a motor with 10 times as many ticks / rev allows controlling lower speeds.
     private static final double     COUNTS_PER_MOTOR_REV    = 4 ;    // eg: TETRIX Motor Encoder
     private static final double     DRIVE_GEAR_REDUCTION    = 72.0 ;     // This is < 1.0 if geared UP
     private static final double     WHEEL_DIAMETER_INCHES   = 90.0 / 25.4 ;     // For figuring circumference
