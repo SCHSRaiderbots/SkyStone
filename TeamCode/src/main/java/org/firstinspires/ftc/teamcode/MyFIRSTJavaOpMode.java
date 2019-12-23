@@ -88,6 +88,9 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
             // this is always "false" (even with distance = 819cm (8 meters out)
             telemetry.addData("did time out", Boolean.toString(sensorTimeOfFlight.didTimeoutOccur()));
 
+            // for Android color routines, see https://developer.android.com/reference/android/graphics/Color
+            // The alpha channel is transparency, but FTC may misuse it as intensity.
+
             // color sensor status
             // color sensor is Rev v 3
             // white point 2cm away 4640 8563 4095
@@ -100,7 +103,6 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
             int gColor = sensorColor.green();
             int bColor = sensorColor.blue();
             int aColor = sensorColor.alpha();
-
             // time to get values is about 50 microseconds
             tColor = getRuntime() - tColor;
 
@@ -123,6 +125,9 @@ public class MyFIRSTJavaOpMode extends LinearOpMode {
             // red gaffer tape: 12 (red should be 0; that red is decidely orange)
             // blue gaffer tape: 230 (blue should be 240)
             Color.RGBToHSV(rCC, gCC, bCC, hsvValues);
+            //  There is also colorToHSV(colorint, float[3] hsv);
+            //  float luminance(color)
+            //  long pack(r,g,b, &opt a)
             telemetry.addData("HSV",
                     String.format(Locale.US, "%6.1f %6.3f %6.3f",
                             hsvValues[0],

@@ -172,6 +172,18 @@ public class AutoCourse extends LinearOpMode {
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
         // Put a hold after each turn
+        /*
+        leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + 10 * 72 * 4);
+        rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + 10 * 72 * 4);
+        leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftDrive.setPower(0.25);
+        rightDrive.setPower(0.25);
+
+        while(leftDrive.isBusy() || rightDrive.isBusy()) {
+            // spin wheel
+        }
+        */
         gyroDrive(DRIVE_SPEED, 48.0, 0.0);    // Drive FWD 48 inches
         gyroTurn( TURN_SPEED, -45.0);         // Turn  CCW to -45 Degrees
         gyroHold( TURN_SPEED, -45.0, 0.5);    // Hold -45 Deg heading for a 1/2 second

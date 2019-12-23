@@ -42,7 +42,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -53,8 +52,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
-import java.util.Locale;
 
 /**
  * RileyBot -- the team's 2018 Robot repurposed for testing.
@@ -161,6 +158,8 @@ public class RileyBot extends OpMode
     private int cLoop = 0;
     private double timeLoop = 0;
 
+    private double voltageBattery = 0.0;
+
     /*
      * Code to run ONCE when the driver hits INIT
      * @TODO Zero the arm position
@@ -170,7 +169,10 @@ public class RileyBot extends OpMode
         Log.d(TAG, "init()");
         telemetry.addData("Status", "Initializing");
 
-        // for I2C busses
+        // get the battery voltage
+        voltageBattery = getBatteryVoltage();
+
+        // for I2C buses
         // for glr
         //   I2C-Bus-0
         //     "imu"
@@ -289,6 +291,13 @@ public class RileyBot extends OpMode
      */
     @Override
     public void init_loop() {
+
+        // TODO: Move battery check to Robot class
+        // check robot health
+        if (voltageBattery < 11.5) {
+            telemetry.addData("Battery", "RECHARGE or REPLACE BATTERY");
+        }
+
         telemetry.addData("init", "looping; look for config info");
 
         // update statistics for loop period
