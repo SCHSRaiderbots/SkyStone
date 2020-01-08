@@ -59,11 +59,12 @@ public class SCHSDetection {
         double rightVal;
         boolean isDone = false;
 
-        while((System.currentTimeMillis() - startTime)< SCAN_BALLS_TIME) {
+        while((System.currentTimeMillis() - startTime)<= SCAN_BALLS_TIME) {
 
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
                 Log.d("Status", "SCHSObjectDetection: # Object Detected " + updatedRecognitions.size());
+                Log.d("Status", "SCHSObjectDetection: TIME: " + (System.currentTimeMillis()-startTime));
 
                 if (updatedRecognitions.size() >= 1 && updatedRecognitions.size() <= 3) {
                     for (Recognition recognition : updatedRecognitions) {
@@ -94,8 +95,8 @@ public class SCHSDetection {
                                 isDone = true;
                                 break;
                             } else {
-                                skyPos = 4;
-                                Log.d("SCHS:Tensor","Wrong left val/right val");
+                                skyPos = 2;
+                                Log.d("SCHS:Tensor","Wrong left val/right val, default to MB route");
                                 Log.d("SCHS:Tensor","leftVal:" + leftVal);
                                 Log.d("SCHS:Tensor","rightVal:" + rightVal);
                                 Log.d("SCHS:Tensor","skyPos :" + skyPos);

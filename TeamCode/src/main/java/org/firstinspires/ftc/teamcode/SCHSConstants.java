@@ -50,22 +50,26 @@ public class SCHSConstants {
 
     static final SCHSPathSeg[] pickStoneArmPath = {
             new SCHSPathSeg( LIFT, 4, 0.5, "yes"),  //lift 4 in
-            new SCHSPathSeg( ARM, 7.5, 1, "yes"), //extend 4 in, change to 7.5
-            new SCHSPathSeg(LIFT, -5,0.5,"yes")
+            new SCHSPathSeg( ARM, 9.5, 1, "yes"), //extend 4 in, change to 9.5
+            new SCHSPathSeg(LIFT, -5,0.5,"yes") //lift down 5
     };
 
-    static final SCHSPathSeg[] retreatStoneArmPath = {
-            new SCHSPathSeg(LIFT, 5, 0.5,"yes"),
-            new SCHSPathSeg(ARM, -2, 1, "yes"),
-            new SCHSPathSeg(LIFT, -4, 0.5, "yes")
+    static final SCHSPathSeg[] retreatStoneArmPath = { //
+            new SCHSPathSeg(LIFT, 5, 0.5,"yes"), //lift 5 up
+            new SCHSPathSeg(ARM, -2, 1, "yes"), //extend 2 back
+            //new SCHSPathSeg(LIFT, -4, 0.5, "yes") //lift down 4, lowest height
+    };
+
+    static final SCHSPathSeg[] stoneDownPath = {
+            new SCHSPathSeg(LIFT, -4, 0.5, "yes") //lift down 4, lowest height
     };
 
     static final SCHSPathSeg[] extendOutPath = {
-            new SCHSPathSeg(ARM, 6, 1,"yes"),
+            new SCHSPathSeg(ARM, 6, 1,"yes"), //extend out 6
     };
 
     static final SCHSPathSeg[] extendInPath = {
-            new SCHSPathSeg(ARM, -6, 1,"yes"),
+            new SCHSPathSeg(ARM, -6, 1,"yes"), //extend in 6
     };
 
     static final SCHSPathSeg[] testPath2 = {
@@ -76,6 +80,10 @@ public class SCHSConstants {
     static final SCHSPathSeg[] testPathExtend = {
             new SCHSPathSeg( LIFT, 18, 0.5, 1),  //lift 2 in
             //new SCHSPathSeg( ARM, 4, 0.25, 1),  //extend 2 in
+    };
+
+    static final SCHSPathSeg[] testPathRun = {
+            new SCHSPathSeg(-18, -18, POWER_FULL)
     };
 
     static final SCHSPathSeg[] startBotPath = {
@@ -90,8 +98,8 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] retreatLBPath= {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, POWER_FULL),  // right 90
-            new SCHSPathSeg( 20, 20, POWER_FULL), //forward 20
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.75),  // right 90
+            new SCHSPathSeg( 20, 20, 0.9), //forward 20
     };
 
     static final SCHSPathSeg[] goToMBPath = {
@@ -99,34 +107,34 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] retreatMBPath = {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, POWER_FULL),  // right 90
-            new SCHSPathSeg( 12, 12, POWER_FULL), //forward 12
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.75),  // right 90
+            new SCHSPathSeg( 12, 12, 0.9), //forward 12
     };
 
     static final SCHSPathSeg[] goToRBPath = {
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, POWER_FULL), //right 90
             new SCHSPathSeg( 10, 10, POWER_FULL), //forward 8, change to 10
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, POWER_FULL), //left 90
-            new SCHSPathSeg( 9.5, 9.5, POWER_FULL), //forward 9, change to 9.5
+            new SCHSPathSeg( 7, 7, POWER_FULL), //forward 9, change to 7
     };
 
     static final SCHSPathSeg[] retreatRBPath = {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, POWER_FULL),  // right 90
-            new SCHSPathSeg( 4, 4, POWER_FULL), //forward 4
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.75),  // right 90
+            new SCHSPathSeg( 4, 4, 0.9), //forward 4
     };
 
     static final SCHSPathSeg[] deliverBlockPath = {
-            //new SCHSPathSeg( 74.75, 74.75, POWER_FULL), //forward 74.75, commenting for testing
-            new SCHSPathSeg( 11, 11, POWER_FULL), //test forward 13, change to 11
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, POWER_FULL), //left 90
+            new SCHSPathSeg( 74.75, 74.75, POWER_FULL), //forward 74.75, commenting for testing
+            //new SCHSPathSeg( 11, 11, POWER_FULL), //test forward 13, change to 11
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.75), //left 90
             new SCHSPathSeg( 6, 6, POWER_FULL), //forward 6
     };
 
     static final SCHSPathSeg[] backToBlocksPath = {
             new SCHSPathSeg( -6, -6, POWER_FULL), //backward 6
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, POWER_FULL), //right 90
-            //new SCHSPathSeg( -98.75, -98.75, POWER_FULL), //backward 98.75, commented for testing
-            new SCHSPathSeg( -37, -37, POWER_FULL), //backward
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.75), //right 90
+            new SCHSPathSeg( -98.75, -98.75, POWER_FULL), //backward 98.75, commented for testing
+            //new SCHSPathSeg( -37, -37, POWER_FULL), //backward
     };
 
     static final SCHSPathSeg[] back2LBPath = {
@@ -162,8 +170,8 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] deliver2BlockPath = {
-            //new SCHSPathSeg( 98.75, 98.75, POWER_FULL), //forward 98.75, commented for testing
-            new SCHSPathSeg( 37, 37, POWER_FULL), //test forward 36
+            new SCHSPathSeg( 98.75, 98.75, POWER_FULL), //forward 98.75, commented for testing
+            //new SCHSPathSeg( 37, 37, POWER_FULL), //test forward 36
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, POWER_FULL), //left 90
             new SCHSPathSeg( 6, 6, POWER_FULL), //forward 6
     };
@@ -177,7 +185,7 @@ public class SCHSConstants {
     static final String TFOD_MODEL_ASSET = "Skystone.tflite";
     static final String LABEL_FIRST_ELEMENT = "Stone";
     static final String LABEL_SECOND_ELEMENT = "Skystone";
-    static final long SCAN_BALLS_TIME = 5000;
+    static final long SCAN_BALLS_TIME = 3000;
 
     static final double POS_3_LEFT_MIN = 340;
     static final double POS_3_LEFT_MAX = 480;

@@ -35,6 +35,7 @@ public class SCHSController extends OpMode {
         STATE_STONES_GO_TO_SKYSTONE,
         STATE_STONES_PICK_STONE,
         STATE_STONES_RETREAT,
+        STATE_STONES_ARM_DOWN,
         STATE_STONES_DELIVER,
         STATE_STONES_RETURN_TO_STONES,
         STATE_STONES_DROP_STONE,
@@ -53,6 +54,7 @@ public class SCHSController extends OpMode {
         STATE_FD_TEST,
         STATE_EXTEND_TEST,
         STATE_TEST_INITIAL,
+        STATE_TEST_1_5,
         STATE_TEST_2_INITIAL,
 
         STATE_STOP,
@@ -93,8 +95,8 @@ public class SCHSController extends OpMode {
         rileyArm.setArmPower(0, ARM);
         //rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
         runtime.reset();
-        newState(State.STATE_STONES_INITIAL);
-        //newState(State.STATE_TEST_INITIAL);
+        //newState(State.STATE_STONES_INITIAL);
+        newState(State.STATE_TEST_INITIAL);
     }
 
     @Override
@@ -137,22 +139,36 @@ public class SCHSController extends OpMode {
                     //rileyArm.closeServo();
                     rileyArm.closeServo(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
-                    //sleep(2000);
+                    sleep(1000);
                     //rileyArm.moveServoNew(0.8, SERVO_OPEN);
                     //rileyArm.moveServo(SERVO_OPEN);
                     //rileyArm.moveServoNew(0.5, SERVO_CLOSE);
                     //rileyArm.moveServoNew(0, SERVO_OPEN);
-                    newState(State.STATE_TEST_2_INITIAL);
+                    newState(State.STATE_TEST_1_5);
                 }
                 break;
 
+            case STATE_TEST_1_5:
+                if (rileyChassis.encodersAtZero()) {
+                    startPath(testPathRun);
+                    newState(State.STATE_TEST_2_INITIAL);
+                }
+
+
             case STATE_TEST_2_INITIAL:
-                rileyArm.openServo(rileyArm.rightHook);
-                rileyArm.closeServo(rileyArm.leftHook);
-                sleep(1000);
-                //rileyArm.moveServoNew(0.002, SERVO_CLOSE);
-                sleep(1000);
-                newState(State.STATE_STOP);
+                if (pathComplete(DRIVE, false))
+                {
+                    rileyArm.openServo(rileyArm.rightHook);
+                    rileyArm.closeServo(rileyArm.leftHook);
+                    sleep(1000);
+                    //rileyArm.moveServoNew(0.002, SERVO_CLOSE);
+                    //sleep(1000);
+                    newState(State.STATE_STOP);
+
+                }
+                else
+                {
+                }
                 break;
 
             case STATE_FD_GO_TO_FOUNDATION:
@@ -238,7 +254,7 @@ public class SCHSController extends OpMode {
                 if (pathComplete(DRIVE, false)){
                     Log.d("SCHS", "inside STATES_STONES_PICK_STONE");
                     telemetry.addLine("inside STATES_STONES_PICK_STONE");
-                    //startPath(pickStoneArmPath);
+                    startPath(pickStoneArmPath);
                     newState(State.STATE_STONES_CLOSE_STONE);
                     //pick up blocks
                 } else {
@@ -246,19 +262,20 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_CLOSE_STONE:
-                //if (pathComplete(LIFT, true)){
+                if (pathComplete(LIFT, true)){
                     Log.d("SCHS", "inside STATES_STONES_CLOSE_STONE");
                     //rileyArm.openServo(rileyArm.grabServo);
                     //sleep(2000);
                     newState(State.STATE_STONES_RETRIEVE_STONE);
-                //} else {
-                //}
+                } else {
+                }
                 break;
 
             case STATE_STONES_RETRIEVE_STONE:
-                //startPath(retreatStoneArmPath);
+                startPath(retreatStoneArmPath);
                 Log.d("SCHS:", "inside STATES_STONES_RETRIEVE_STONE");
-                if (!isRoundTwo){
+                newState(State.STATE_STONES_ARM_DOWN);
+                /*if (!isRoundTwo){
                     Log.d("SCHS:", "STATES_STONES_RETRIEVE_STONE, round one");
                     telemetry.addLine("STATES_STONES_RETRIEVE_STONE, round one");
                     newState((State.STATE_STONES_RETREAT));
@@ -267,11 +284,28 @@ public class SCHSController extends OpMode {
                     telemetry.addLine("STATES_STONES_RETRIEVE_STONE, round 2");
                     newState(State.STATE_STONES_RETREAT_SECOND);
                     //newState(State.STATE_STOP);
+                }*/
+                break;
+
+            case STATE_STONES_ARM_DOWN:
+                if (pathComplete(LIFT, true)) {
+                    startPath(stoneDownPath);
+                    if (!isRoundTwo){
+                        Log.d("SCHS:", "STATES_STONES_RETRIEVE_STONE, round one");
+                        telemetry.addLine("STATES_STONES_RETRIEVE_STONE, round one");
+                        newState((State.STATE_STONES_RETREAT));
+                    } else {
+                        Log.d("SCHS:", "STATES_STONES_RETRIEVE_STONE, round 2");
+                        telemetry.addLine("STATES_STONES_RETRIEVE_STONE, round 2");
+                        newState(State.STATE_STONES_RETREAT_SECOND);
+                    }
+                } else {
+
                 }
                 break;
 
             case STATE_STONES_RETREAT:
-                //if (pathComplete(LIFT, true)){
+                if (pathComplete(LIFT, false)){
                 //if (pathComplete(DRIVE, false)) {
                     Log.d("SCHS","inside STATES_STONES_RETREAT");
                     telemetry.addLine("STATES_STONES_RETREAT");
@@ -292,8 +326,8 @@ public class SCHSController extends OpMode {
                         telemetry.addData("STATE_STONES_ RETREAT: AAAAAAAAHHHH! WRONG SKY POS! skypos:", skyPos);
                     }
                     newState((State.STATE_STONES_DELIVER));
-                //} else {
-                //}
+                } else {
+                }
                 break;
 
             case STATE_STONES_DELIVER:
@@ -311,15 +345,15 @@ public class SCHSController extends OpMode {
                     telemetry.addLine("STATES_STONES_DROP_STONE");
                     //drop blocks
                     if (!isRoundTwo){
-                        //rileyArm.openServo(rileyArm.grabServo);
-                        //sleep(2000);
+                        rileyArm.openServo(rileyArm.grabServo);
+                        sleep(2000);
                         Log.d("SCHS","inside STATES_STONES_DROP_STONE, round 1");
                         telemetry.addLine("STATES_STONES_DROP_STONE, round 1");
                         newState((State.STATE_STONES_RETURN_TO_STONES));
                     } else {
                         Log.d("SCHS","inside STATES_STONES_DROP_STONE, round 2");
                         telemetry.addLine("STATES_STONES_DROP_STONE, round 2");
-                        //startPath(extendOutPath);
+                        startPath(extendOutPath);
                         newState(State.STATE_STONES_SECOND_DROP);
                     }
                 } else {
@@ -327,16 +361,16 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_SECOND_DROP:
-                //if (pathComplete(ARM, false)){
-                    //rileyArm.openServo(rileyArm.grabServo);
-                    //sleep(2000);
+                if (pathComplete(ARM, false)){
+                    rileyArm.openServo(rileyArm.grabServo);
+                    sleep(2000);
                     newState(State.STATE_STONES_EXTEND_IN);
-                //} else {
-                //}
+                } else {
+                }
                 break;
 
             case STATE_STONES_EXTEND_IN:
-                //startPath(extendInPath);
+                startPath(extendInPath);
                 newState(State.STATE_STONES_BACK_FD);
                 break;
 
@@ -371,7 +405,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT_SECOND:
-                //if (pathComplete(LIFT, true)){
+                if (pathComplete(LIFT, false)){
                     telemetry.addLine("STATES_STONES_RETREAT_SECOND");
                     if (skyPos == LEFT_POS) {
                         Log.d("SCHS: RETREAT_SECOND", "left pos");
@@ -389,8 +423,8 @@ public class SCHSController extends OpMode {
                         telemetry.addData("STATE_STONES_ RETREAT_SECOND: AAAAAAAAHHHH! WRONG SKY POS! skypos:", skyPos);
                     }
                     newState((State.STATE_STONES_DELIVER_SECOND));
-                //} else {
-                //}
+                } else {
+                }
                 break;
 
             case STATE_STONES_DELIVER_SECOND:
@@ -403,13 +437,13 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_BACK_FD:
-                //if (pathComplete(ARM, false)){
+                if (pathComplete(ARM, false)){
                     Log.d("SCHS", "inside STATE_STONES_BACK_FD");
                     telemetry.addLine("STATES_STONES_BACK_FD");
                     startPath(backFromFDPath);
                     newState((State.STATE_STOP));
-                //} else {
-                //}
+                } else {
+                }
                 break;
 
             case STATE_STOP:
