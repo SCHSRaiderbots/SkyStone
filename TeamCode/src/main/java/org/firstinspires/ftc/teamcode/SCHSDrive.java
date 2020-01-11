@@ -19,7 +19,7 @@ public class SCHSDrive {
 
     private SCHSDcMotor driveMotors;
     private DcMotor motorLeft;
-    private DcMotor motorRight;
+    protected DcMotor motorRight;
 
     private int leftEncoderTarget;
     private int rightEncoderTarget;

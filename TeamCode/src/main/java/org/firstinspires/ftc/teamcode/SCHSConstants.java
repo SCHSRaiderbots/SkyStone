@@ -51,7 +51,7 @@ public class SCHSConstants {
     static final SCHSPathSeg[] pickStoneArmPath = {
             new SCHSPathSeg( LIFT, 4, 0.5, "yes"),  //lift 4 in
             new SCHSPathSeg( ARM, 9.5, 1, "yes"), //extend 4 in, change to 9.5
-            new SCHSPathSeg(LIFT, -5,0.5,"yes") //lift down 5
+            new SCHSPathSeg(LIFT, -5.5,0.5,"yes") //lift down 5
     };
 
     static final SCHSPathSeg[] retreatStoneArmPath = { //
@@ -61,7 +61,7 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
-            new SCHSPathSeg(LIFT, -4, 0.5, "yes") //lift down 4, lowest height
+            new SCHSPathSeg(LIFT, -4.5, 0.5, "yes") //lift down 4, change to 4.5, lowest height
     };
 
     static final SCHSPathSeg[] extendOutPath = {
@@ -83,7 +83,8 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] testPathRun = {
-            new SCHSPathSeg(-18, -18, POWER_FULL)
+            //new SCHSPathSeg(-18, -18, POWER_FULL)
+            new SCHSPathSeg(98, 98, 0.9)
     };
 
     static final SCHSPathSeg[] startBotPath = {
