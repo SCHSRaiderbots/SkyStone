@@ -187,6 +187,9 @@ public class BasicIterative extends OpMode
     private int cLoop = 0;
     private double timeLoop = 0;
 
+    // TODO merge more of SCHSDrive
+    private SCHSDrive schsdrive = null;
+
     /*
      * Code to run ONCE when the driver hits INIT
      * @TODO Zero the arm position
@@ -195,6 +198,9 @@ public class BasicIterative extends OpMode
     public void init() {
         Log.d(TAG, "init()");
         telemetry.addData("Status", "Initializing");
+
+        schsdrive = new SCHSDrive();
+        schsdrive.initialize(hardwareMap);
 
         // for I2C busses
         // for glr
@@ -332,6 +338,8 @@ public class BasicIterative extends OpMode
     @Override
     public void init_loop() {
         telemetry.addData("init", "looping; look for config info");
+
+        schsdrive.init_loop();
 
         // update statistics for loop period
         // TODO why is this loop taking 100 ms?
@@ -476,6 +484,8 @@ public class BasicIterative extends OpMode
         //   In other words, I think Opmode supplies a reasonable time.
         runtime.reset();
 
+        schsdrive.start();
+
         // reset timer statistics
         cLoop = 0;
         timeLoop = time;
@@ -564,8 +574,18 @@ public class BasicIterative extends OpMode
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
+        schsdrive.loop();
+
         // update the robot pose
         updateRobotPose();
+
+        // change radians to degrees
+        telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
+        telemetry.addData("pose", "%8.2f %8.2f %8.2f",
+                schsdrive.xPose,
+                schsdrive.yPose,
+                schsdrive.thetaPose * 180 / Math.PI);
+
 
         // query the imu
         // Acquiring the angles is relatively expensive; we don't want
@@ -730,6 +750,8 @@ public class BasicIterative extends OpMode
     @Override
     public void stop() {
         Log.d(TAG, "stop()");
+
+        schsdrive.stop();
 
         // turn off the drive motors
         //   abstract to a common class (eg, Robot)
