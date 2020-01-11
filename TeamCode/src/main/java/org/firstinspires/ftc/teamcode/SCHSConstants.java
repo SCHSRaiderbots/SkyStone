@@ -20,9 +20,54 @@ public class SCHSConstants {
     static final double INCREMENT = 0.01;
     static final int CYCLE_MS = 50;
 
+
+    // robot parameters
+    // abstract to a class (eg, Robot) where static parameters describe the robot
+    // the wheel diameters
+    private final double mWheelDiameterLeft = 0.090;
+    private final double mWheelDiameterRight = 0.090;
+    // half the distance between the wheels
+    private final double distWheel = 0.305 / 2;
+
+    // derived robot parameters
+    // Distance per tick
+    //   leaving the units vague at this point
+    // Currently using direct drive with a CoreHex motor
+    // The CoreHex motor has 4 ticks per revolution and is geared down by 72
+    //   those attributes should be in the DcMotor class
+    // The HD Hex Motor has 56 ticks per revolution
+    //    the 20:1 is geared 20 to 1
+    //    the 40:1 is geared 40 to 1
+    // The HD Hex Motor is also used with the Ultraplanetary gearbox
+    //    the 3:1 cartridge is actually 84:29 (2.9...)
+    //    the 4:1 cartridge is actually 76:21 (3.6...)
+    //    the 5:1 cartridge is actually 68:13 (5.2...)
+    static final double HEX_HD_RATIO_3_1 = 84.0/29.0;
+    static final double HEX_HD_RATIO_4_1 = 76.0/21.0;
+    static final double HEX_HD_RATIO_5_1 = 68.0/13.0;
+    static final double COUNTS_PER_REV = 56.0 * HEX_HD_RATIO_4_1 * HEX_HD_RATIO_5_1;
+
+
+    // The DcMotor class can allow some help
+    //   MotorConfigurationType .getMotorType()
+    //     MotorConfigurationType#getUnspecifiedMotorType()
+    //       do not know where the enum is
+    //   java.lang.String .getDeviceName() (not the config name)
+    //   HardwareDevice.Manufacturer .getManufacturer()
+    //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
+    //       possibly uninteresting
+    //   DcMotorEx has .getVelocity(AngleUnit unit), so it presumably knows the ticks per revolution
+    //     however, there is not a .getCurrentPostion(AngleUnit unit)
+    private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (4 * 72);
+    private final double distpertickRight = mWheelDiameterRight * Math.PI / (4 * 72);
+
+
+
+
     //245 counts ~ 90 degree turn
 
-    static final double COUNTS_PER_INCH = (288)/(3.54331*(Math.PI));
+    //static final double COUNTS_PER_INCH = (288)/(3.54331*(Math.PI)); //for core hex motor
+    static final double COUNTS_PER_INCH = (COUNTS_PER_REV)/(3.54331*(Math.PI));
     static final double ARM_FACTOR = 80;
     static final double LIFT_FACTOR = 139.77;
     static final double TURN_VALUE_90 = 245/(COUNTS_PER_INCH);
