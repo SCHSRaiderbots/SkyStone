@@ -39,6 +39,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -277,6 +278,7 @@ public class BasicIterative extends OpMode
         motorElevator = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
         LogDevice.logMotor("motorElevator", motorElevator);
         // assume it is at position 0 right now
+        motorElevator.setDirection(DcMotorSimple.Direction.REVERSE);
         motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorElevator.setTargetPosition(0);
         motorElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -677,7 +679,7 @@ public class BasicIterative extends OpMode
         // Thus 500 counts should be about 5 inches.
         // Elevator is continuous, so height is 1:1.
         // So 500 counts raises elevator about 5 inches.
-        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 1500));
+        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 2500));
 
         // control the hooks
         if (gamepad1.left_bumper) {
@@ -697,7 +699,7 @@ public class BasicIterative extends OpMode
                 // should only attack if distance is reasonable
                 if (distAttack < 60) {
                     // distance is less than 40 cm.
-                    int cEncoder = -(int)((distAttack - 5) * 0.01 / distpertickLeft);
+                    int cEncoder = (int)((distAttack - 5) * 0.01 / distpertickLeft);
 
                     // set the target positions
                     leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + cEncoder);

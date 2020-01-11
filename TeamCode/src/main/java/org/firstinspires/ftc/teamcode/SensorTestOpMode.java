@@ -21,7 +21,7 @@ import java.util.Locale;
  * TODO: Move code to common class (eg, Robot) and specific Opmodes; Lousy name for class
  */
 @TeleOp(name="SensorTest", group="Test")
-public class MyFIRSTJavaOpMode extends LinearOpMode {
+public class SensorTestOpMode extends LinearOpMode {
     private Gyroscope imu;
     private DcMotor motorLeft;
     private DigitalChannel digitalTouch;

@@ -169,7 +169,11 @@ public class RileyBot extends OpMode
         Log.d(TAG, "init()");
         telemetry.addData("Status", "Initializing");
 
+        // TODO: Check the firmware revisions on any Control Hub
+        // I think it should be 1.8.3
+
         // get the battery voltage
+        // TODO: Better way to do this
         voltageBattery = getBatteryVoltage();
 
         // for I2C buses
@@ -494,9 +498,15 @@ public class RileyBot extends OpMode
         //     -x  0  +x
         //        +y
         //       need to check that x values are not reversed
-        // TOPDO: In Odemetry, angles are reported negative turning right is positive
         double drive = -gamepad1.left_stick_y;
         double turn  =  gamepad1.right_stick_x;
+
+        // adjust control
+        // drive = drive * Math.abs(drive);
+        // turn = turn * Math.abs(turn);
+
+        // TODO: clipping is the wrong thing to do here.
+        // Do I want to control velocity and clip to some max velocity?
         leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
         rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
 
@@ -529,12 +539,12 @@ public class RileyBot extends OpMode
             //   so keep the count below 576 counts/second
 
             // continual update of velocity command
-            leftDrive.setVelocity(200);
-            rightDrive.setVelocity(400);
+            leftDrive.setVelocity(100);
+            rightDrive.setVelocity(200);
         } else if (gamepad1.b) {
             // run a backward arc
-            leftDrive.setVelocity(-200);
-            rightDrive.setVelocity(-400);
+            leftDrive.setVelocity(-100);
+            rightDrive.setVelocity(-200);
         } else {
             // Send calculated power to wheels
             leftDrive.setPower(leftPower);
