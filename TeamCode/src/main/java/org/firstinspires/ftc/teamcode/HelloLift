@@ -1,0 +1,63 @@
+package com.example.schslift;
+
+import androidx.appcompat.app.AppCompatActivity;
+import com.qualcomm.robotcore.hardware;
+
+import android.os.Bundle;
+
+public class TestLift  {
+    private SCHSMotor LiftMotor;
+
+    public void initialize(HardwareMap hardwareMap) {
+        LiftMotor = hardwareMap.get(DcMotor.class, "LiftMotor");
+
+
+    public void setSpeed(int speed){
+        this.speed = speed ;
+    }
+
+    public void setPower(double power){
+        this.power = power;
+    }
+
+    public void extendLift(){
+        DCMotorSimple.Direction FORWARD;
+
+        // extend lift to the max
+    }
+
+    public void retractLift(){
+        DCMotorSimple.Direction REVERSE;
+
+        // retract lift to the max
+    }
+
+
+    public void moveLift(boolean direction, double power){
+
+        if (direction == true){
+            DCMotorSimple.Direction FORWARD;
+            log.d("Status: Lift is extending with " + (power) + " power");
+
+        }
+
+        if (direction == false){
+            DCMotorSimple.Direction REVERSE;
+            log.d("Status: Lift is retracting with " + (power) + " power");
+            DCMotor.sleep(sec);
+        }
+        //extends or retracts lift a certain amount
+
+    }
+
+
+
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+    }
+}
