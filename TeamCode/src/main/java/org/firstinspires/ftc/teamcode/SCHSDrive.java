@@ -5,9 +5,12 @@ import android.util.Log;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -16,56 +19,56 @@ import static com.qualcomm.robotcore.hardware.DcMotor.*;
 import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
 
 public class SCHSDrive {
+    // the hardware map
+    HardwareMap hardwareMap;
 
-    // TODO: merge code from SCHSDrive
+    // information to report home
+    Telemetry telemetry = null;
+
+    // battery voltage; used to warn of a low battery
+    double voltageBattery = 0.0;
+
+    // TODO: merge code from SCHSDcMotor
     private SCHSDcMotor driveMotors;
-    private DcMotor motorLeft;
-    protected DcMotor motorRight;
+    protected DcMotorEx motorLeft;
+    protected DcMotorEx motorRight;
 
     // robot parameters
-    // abstract to a class (eg, Robot) where static parameters describe the robot
-    // the wheel diameters
-    private final double mWheelDiameterLeft = 0.090;
-    private final double mWheelDiameterRight = 0.090;
+    // the wheel diameters are 90mm nominal
+    private double mWheelDiameterLeft = 0.090;
+    private double mWheelDiameterRight = 0.090;
+    
     // half the distance between the wheels
-    private final double distWheel = 0.305 / 2;
+    // TODO get the new wheel separation
+    private double distWheel = 0.305 / 2;
 
-    // derived robot parameters
-    // Distance per tick
-    //   leaving the units vague at this point
-    // Currently using direct drive with a CoreHex motor
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
     //   those attributes should be in the DcMotor class
     // The HD Hex Motor has 56 ticks per revolution
     //    the 20:1 is geared 20 to 1
     //    the 40:1 is geared 40 to 1
-    // The HD Hex Motor is also used with the Ultraplanetary gearbox
+    // The HD Hex Motor is also used with the Ultraplanetary cartridges
     //    the 3:1 cartridge is actually 84:29 (2.9...)
     //    the 4:1 cartridge is actually 76:21 (3.6...)
     //    the 5:1 cartridge is actually 68:13 (5.2...)
-    private final double HD_HEX_3_1 = 84.0/29.0;
-    private final double HD_HEX_4_1 = 76.0/21.0;
-    private final double HD_HEX_5_1 = 68.0/13.0;
+    private final double HD_HEX_GEAR_CART_3_1 = 84.0/29.0;
+    private final double HD_HEX_GEAR_CART_4_1 = 76.0/21.0;
+    private final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
 
-    private final double ticksPerRev = 56 * HD_HEX_5_1 * HD_HEX_4_1;
+    // calculate the wheel's ticks per revolution
+    double ticksPerWheelRev = 56 * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
 
-    // The DcMotor class can allow some help
-    //   MotorConfigurationType .getMotorType()
-    //     MotorConfigurationType#getUnspecifiedMotorType()
-    //       do not know where the enum is
-    //   java.lang.String .getDeviceName() (not the config name)
-    //   HardwareDevice.Manufacturer .getManufacturer()
-    //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
-    //       possibly uninteresting
-    //   DcMotorEx has .getVelocity(AngleUnit unit), so it presumably knows the ticks per revolution
-    //     however, there is not a .getCurrentPostion(AngleUnit unit)
-    private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerRev);
-    private final double distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerRev);
+    // derived robot parameters
+    // Distance per tick
+    //   leaving the units vague at this point
+
+    // the distance per tick for each wheel = circumference / ticks
+    private double distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
+    private double distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
 
     // the robot pose
-    // abstract to a class (eg, Robot) with static parameters
-    //   that class can have .updatePose(), .getPose()
-    //   such a step may allow the Pose to be carried over from Autonomous to Teleop
+    //   can have .updatePose(), .getPose()
+    //   using static would allow the Pose to be carried over from Autonomous to Teleop
     //     Autonomous can set the initial pose
     //     When Teleop starts, it can use the existing Pose
     //        If there was no teleop, then initial Pose is random
@@ -75,41 +78,110 @@ public class SCHSDrive {
     double thetaPose = 0.0;
 
     // encoder counts
-    // abstract to a class coupled to the drive motors (eg, Robot) as static
     // There's a subtle issue here
     //    If robot is not moving, it is OK to set these values to the current encoder counts
     //    That could always happen during .init()
     private int cEncoderLeft;
     private int cEncoderRight;
 
+    // Anisha's variables
     private int leftEncoderTarget;
     private int rightEncoderTarget;
 
     /**
      * Called during an OpMode init() routine.
      * gets the drive motors setup
-     * @param hardwareMap
+     * @param hdmap the FTC hardwareMap of devices
+     * @param telem
      */
-    public void initialize(HardwareMap hardwareMap) {
+    public void init(HardwareMap hdmap, Telemetry telem) {
+        // save the hardware map for future reference
+        hardwareMap = hdmap;
+
+        // save telemetry for future reference (may be null)
+        telemetry = telem;
+
+        // TODO: Check the firmware revisions on all Expansion Hubs
+        //   should be 1.8.3
+
+        // get the battery voltage
+        // TODO: Better way to do this
+        voltageBattery = getBatteryVoltage();
+
+        // find the drive motors
+        // for SCHSConfig
+        //    0: rightMotor
+        //    1: leftMotor
+        //    2: armExtenderMotor
+        //    3: elevatorMotor
         driveMotors = new SCHSDcMotor();
         driveMotors.initialize(hardwareMap);
 
+        // get local copies of the drive motors
         motorLeft = driveMotors.getMotorleft();
         motorRight = driveMotors.getMotorRight();
 
+        // 16 December 2019: PIDF coefficients could not be set to 5,0,0,0 in logcat
+        //   PIDF(rue) = 9.999847412109375, 2.9999542236328125, 0.0, 0.0
+        //   PIDF(r2p) = 9.999847412109375, 0.04998779296875, 0.0, 0.0
+        // 17 December 2019: Updated Expansion Hub firmware to 1.8.2
+        // still get an error message
+        //   eg, 2019-12-17 10:12:06.021 13370-13425/com.qualcomm.ftcrobotcontroller W/LynxMotor: not supported: setPIDFCoefficients(0, RUN_TO_POSITION, PIDFCoefficients(p=5.000000 i=0.000000 d=0.000000 f=0.000000 alg=PIDF))
+        // but report is now
+        //   PIDF(rue) = 4.9600067138671875, 0.496002197265625, 0.0, 49.600006103515625 algorithm: PIDF
+        //   PIDF(r2p) = 5.0, 0.0, 0.0, 0.0 algorithm: PIDF
+        LogDevice.logMotor("motorLeft", motorLeft);
+        LogDevice.logMotor("motorRight", motorRight);
+
+        // remember the current encoder counts to do odometry
+        // DcMotor Direction also affects the encoder counts
+        // remember the current encoder counts
+        // Should always do this (even if not resetting the Pose)
         cEncoderLeft = motorLeft.getCurrentPosition();
         cEncoderRight = motorRight.getCurrentPosition();
+    }
+
+    /**
+     * old name for routine
+     * @deprecated
+     * @param hardwareMap
+     */
+    public void initialize(HardwareMap hardwareMap) {
+        init(hardwareMap, null);
+    }
+
+    /**
+     * Want to use this code with last year's robot, but it has different parameters
+     */
+    public void setRobot2019() {
+        // set the wheel diameters
+        mWheelDiameterLeft = 0.090;
+        mWheelDiameterRight = 0.090;
+
+        // set the wheel half separation
+        distWheel =  0.305 / 2;
+
+        // ticks per wheel revolution
+        // CoreHex motor...
+        ticksPerWheelRev = 4 * 72;
+
+        // derived values
+        distpertickLeft = mWheelDiameterLeft * Math.PI / (ticksPerWheelRev);
+        distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
     }
 
     /**
      * An OpMode should call this during its init_loop() method
      */
     public void init_loop() {
-        // TODO: complain if battery voltage is low
+        // check robot health
+        if (telemetry != null && voltageBattery < 11.5) {
+            telemetry.addData("Battery", "RECHARGE or REPLACE BATTERY");
+        }
     }
 
     /**
-     * An OpMode should call this during its stop() method
+     * An OpMode should call this during its start() method
      */
     public void start() {
 
@@ -119,7 +191,7 @@ public class SCHSDrive {
      * An OpMode should call this during its loop() method
      */
     public void loop() {
-        // Update position
+        // Update the robot's position
         updateRobotPose();
     }
 
@@ -127,7 +199,9 @@ public class SCHSDrive {
      * An OpMode should call this during its stop() method
      */
     public void stop() {
-
+        // turn off the drive motors
+        motorLeft.setPower(0);
+        motorRight.setPower(0);
     }
 
     public void resetEncoders(){
@@ -223,6 +297,26 @@ public class SCHSDrive {
     }
 
     /**
+     * Calculate the number of encoderticks to move the robot.
+     * Uses just the left wheel
+     * @param mDist distance in meters
+     * @return encoder ticks to travel that distance
+     */
+    int ticksFromMeters(double mDist) {
+        return (int)(mDist / distpertickLeft);
+    }
+
+    /**
+     * Calculate the number of encoderticks to move the robot.
+     * Uses just the left wheel
+     * @param inDist distance in inches
+     * @return encoder ticks to travel that distance
+     */
+    int ticksFromInches(double inDist) {
+        return (int)(inDist * 0.0254 / distpertickLeft);
+    }
+
+    /**
      * Update the robot pose.
      * Uses small angle approximations.
      * See COS495-Odometry by Chris Clark, 2011,
@@ -248,6 +342,7 @@ public class SCHSDrive {
         cEncoderLeft = cLeft;
         cEncoderRight = cRight;
 
+        // calculate the distance the wheels moved
         double distL = dsLeft * distpertickLeft;
         double distR = dsRight * distpertickRight;
 
@@ -271,6 +366,19 @@ public class SCHSDrive {
         // telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
     }
 
+    // Read the battery voltage
+    // Put this is the robot class
+    // put the sensor in a class variable
+    double getBatteryVoltage() {
+        double result = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                result = Math.min(result, voltage);
+            }
+        }
+        return result;
+    }
 
 }
 

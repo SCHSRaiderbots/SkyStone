@@ -32,7 +32,6 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -77,7 +76,7 @@ public class BasicIterative extends OpMode
     // Declare OpMode members.
 
     // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html
-    private static final String TAG = "Testbot";
+    private static final String TAG = "testbot";
     // so use Log.d(TAG, <string>) to log debugging messages
 
     // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
@@ -113,60 +112,6 @@ public class BasicIterative extends OpMode
     // abstract to a class (eg, Robot) where attributes can be static
     private Servo servoGrab = null;
 
-    // robot parameters
-    // abstract to a class (eg, Robot) where static parameters describe the robot
-    // the wheel diameters
-    private final double mWheelDiameterLeft = 0.090;
-    private final double mWheelDiameterRight = 0.090;
-    // half the distance between the wheels
-    private final double distWheel = 0.305 / 2;
-
-    // derived robot parameters
-    // Distance per tick
-    //   leaving the units vague at this point
-    // Currently using direct drive with a CoreHex motor
-    // The CoreHex motor has 4 ticks per revolution and is geared down by 72
-    //   those attributes should be in the DcMotor class
-    // The HD Hex Motor has 56 ticks per revolution
-    //    the 20:1 is geared 20 to 1
-    //    the 40:1 is geared 40 to 1
-    // The HD Hex Motor is also used with the Ultraplanetary gearbox
-    //    the 3:1 cartridge is actually 84:29 (2.9...)
-    //    the 4:1 cartridge is actually 76:21 (3.6...)
-    //    the 5:1 cartridge is actually 68:13 (5.2...)
-    // The DcMotor class can allow some help
-    //   MotorConfigurationType .getMotorType()
-    //     MotorConfigurationType#getUnspecifiedMotorType()
-    //       do not know where the enum is
-    //   java.lang.String .getDeviceName() (not the config name)
-    //   HardwareDevice.Manufacturer .getManufacturer()
-    //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
-    //       possibly uninteresting
-    //   DcMotorEx has .getVelocity(AngleUnit unit), so it presumably knows the ticks per revolution
-    //     however, there is not a .getCurrentPostion(AngleUnit unit)
-    private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (4 * 72);
-    private final double distpertickRight = mWheelDiameterRight * Math.PI / (4 * 72);
-
-    // the robot pose
-    // abstract to a class (eg, Robot) with static parameters
-    //   that class can have .updatePose(), .getPose()
-    //   such a step may allow the Pose to be carried over from Autonomous to Teleop
-    //     Autonomous can set the initial pose
-    //     When Teleop starts, it can use the existing Pose
-    //        If there was no teleop, then initial Pose is random
-    //        A button press during teleop's init_loop can set a known Pose
-    private double xPose = 0.0;
-    private double yPose = 0.0;
-    private double thetaPose = 0.0;
-
-    // encoder counts
-    // abstract to a class coupled to the drive motors (eg, Robot) as static
-    // There's a subtle issue here
-    //    If robot is not moving, it is OK to set these values to the current encoder counts
-    //    That could always happen during .init()
-    private int cEncoderLeft;
-    private int cEncoderRight;
-
     // REV 2m distance sensor and attack mode
     // Also Rev2mDistanceSensor
     private DistanceSensor sensorRange2m;
@@ -187,20 +132,24 @@ public class BasicIterative extends OpMode
     private int cLoop = 0;
     private double timeLoop = 0;
 
-    // TODO merge more of SCHSDrive
+    // SCHSDrive (has drive motors and other stuff)
     private SCHSDrive schsdrive = null;
 
-    /*
+    /**
      * Code to run ONCE when the driver hits INIT
-     * @TODO Zero the arm position
+     * TODO: Zero the arm position
      */
     @Override
     public void init() {
         Log.d(TAG, "init()");
         telemetry.addData("Status", "Initializing");
 
+        // the robot drive
         schsdrive = new SCHSDrive();
-        schsdrive.initialize(hardwareMap);
+        schsdrive.init(hardwareMap, telemetry);
+        // TODO stop using local copies
+        leftDrive = schsdrive.motorLeft;
+        rightDrive = schsdrive.motorRight;
 
         // for I2C busses
         // for glr
@@ -236,30 +185,6 @@ public class BasicIterative extends OpMode
         // start initializing
         telemetry.addData("IMU", "initialize");
         imu.initialize(parameters);
-
-        // find the drive motors
-        // abstract to a common Class (eg, Robot)
-        // for SCHSConfig
-        //    0: rightMotor
-        //    1: leftMotor
-        //    2: armExtenderMotor
-        //    3: elevatorMotor
-        leftDrive  = hardwareMap.get(DcMotorEx.class, "leftMotor");
-        rightDrive = hardwareMap.get(DcMotorEx.class, "rightMotor");
-
-        LogDevice.logMotor("motorLeft", leftDrive);
-        LogDevice.logMotor("motorRight", rightDrive);
-
-        // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
-        leftDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        // DcMotor Direction also affects the encoder counts
-        // remember the current encoder counts
-        // Should always do this (even if not resetting the Pose)
-        cEncoderLeft = leftDrive.getCurrentPosition();
-        cEncoderRight = rightDrive.getCurrentPosition();
 
         // The arm motor
         //   See comments at https://ftc-tricks.com/dc-motors/
@@ -339,6 +264,7 @@ public class BasicIterative extends OpMode
     public void init_loop() {
         telemetry.addData("init", "looping; look for config info");
 
+        // update drive chassis
         schsdrive.init_loop();
 
         // update statistics for loop period
@@ -469,6 +395,26 @@ public class BasicIterative extends OpMode
                 break;
         }
         /**/
+
+        // for debugging drive motors
+        if (gamepad1.x && ! schsdrive.motorLeft.isBusy()) {
+            // make the motors turn 10 revolutions
+            int ticks = (int)(10 * schsdrive.ticksPerWheelRev);
+
+            schsdrive.motorLeft.setTargetPosition(
+                    schsdrive.motorLeft.getCurrentPosition() + ticks);
+            schsdrive.motorRight.setTargetPosition(
+                    schsdrive.motorRight.getCurrentPosition() + ticks);
+        }
+        if (gamepad1.y && ! schsdrive.motorLeft.isBusy()) {
+            // make the motors move 48 inches (two tiles)
+            int ticks = schsdrive.ticksFromInches(48.0);
+
+            schsdrive.motorLeft.setTargetPosition(
+                    schsdrive.motorLeft.getCurrentPosition() + ticks);
+            schsdrive.motorRight.setTargetPosition(
+                    schsdrive.motorRight.getCurrentPosition() + ticks);
+        }
     }
 
     /*
@@ -520,51 +466,6 @@ public class BasicIterative extends OpMode
         }
     }
 
-    /**
-     * Update the robot pose.
-     * Uses small angle approximations.
-     * See COS495-Odometry by Chris Clark, 2011,
-     * <a href="https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf">https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf</a>
-     * TODO: Move to a common class (eg, Robot)
-     */
-    private void updateRobotPose() {
-        // several calculations are needed
-
-        // get the new encoder positions
-        int cLeft = leftDrive.getCurrentPosition();
-        int cRight = rightDrive.getCurrentPosition();
-
-        // calculate the arc length deltas
-        int dsLeft = cLeft - cEncoderLeft;
-        int dsRight = cRight - cEncoderRight;
-
-        // save the new encoder positions for the next time around
-        cEncoderLeft = cLeft;
-        cEncoderRight = cRight;
-
-        double distL = dsLeft * distpertickLeft;
-        double distR = dsRight * distpertickRight;
-
-        // approximate the arc length as the average of the left and right arcs
-        double ds = (distR + distL) / 2;
-        // approximate the angular change as the difference in the arcs divided by wheel offset from
-        // center of rotation.
-        double dtheta = (distR - distL) / ( 2 * distWheel);
-
-        // approximate the hypotenuse as just ds
-        // approximate the average change in direction as one half the total angular change
-        double dx = ds * Math.cos(thetaPose + 0.5 * dtheta);
-        double dy = ds * Math.sin(thetaPose + 0.5 * dtheta);
-
-        // update the current pose
-        xPose = xPose + dx;
-        yPose = yPose + dy;
-        thetaPose = thetaPose + dtheta;
-
-        // change radians to degrees
-        telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
-    }
-
     /*
      * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
      */
@@ -574,18 +475,14 @@ public class BasicIterative extends OpMode
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
+        // update robot position
         schsdrive.loop();
 
-        // update the robot pose
-        updateRobotPose();
-
-        // change radians to degrees
-        telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
+        // report position in meters and degrees
         telemetry.addData("pose", "%8.2f %8.2f %8.2f",
                 schsdrive.xPose,
                 schsdrive.yPose,
                 schsdrive.thetaPose * 180 / Math.PI);
-
 
         // query the imu
         // Acquiring the angles is relatively expensive; we don't want
@@ -719,7 +616,7 @@ public class BasicIterative extends OpMode
                 // should only attack if distance is reasonable
                 if (distAttack < 60) {
                     // distance is less than 40 cm.
-                    int cEncoder = (int)((distAttack - 5) * 0.01 / distpertickLeft);
+                    int cEncoder = schsdrive.ticksFromMeters((distAttack - 5) * 0.01);
 
                     // set the target positions
                     leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + cEncoder);
@@ -763,19 +660,4 @@ public class BasicIterative extends OpMode
 
         Log.d(TAG, "stop() complete");
     }
-
-    // Read the battery voltage
-    // Put this is the robot class
-    // put the sensor in a class variable
-    double getBatteryVoltage() {
-        double result = Double.POSITIVE_INFINITY;
-        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
-            double voltage = sensor.getVoltage();
-            if (voltage > 0) {
-                result = Math.min(result, voltage);
-            }
-        }
-        return result;
-    }
-
 }
