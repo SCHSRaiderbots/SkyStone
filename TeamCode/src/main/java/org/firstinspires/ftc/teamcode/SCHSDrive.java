@@ -106,9 +106,9 @@ public class SCHSDrive {
 
         // TODO: Check the firmware revisions on all Expansion Hubs
         //   should be 1.8.3
+        //   17 December 2019: Updated Expansion Hub firmware to 1.8.2
 
         // get the battery voltage
-        // TODO: Better way to do this
         voltageBattery = getBatteryVoltage();
 
         // find the drive motors
@@ -127,7 +127,6 @@ public class SCHSDrive {
         // 16 December 2019: PIDF coefficients could not be set to 5,0,0,0 in logcat
         //   PIDF(rue) = 9.999847412109375, 2.9999542236328125, 0.0, 0.0
         //   PIDF(r2p) = 9.999847412109375, 0.04998779296875, 0.0, 0.0
-        // 17 December 2019: Updated Expansion Hub firmware to 1.8.2
         // still get an error message
         //   eg, 2019-12-17 10:12:06.021 13370-13425/com.qualcomm.ftcrobotcontroller W/LynxMotor: not supported: setPIDFCoefficients(0, RUN_TO_POSITION, PIDFCoefficients(p=5.000000 i=0.000000 d=0.000000 f=0.000000 alg=PIDF))
         // but report is now
@@ -327,15 +326,11 @@ public class SCHSDrive {
      * TODO: Move to a common class (eg, Robot)
      */
     private void updateRobotPose() {
-        // TODO: these should be local variables
-        DcMotor leftDrive = motorLeft;
-        DcMotor rightDrive = motorRight;
-
         // several calculations are needed
 
         // get the new encoder positions
-        int cLeft = leftDrive.getCurrentPosition();
-        int cRight = rightDrive.getCurrentPosition();
+        int cLeft = motorLeft.getCurrentPosition();
+        int cRight = motorRight.getCurrentPosition();
 
         // calculate the arc length deltas
         int dsLeft = cLeft - cEncoderLeft;

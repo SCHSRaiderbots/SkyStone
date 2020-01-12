@@ -81,7 +81,7 @@ class LogDevice {
      * @param pidf - the PIDF coefficients to dump
      */
     static void logPIDF(String msg, PIDFCoefficients pidf) {
-        Log.d(TAG, msg + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f +
+        Log.d(TAG, msg + " " + pidf.p + ", " + pidf.i + ", " + pidf.d + ", " + pidf.f +
                 " algorithm: " + pidf.algorithm);
     }
 

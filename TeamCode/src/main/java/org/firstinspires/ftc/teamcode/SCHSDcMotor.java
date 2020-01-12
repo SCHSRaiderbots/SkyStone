@@ -24,16 +24,32 @@ public class SCHSDcMotor {
         extendMotor.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
+    /**
+     * @Deprecated
+     * @return
+     */
     public DcMotorEx getMotorleft() {
         return motorleft;
     }
 
+    /**
+     * @Deprecated
+     * @return
+     */
     public DcMotorEx getMotorRight() {
         return motorRight;
     }
 
+    /**
+     * @Deprecated
+     * @return
+     */
     public DcMotorEx getLiftMotor() { return liftMotor; }
 
+    /**
+     * @Deprecated
+     * @return
+     */
     public DcMotorEx getExtendMotor() { return extendMotor; }
 
 }
