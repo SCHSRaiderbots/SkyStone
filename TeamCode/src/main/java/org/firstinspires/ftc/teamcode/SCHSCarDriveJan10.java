@@ -3,13 +3,15 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 
-@TeleOp(name="SCHSDriveCarDec30", group="Iterative Opmode")
+@TeleOp(name="SCHSDriveCarJan10", group="Iterative Opmode")
 
-public class SCHSCarDriveDec30 extends OpMode {
+public class SCHSCarDriveJan10 extends OpMode {
 
     //OpMode Members
 
@@ -27,14 +29,20 @@ public class SCHSCarDriveDec30 extends OpMode {
     private double turn;
     private double lPower;
     private double rPower;
-    private final double EXTENDER_POWER = 0.9; //arbitrary value to prevent extending too quickly
     private double grabberPosition; //it is possible that the min/fully retracted position could be 0
     private double grabberPositionIncrement;
     private int towerHeight;
 
+    private final double EXTENDER_POWER = 0.9; //arbitrary value to prevent extending too quickly
+    private final double driveMultiplier = 0.5;
+    private final double turnMultiplier  = 0.4;
+
     private double armPower;
 
-    private int maxElevatorPos = 1560;
+    private int minElevatorPos = 120;
+    private int minExtenderPos = 0;
+
+    private int maxElevatorPos = 2400;
     private int maxExtenderPos = 1100;
 
     //false if the hooks are up, true if the hooks are down
@@ -50,7 +58,7 @@ public class SCHSCarDriveDec30 extends OpMode {
         turn = 0;
         grabberPosition = 0;
         towerHeight = 0;
-        grabberPositionIncrement = 180; //testing value
+        grabberPositionIncrement = 0.05; //testing value
         isThereBumperInput = false;
 
         telemetry.addData("Status:", "Initialized");
@@ -59,15 +67,20 @@ public class SCHSCarDriveDec30 extends OpMode {
 
         leftMotor  = hardwareMap.get(DcMotor.class, "leftMotor");
         rightMotor = hardwareMap.get(DcMotor.class, "rightMotor");
-        elevatorMotor   = hardwareMap.get(DcMotor.class, "elevatorMotor");
+        elevatorMotor = hardwareMap.get(DcMotor.class, "elevatorMotor");
         extenderMotor = hardwareMap.get(DcMotor.class, "armExtenderMotor"); //temp name
 
         //to prevent arm from slipping and sliding
         elevatorMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         extenderMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        elevatorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //TODO: ADD CODE TO RESET THE LEFT,  RIGHT MOTOR
+        //elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);  //must set position before switching to RUN_TO_POSITION MODE
+
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
         rightMotor.setDirection(DcMotor.Direction.FORWARD);
+        elevatorMotor.setDirection(DcMotor.Direction.REVERSE);  //makes the left button take elevator down and right button take it up
 
         //initialize servos
 
@@ -93,9 +106,11 @@ public class SCHSCarDriveDec30 extends OpMode {
         telemetry.addData("Status:", "Waiting");
 
         //raises the elevator slightly to allow the extender to retract fully
-        if (elevatorMotor.getCurrentPosition() < 28) {
+        if (elevatorMotor.getCurrentPosition() < minElevatorPos) {
 
-            elevatorMotor.setPower(0.5);
+            elevatorMotor.setTargetPosition(minElevatorPos);
+            elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            elevatorMotor.setPower(0.2);
 
         }
 
@@ -118,32 +133,30 @@ public class SCHSCarDriveDec30 extends OpMode {
         -x button + left stick: on the spot rotation
             -perhaps change to just left stick button + left stick y value
         -D pad up/down: keeps track of how many blocks are stacked
+        -y: removes the "restrictor plate" and allows the robot to go at full speed
         -[Undecided]: Attack mode
         -[Undecided]: Incremental movement
 
         Gamepad 2:
         -Left, Right Triggers: move elevator up and down - need to switch to encoder position based
-        -a + Left/Right Triggers: grabber servo movement (CHANGE TO A AND B WHEN LIMITS ARE FOUND)
+        -a, b: grabber servo movement (CHANGE TO A AND B WHEN LIMITS ARE FOUND)
         -Left, Right Buttons: extending arm for the servo
         -D pad up/down: controls hooks (up: hooks up, down: hooks down)
-
-
 
          */
 
 
         //situational tank turning with x button
 
-        turn = gamepad1.left_stick_x;
+        turn = gamepad1.left_stick_x * turnMultiplier;
 
         spotTurn();
 
         //default mode
         normalCar();
 
-        if (gamepad1.left_bumper) {
-            hooks();
-        }
+        hooks();
+
 
         towerHeight();
         elevatorMovement();
@@ -156,13 +169,29 @@ public class SCHSCarDriveDec30 extends OpMode {
 
     public void stop() {
 
-        //null all the OpMode members
+        //also need to return extender to default lowest state
 
-        leftMotor  = null;
-        rightMotor = null;
+        //return elevator motor to default lowest state
 
-        leftHook  = null;
-        rightHook = null;
+        //elevatorMotor.setTargetPosition(0);
+        //elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //elevatorMotor.setPower(-0.2);
+
+        /*
+
+        while(elevatorMotor.getCurrentPosition() > 0) {
+
+            elevatorMotor.setPower(-0.3);
+
+        }
+
+
+         */
+
+        //return hooks to default state
+
+        //resetHooks();
+
 
     }
 
@@ -172,10 +201,10 @@ public class SCHSCarDriveDec30 extends OpMode {
 
     private void towerHeight() {
 
-        if (gamepad1.dpad_up)
+        if (gamepad2.dpad_up)
             towerHeight++;
 
-        if (gamepad1.dpad_down)
+        if (gamepad2.dpad_down)
             towerHeight--;
     }
 
@@ -194,7 +223,7 @@ public class SCHSCarDriveDec30 extends OpMode {
     }
 
     //returns true if there is input from the left button and no input from the right button
-    private boolean leftButtonInput(boolean rightInput, boolean leftInput) {
+    private boolean leftBumperInput(boolean rightInput, boolean leftInput) {
 
         if (leftInput == true && rightInput == false) {
 
@@ -243,7 +272,7 @@ public class SCHSCarDriveDec30 extends OpMode {
 
     private void spotTurn(){
 
-        if(gamepad1.x) {
+        if(gamepad1.left_stick_button) {
 
             //get power values; rPower is negative lPower so robot can turn like tank
             lPower = gamepad1.left_stick_x / 2.77;
@@ -257,7 +286,7 @@ public class SCHSCarDriveDec30 extends OpMode {
     }
 
 
-    public void normalCar(){
+    private void normalCar(){
 
         //use triggers for power inputs
 
@@ -274,19 +303,36 @@ public class SCHSCarDriveDec30 extends OpMode {
 
     }
 
-    private void reverse(){
+    private double restrictorPlate(double power) {
+
+        if(!gamepad1.y) {
+
+            power = power * driveMultiplier;
+
+        }
+
+        return power;
+    }
+
+
+    private void reverse() {
 
         lPower = -gamepad1.left_trigger;
+        lPower = restrictorPlate(lPower);
+
         rPower = lPower;
 
-        leftMotor.setPower(lPower + turn); //switch + and - if turning in wrong direction
-        rightMotor.setPower(rPower - turn);
+
+        leftMotor.setPower(lPower - turn); //switch + and - if turning in wrong direction
+        rightMotor.setPower(rPower + turn);
 
     }
 
-    private void forward(){
+    private void forward() {
 
         rPower = gamepad1.right_trigger;
+        rPower = restrictorPlate(rPower);
+
         lPower = rPower;
 
         leftMotor.setPower(lPower + turn);
@@ -294,20 +340,19 @@ public class SCHSCarDriveDec30 extends OpMode {
     }
 
     //controls the servo hooks that grab the foundation
-    //may need to be redone based on button holding, instead of simple button press this is meant for due to design of iterative op mode
-    private void hooks() { //need to print the checklists and fill them out for competition
+    private void hooks() {
 
         //fixed Jan 7
         //hooksEngaged is false, hooks are up, lower the hooks
-        if (gamepad2.dpad_down && hooksEngaged == false) {
+        if (gamepad1.dpad_down && hooksEngaged == false) {
 
-            leftHook.setPosition(0.55);
-            rightHook.setPosition(0.55);
+            leftHook.setPosition(0.4);
+            rightHook.setPosition(0.4);
 
             hooksEngaged = true;
         }
 
-        if (gamepad2.dpad_up && hooksEngaged == true) {
+        if (gamepad1.dpad_up && hooksEngaged == true) {
 
             leftHook.setPosition(0);
             rightHook.setPosition(0);
@@ -346,7 +391,13 @@ public class SCHSCarDriveDec30 extends OpMode {
 
     //controls the elevator - :sadjuri:
     //TODO: check if left TRIGGER makes it go down, right trigger makes it go up
+    //TODO: find min/ max for range.clip
     private void elevatorMovement() {
+
+        //OLD CODE Before Jan 10
+        /*
+
+        Probably does not work because the elevator motor mode has been changed to RUN_TO_POSITION
 
         if (leftTriggerInput(gamepad2.right_trigger, gamepad2.left_trigger)) {
 
@@ -359,28 +410,74 @@ public class SCHSCarDriveDec30 extends OpMode {
             powerClip(armPower, 18, maxElevatorPos, elevatorMotor);
 
         }
+
+         */
+
+        //new code similar to last year's code
+
+        if (leftTriggerInput(gamepad2.right_trigger, gamepad2.left_trigger))
+            armPower = -gamepad2.left_trigger;
+        else
+            armPower =  gamepad2.right_trigger;
+
+        int currentPosition = elevatorMotor.getCurrentPosition();
+        int targetPosition  = currentPosition + (int)(armPower * 300);
+
+
+        //targetPosition = Range.clip(targetPosition, minElevatorPos + 10, maxElevatorPos);
+
+        elevatorMotor.setTargetPosition(targetPosition);
+        elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        elevatorMotor.setPower(armPower);
+
+
+        //TARGET POSITION NOT SET EXCEPTION has been fixed
+
     }
 
     //extends the grabbing arm based on left/right buttons
     //left should be UP right should be DOWN
+
+    //TODO: test, find min and max values for Range.clip
     private void extenderMovement(){
+
+        int currentPosition = extenderMotor.getCurrentPosition();
+        int targetPosition;
+        double extenderPower;
 
         isThereBumperInput();
 
+        //this is here so it does not extend without any bumper input - the bumpers return false compared to the triggers' 0 when not pressed
         if(isThereBumperInput) {
 
-            if (leftButtonInput(gamepad2.right_bumper,gamepad2.left_bumper)) {
+            if (leftBumperInput(gamepad2.right_bumper, gamepad2.left_bumper)) {
 
-                powerClip(-EXTENDER_POWER, 0, maxExtenderPos, extenderMotor);
+                //old code not designed for RUN_TO_POSITION
+                //powerClip(-EXTENDER_POWER, 0, maxExtenderPos, extenderMotor);
 
-            } else { //if the above condition is not satisfied then it must be the right bumper input making is there bumper input true
+                targetPosition = currentPosition + (int)(-EXTENDER_POWER * 100);
+                extenderPower = -EXTENDER_POWER;
 
-                powerClip(EXTENDER_POWER, 0, maxExtenderPos, extenderMotor);
-                extenderMotor.setPower(EXTENDER_POWER);
+            } else {
+
+                //if the first if condition is not satisfied then it must be the right bumper input making is there bumper input true
+
+                //old code not designed for RUN_TO_POSITION
+                //powerClip(EXTENDER_POWER, 0, maxExtenderPos, extenderMotor);
+
+                targetPosition = currentPosition + (int)(EXTENDER_POWER * 100);
+                extenderPower =  EXTENDER_POWER;
 
             }
+
+            extenderMotor.setTargetPosition(targetPosition);
+            extenderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            extenderMotor.setPower(extenderPower);
+
         } else {
 
+            extenderMotor.setTargetPosition(currentPosition);
+            extenderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             extenderMotor.setPower(0);
         }
     }
@@ -395,8 +492,6 @@ public class SCHSCarDriveDec30 extends OpMode {
     //uses incremental thing to find limiting values
     //once these are found, TODO: make it so that the servo either goes to open position or closed position ONLY with a and b keys
     private void grabberServoMovement() {
-
-
 
         //retract the grabber
         if (gamepad2.dpad_down) {
@@ -415,20 +510,20 @@ public class SCHSCarDriveDec30 extends OpMode {
     }
 
 
-
     //update telemetry info
     private void update() {
 
-        //telemetry.addData("Left Motor Encoder Position",  leftMotor.getCurrentPosition());
-        //telemetry.addData("Right Motor Encoder Position", rightMotor.getCurrentPosition());
+        telemetry.addData("Left Motor Encoder Position",  leftMotor.getCurrentPosition());
+        telemetry.addData("Right Motor Encoder Position", rightMotor.getCurrentPosition());
+        //telemetry.addData("Turn Multiplier value:", turnMultiplier);
 
         telemetry.addData(" ", " ");
 
-        telemetry.addData("Hook Status", hooksInfo());
+        //telemetry.addData("Hook Status", hooksInfo());
 
         telemetry.addData("Elevator Encoder Position", elevatorMotor.getCurrentPosition());
         telemetry.addData("Extender Encoder Position", extenderMotor.getCurrentPosition());
-        telemetry.addData("grabberServo position", grabberServo.getPosition());
+        telemetry.addData("grabberServo position:", grabberServo.getPosition());
 
         telemetry.addData(" ", " ");
 
@@ -439,10 +534,8 @@ public class SCHSCarDriveDec30 extends OpMode {
 }
 
 
-//TODO:add code that moves very small amt
 //add code that resets servo to "up" state
 //TODO: finish the servo stuff
-//TODO: look into "attack mode":
 //TODO: find a way for the servo to return to the default retracted position
 //switch arm related motors to encoder position-based movement w/ range setter [similar to last year's code]
 //TODO: fix the turning
@@ -458,13 +551,12 @@ public class SCHSCarDriveDec30 extends OpMode {
 2. Find Servo limits
 3. Robot still drives
 6. Find maximum elevator/extender encoder limits
-    elevator: max is ~1600
-    extender: max is ~1100
+    elevator: max is TO BE FOUND
+    extender: max is TO BE FOUND
 
  */
 
 //robot should keep track of how many blocks are stacked, press a button for each layer of tower
 
-//90 deg left: Left encoder at -287, Right Encoder at 208
 
 //1/8: Max extender position
