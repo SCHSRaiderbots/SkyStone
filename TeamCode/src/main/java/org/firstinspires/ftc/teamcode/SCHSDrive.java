@@ -39,12 +39,14 @@ public class SCHSDrive {
     private double mWheelDiameterRight = 0.090;
     
     // half the distance between the wheels
-    // TODO get the new wheel separation
-    private double distWheel = 0.305 / 2;
+    // the new wheel separation 13 + 15/16
+    private double distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
 
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
     //   those attributes should be in the DcMotor class
+
     // The HD Hex Motor has 56 ticks per revolution
+    //    or so claims http://www.revrobotics.com/content/docs/HDMotorEncoderGuide.pdf
     //    the 20:1 is geared 20 to 1
     //    the 40:1 is geared 40 to 1
     // The HD Hex Motor is also used with the Ultraplanetary cartridges
@@ -56,7 +58,8 @@ public class SCHSDrive {
     private final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
 
     // calculate the wheel's ticks per revolution
-    double ticksPerWheelRev = 56 * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
+    // TODO figure out why we need 28 instead of 56!
+    double ticksPerWheelRev = (56/2) * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
 
     // derived robot parameters
     // Distance per tick

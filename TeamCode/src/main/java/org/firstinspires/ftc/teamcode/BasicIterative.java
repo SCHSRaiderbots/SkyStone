@@ -114,13 +114,13 @@ public class BasicIterative extends OpMode
 
     // REV 2m distance sensor and attack mode
     // Also Rev2mDistanceSensor
-    private DistanceSensor sensorRange2m;
+    // *** private DistanceSensor sensorRange2m;
     private double distAttack = 0.0;
     private boolean bAttack = false;
 
     // Color distance sensor
-    private DistanceSensor sensorDistance;
-    private ColorSensor sensorColor;
+    //*** private DistanceSensor sensorDistance;
+    //*** private ColorSensor sensorColor;
 
     // REV touch sensor as digital channel
     private DigitalChannel digitalTouch;
@@ -134,6 +134,10 @@ public class BasicIterative extends OpMode
 
     // SCHSDrive (has drive motors and other stuff)
     private SCHSDrive schsdrive = null;
+
+    // for tests
+    private boolean brun = false;
+    private boolean bspin = false;
 
     /**
      * Code to run ONCE when the driver hits INIT
@@ -235,11 +239,11 @@ public class BasicIterative extends OpMode
         servoGrab = hardwareMap.get(Servo.class, "grabberServo");
 
         // find the REV 2m distance sensor
-        sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
+        // *** sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
 
         // The color/distance sensor
-        sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
+        //*** sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
+        //*** sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
 
         // touch sensor
         digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
@@ -282,6 +286,7 @@ public class BasicIterative extends OpMode
         // report digital touch sensor
         telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
 
+        /* ***
         // report color
         // had used graph to scale red / 0.86, green / 0.98, and blue / 0.61
         // get values
@@ -329,7 +334,7 @@ public class BasicIterative extends OpMode
         // telemetry.addData("ID", String.format("%x", sensorTimeOfFlight.getModelID()));
         // this is always "false" (even with distance = 819cm (8 meters out)
         // telemetry.addData("did time out", Boolean.toString(sensorTimeOfFlight.didTimeoutOccur()));
-
+*/
         /* */
         // do complicated initialization of elevator
         switch (markovElevator) {
@@ -396,24 +401,73 @@ public class BasicIterative extends OpMode
         }
         /**/
 
+        // TODO: this spun 20 instead of 10 times
         // for debugging drive motors
-        if (gamepad1.x && ! schsdrive.motorLeft.isBusy()) {
-            // make the motors turn 10 revolutions
-            int ticks = (int)(10 * schsdrive.ticksPerWheelRev);
+        if (!bspin) {
+            // not spinning -- look to start
+            bspin = true;
 
-            schsdrive.motorLeft.setTargetPosition(
-                    schsdrive.motorLeft.getCurrentPosition() + ticks);
-            schsdrive.motorRight.setTargetPosition(
-                    schsdrive.motorRight.getCurrentPosition() + ticks);
+            if (gamepad1.x) {
+                // make the motors turn 10 revolutions
+                int ticks = (int)(10 * schsdrive.ticksPerWheelRev);
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                schsdrive.motorLeft.setTargetPosition(
+                        schsdrive.motorLeft.getCurrentPosition() + ticks);
+                schsdrive.motorRight.setTargetPosition(
+                        schsdrive.motorRight.getCurrentPosition() + ticks);
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                leftDrive.setPower(0.8);
+                rightDrive.setPower(0.8);
+            }
+        } else {
+            if (! schsdrive.motorLeft.isBusy() && ! schsdrive.motorRight.isBusy()) {
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                // we are done
+                bspin = false;
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
         }
-        if (gamepad1.y && ! schsdrive.motorLeft.isBusy()) {
-            // make the motors move 48 inches (two tiles)
-            int ticks = schsdrive.ticksFromInches(48.0);
 
-            schsdrive.motorLeft.setTargetPosition(
-                    schsdrive.motorLeft.getCurrentPosition() + ticks);
-            schsdrive.motorRight.setTargetPosition(
-                    schsdrive.motorRight.getCurrentPosition() + ticks);
+        if (!brun) {
+            // try running
+            brun = true;
+            if (gamepad1.y) {
+                // make the motors move 48 inches (two tiles)
+                int ticks = schsdrive.ticksFromInches(48.0);
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                schsdrive.motorLeft.setTargetPosition(
+                        schsdrive.motorLeft.getCurrentPosition() + ticks);
+                schsdrive.motorRight.setTargetPosition(
+                        schsdrive.motorRight.getCurrentPosition() + ticks);
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                leftDrive.setPower(0.8);
+                rightDrive.setPower(0.8);
+            }
+        } else {
+            if (! schsdrive.motorLeft.isBusy() && ! schsdrive.motorRight.isBusy()) {
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                // we are done
+                brun = false;
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
         }
     }
 
@@ -612,7 +666,7 @@ public class BasicIterative extends OpMode
                 Log.d(TAG, "Attack start");
 
                 // calculate the attack distance
-                distAttack = sensorRange2m.getDistance(DistanceUnit.CM);
+                distAttack = 30; // ***  sensorRange2m.getDistance(DistanceUnit.CM);
                 // should only attack if distance is reasonable
                 if (distAttack < 60) {
                     // distance is less than 40 cm.
