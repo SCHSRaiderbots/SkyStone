@@ -13,6 +13,7 @@ public class SCHSConstants {
     static final int LIFT = 1;
     static final int ARM = 2;
     static final int DRIVE = 0;
+    static final int LONG_DRIVE = 3;
 
     //Servo Constants
     static final boolean SERVO_OPEN = true;
@@ -147,7 +148,7 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] goToMBPath = {
-            new SCHSPathSeg( 9, 9, POWER_FULL), //forward 9
+            new SCHSPathSeg( 4.5, 4.5, POWER_FULL), //forward 9, change to 4.5
     };
 
     static final SCHSPathSeg[] retreatMBPath = {
@@ -169,18 +170,32 @@ public class SCHSConstants {
 
     static final SCHSPathSeg[] deliverBlockPath = {
             //new SCHSPathSeg( 25, 25, POWER_FULL), //forward 74.75, commenting for testing
-            new SCHSPathSeg( 48, 48, POWER_FULL),
-            new SCHSPathSeg( 26.75,26.75, POWER_FULL),
+            //new SCHSPathSeg( 48, 48, POWER_FULL),
+            new SCHSPathSeg( 74.75,74.75, POWER_FULL), //74.75, change to 104.75 for test
             //new SCHSPathSeg( 11, 11, POWER_FULL), //test forward 13, change to 11
-            //new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
-            //new SCHSPathSeg( 6, 6, 0.5), //forward 6
+    };
+
+    static final SCHSPathSeg[] liftBlockFD = {
+            new SCHSPathSeg(LIFT, 4, 0.9, "yes")
+    };
+
+    static final SCHSPathSeg[] dropBlockFD = {
+            new SCHSPathSeg(LIFT, -4, 0.9, "yes")
+    };
+
+    static final SCHSPathSeg[] turnFDPATH = {
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
+            new SCHSPathSeg( 6, 6, 0.5), //forward 6
+    };
+
+    static final SCHSPathSeg[] backBlocksFirst = {
+            new SCHSPathSeg( -6, -6, 0.5), //backward 6
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
     };
 
     static final SCHSPathSeg[] backToBlocksPath = {
-            //new SCHSPathSeg( -6, -6, 0.5), //backward 6
-            //new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
-            new SCHSPathSeg( -48, -48, POWER_FULL),
-            new SCHSPathSeg( -50.75, -50.75, POWER_FULL),
+            //SCHSPathSeg( -48, -48, POWER_FULL),
+            new SCHSPathSeg( -98.75, -98.75, POWER_FULL),
             //new SCHSPathSeg( -25, -25, POWER_FULL),
             //new SCHSPathSeg( -23.75, -23.75, POWER_FULL), //backward 98.75, commented for testing
             //new SCHSPathSeg( -37, -37, POWER_FULL), //backward
