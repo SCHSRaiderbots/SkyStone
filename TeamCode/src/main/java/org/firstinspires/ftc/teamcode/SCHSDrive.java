@@ -6,6 +6,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
@@ -28,8 +29,7 @@ public class SCHSDrive {
     // battery voltage; used to warn of a low battery
     double voltageBattery = 0.0;
 
-    // TODO: merge code from SCHSDcMotor
-    private SCHSDcMotor driveMotors;
+    // the drive motors
     protected DcMotorEx motorLeft;
     protected DcMotorEx motorRight;
 
@@ -117,12 +117,13 @@ public class SCHSDrive {
         //    1: leftMotor
         //    2: armExtenderMotor
         //    3: elevatorMotor
-        driveMotors = new SCHSDcMotor();
-        driveMotors.initialize(hardwareMap);
 
-        // get local copies of the drive motors
-        motorLeft = driveMotors.getMotorleft();
-        motorRight = driveMotors.getMotorRight();
+        // get the drive motors
+        motorLeft = hardwareMap.get(DcMotorEx.class, "leftMotor");
+        motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
+
+        motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // 16 December 2019: PIDF coefficients could not be set to 5,0,0,0 in logcat
         //   PIDF(rue) = 9.999847412109375, 2.9999542236328125, 0.0, 0.0

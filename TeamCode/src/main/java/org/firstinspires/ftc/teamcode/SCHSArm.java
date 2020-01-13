@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
@@ -12,9 +14,9 @@ import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
 
 public class SCHSArm {
 
-    private SCHSDcMotor armMotors;
     private DcMotor liftMotor;
     private DcMotor extendMotor;
+
     private SCHSServo botServos;
     protected Servo grabServo;
     protected Servo leftHook;
@@ -26,14 +28,17 @@ public class SCHSArm {
 
 
     public void initialize(HardwareMap hardwareMap) {
-        armMotors = new SCHSDcMotor();
-        armMotors.initialize(hardwareMap);
         botServos = new SCHSServo();
         botServos.initialize(hardwareMap);
 
-        liftMotor = armMotors.getLiftMotor();
-        extendMotor = armMotors.getExtendMotor();
+        liftMotor = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
+        extendMotor = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
+
+        liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        extendMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+
         grabServo = botServos.getGrabServo();
+
         leftHook = botServos.getLeftHook();
         rightHook = botServos.getRightHook();
     }
