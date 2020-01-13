@@ -12,6 +12,9 @@ import com.qualcomm.robotcore.util.Range;
 import static android.os.SystemClock.sleep;
 import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
 
+/**
+ * The class for the elevator, arm, and hooks.
+ */
 public class SCHSArm {
 
     private DcMotor liftMotor;
@@ -20,19 +23,24 @@ public class SCHSArm {
     protected Servo grabServo;
     protected Servo leftHook;
     protected Servo rightHook;
+
     private int liftEncoderTarget;
     private int armEncoderTarget;
+
     private double liftPos;
     private double extendPos;
 
-
     public void initialize(HardwareMap hardwareMap) {
-        // get the arm motors
+        // the elevator lift motor
         liftMotor = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
-        extendMotor = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
-
+        // ah, this explains why it wrapped the otehr way...
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        LogDevice.dump("liftMotor", liftMotor);
+
+        // the arm extend motor
+        extendMotor = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
         extendMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        LogDevice.dump("extendMtoro", extendMotor);
 
         // get the grabber servo
         grabServo = hardwareMap.get(Servo.class, "grabberServo");
@@ -46,6 +54,10 @@ public class SCHSArm {
         rightHook.setDirection(Servo.Direction.FORWARD);
     }
 
+    /**
+     * @Deprecated just getting the armPart position will do the synch; DcMotorEx will keep track of the position.
+     * @param armPart
+     */
     public void synchArmEncoder(int armPart) {
         //	get and set the encoder targets
         if (armPart == LIFT ){
@@ -55,6 +67,11 @@ public class SCHSArm {
         }
     }
 
+    /**
+     * @Deprecated why switch on armPart?
+     * @param mode
+     * @param armPart
+     */
     public void setArmMode(DcMotor.RunMode mode, int armPart) {
         // Ensure the motors are in the correct mode.
         if (armPart == LIFT ){
@@ -66,6 +83,11 @@ public class SCHSArm {
         }
     }
 
+    /**
+     * @Deprecated why use armPart?
+     * @param power
+     * @param armPart
+     */
     public void setArmPower(double power, int armPart){
         if (armPart == LIFT ){
             liftMotor.setPower(Range.clip(power, -1, 1));
@@ -74,6 +96,11 @@ public class SCHSArm {
         }
     }
 
+    /**
+     * @Deprecated why use armPart? does not use standard unit of measure
+     * @param encoder
+     * @param armPart
+     */
     public void addEncoderTarget(int encoder, int armPart){
         if (armPart == LIFT ){
             liftMotor.setTargetPosition(liftEncoderTarget+= encoder);
@@ -83,6 +110,10 @@ public class SCHSArm {
         }
     }
 
+    /**
+     * @Deprecated The motors should use this run mode all the time
+     * @param armPart
+     */
     public void useConstantSpeed(int armPart) {
         if (armPart == LIFT ){
             liftMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -91,6 +122,9 @@ public class SCHSArm {
         }
     }
 
+    /**
+     * @Deprecated the Arm encoders should be zeroed locally
+     */
     public void resetArmEncoders(){
         setArmPower(0,LIFT);
         setArmPower(0, ARM);
@@ -98,6 +132,10 @@ public class SCHSArm {
         setArmMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER, ARM);
     }
 
+    /**
+     * @Deprecated Method should open or close the grabber rather than a generic servo
+     * @param servo
+     */
     public void openServo(Servo servo) {
         //grabServo.setDirection(Servo.Direction.FORWARD);
         Log.d("SCHS: moveServo()", "in if, current Position before" + servo.getPosition());
@@ -119,6 +157,11 @@ public class SCHSArm {
         Log.d("SCHS: moveServo()", "current Position after turn2:" + servo.getPosition());
     }
 
+    /**
+     * @Deprecated Command servo to a new position; do not modulate its speed. NEVER sleep()
+     * @param position
+     * @param servoDirection
+     */
     public void moveServoNew(double position, boolean servoDirection) {
         if (servoDirection){
             grabServo.setDirection(Servo.Direction.FORWARD);
@@ -168,20 +211,36 @@ public class SCHSArm {
         }
     }
 
+    /**
+     * @Deprecated does not use standard units
+     * @return
+     */
     public double getLiftPos() {
         liftPos = liftMotor.getCurrentPosition();
         return liftPos;
     }
 
+    /**
+     * @Deprecated does not use standard units
+     * @return
+     */
     public double getExtendPos() {
         extendPos = extendMotor.getCurrentPosition();
         return extendPos;
     }
 
+    /**
+     * @Deprecated does not use standard units; should be based on DcMotorEx.getTargetPosition()
+     * @return
+     */
     public int getLiftEncoderTarget() {
         return liftEncoderTarget;
     }
 
+    /**
+     * @Deprecated does not use standard units; should be based on DcMotorEx.getTargetPosition()
+     * @return
+     */
     public int getArmEncoderTarget() {
         return armEncoderTarget;
     }

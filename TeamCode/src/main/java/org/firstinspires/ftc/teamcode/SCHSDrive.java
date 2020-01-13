@@ -58,7 +58,7 @@ public class SCHSDrive {
     private final double HD_HEX_GEAR_CART_5_1 = 68.0/13.0;
 
     // calculate the wheel's ticks per revolution
-    // TODO figure out why we need 28 instead of 56!
+    //   Apparently, we only see 1/2 the counts that REV claims (28 instead of 56)
     double ticksPerWheelRev = (56/2) * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
 
     // derived robot parameters
@@ -107,6 +107,7 @@ public class SCHSDrive {
         // TODO: Check the firmware revisions on all Expansion Hubs
         //   should be 1.8.2
         //   17 December 2019: Updated Expansion Hub firmware to 1.8.2
+        // would like to raise an alarm if the Expansion Hub is out of date
 
         // get the battery voltage
         voltageBattery = getBatteryVoltage();
@@ -324,7 +325,6 @@ public class SCHSDrive {
      * Uses small angle approximations.
      * See COS495-Odometry by Chris Clark, 2011,
      * <a href="https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf">https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf</a>
-     * TODO: Move to a common class (eg, Robot)
      */
     private void updateRobotPose() {
         // several calculations are needed
@@ -365,9 +365,10 @@ public class SCHSDrive {
         // telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
     }
 
-    // Read the battery voltage
-    // Put this is the robot class
-    // put the sensor in a class variable
+    /**
+     * Read the battery voltage from all available voltage sensors
+     * @return the minimum battery voltage or positive infinity
+     */
     double getBatteryVoltage() {
         double result = Double.POSITIVE_INFINITY;
         for (VoltageSensor sensor : hardwareMap.voltageSensor) {

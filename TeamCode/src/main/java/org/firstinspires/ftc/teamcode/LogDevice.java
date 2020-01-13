@@ -15,8 +15,6 @@ import com.qualcomm.robotcore.hardware.Servo;
  *
  * Used to explore DcMotorEx configuration (e.g., PIDF coefficients)
  * Used to describe Servo
- *
- * TODO: It might be better to overload some of these methods and make use of device hierarchy
  */
 class LogDevice {
     // String used for the log
@@ -24,6 +22,7 @@ class LogDevice {
 
     static void dump(String name, HardwareDevice device) {
         Log.d(TAG, "hardware device " + name);
+        Log.d(TAG, "  version: " + device.getVersion());
     }
 
     /**
@@ -116,6 +115,9 @@ class LogDevice {
         Log.d(TAG, "  manufacturer: " + servo.getManufacturer());
         // reports into which port the servo is plugged
         Log.d(TAG, "  port number: " + servo.getPortNumber());
+
+        // direction
+        Log.d(TAG, "  direction: " + servo.getDirection());
 
         // reports current position
         Log.d(TAG, "  position: " + servo.getPosition());

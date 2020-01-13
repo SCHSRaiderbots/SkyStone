@@ -151,6 +151,7 @@ public class BasicIterative extends OpMode
         // the robot drive
         schsdrive = new SCHSDrive();
         schsdrive.init(hardwareMap, telemetry);
+
         // TODO stop using local copies
         leftDrive = schsdrive.motorLeft;
         rightDrive = schsdrive.motorRight;
@@ -401,7 +402,6 @@ public class BasicIterative extends OpMode
         }
         /**/
 
-        // TODO: this spun 20 instead of 10 times
         // for debugging drive motors
         if (!bspin) {
             // not spinning -- look to start
