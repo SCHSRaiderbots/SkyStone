@@ -12,6 +12,10 @@ public class SCHSDcMotor {
     private DcMotorEx liftMotor = null;
     private DcMotorEx extendMotor = null;
 
+    /**
+     * @Deprecated only used by SCHSArm and SCHSDrive
+     * @param hardwareMap
+     */
     public void initialize(HardwareMap hardwareMap) {
         motorleft = hardwareMap.get(DcMotorEx.class, "leftMotor");
         motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
@@ -25,7 +29,7 @@ public class SCHSDcMotor {
     }
 
     /**
-     * @Deprecated
+     * @Deprecated only used by SCHSDrive
      * @return
      */
     public DcMotorEx getMotorleft() {
@@ -33,7 +37,7 @@ public class SCHSDcMotor {
     }
 
     /**
-     * @Deprecated
+     * @Deprecated Only used by SCHSDrive
      * @return
      */
     public DcMotorEx getMotorRight() {
@@ -41,13 +45,13 @@ public class SCHSDcMotor {
     }
 
     /**
-     * @Deprecated
+     * @Deprecated only used by SCHSArm
      * @return
      */
     public DcMotorEx getLiftMotor() { return liftMotor; }
 
     /**
-     * @Deprecated
+     * @Deprecated only used by SCHSArm
      * @return
      */
     public DcMotorEx getExtendMotor() { return extendMotor; }
