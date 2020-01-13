@@ -105,7 +105,7 @@ public class SCHSDrive {
         telemetry = telem;
 
         // TODO: Check the firmware revisions on all Expansion Hubs
-        //   should be 1.8.3
+        //   should be 1.8.2
         //   17 December 2019: Updated Expansion Hub firmware to 1.8.2
 
         // get the battery voltage

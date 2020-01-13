@@ -99,8 +99,8 @@ class LogDevice {
         Log.d(TAG, "  manufacturer: " + servo.getManufacturer());
         // reports into which port the servo is plugged
         Log.d(TAG, "  port number: " + servo.getPortNumber());
+
         // reports current position
         Log.d(TAG, "  position: " + servo.getPosition());
     }
-
 }
