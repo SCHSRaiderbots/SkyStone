@@ -55,7 +55,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated just getting the armPart position will do the synch; DcMotorEx will keep track of the position.
+     * @deprecated just getting the armPart position will do the synch; DcMotorEx will keep track of the position.
      * @param armPart
      */
     public void synchArmEncoder(int armPart) {
@@ -68,7 +68,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated why switch on armPart?
+     * @deprecated why switch on armPart?
      * @param mode
      * @param armPart
      */
@@ -84,7 +84,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated why use armPart?
+     * @deprecated why use armPart?
      * @param power
      * @param armPart
      */
@@ -97,7 +97,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated why use armPart? does not use standard unit of measure
+     * @deprecated why use armPart? does not use standard unit of measure
      * @param encoder
      * @param armPart
      */
@@ -111,7 +111,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated The motors should use this run mode all the time
+     * @deprecated The motors should use this run mode all the time
      * @param armPart
      */
     public void useConstantSpeed(int armPart) {
@@ -123,7 +123,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated the Arm encoders should be zeroed locally
+     * @deprecated the Arm encoders should be zeroed locally
      */
     public void resetArmEncoders(){
         setArmPower(0,LIFT);
@@ -133,7 +133,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated Method should open or close the grabber rather than a generic servo
+     * @deprecated Method should open or close the grabber rather than a generic servo
      * @param servo
      */
     public void openServo(Servo servo) {
@@ -158,7 +158,7 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated Command servo to a new position; do not modulate its speed. NEVER sleep()
+     * @deprecated Command servo to a new position; do not modulate its speed. NEVER sleep()
      * @param position
      * @param servoDirection
      */
@@ -212,8 +212,8 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated does not use standard units
-     * @return
+     * @deprecated does not use standard units
+     * @return the current lift position
      */
     public double getLiftPos() {
         liftPos = liftMotor.getCurrentPosition();
@@ -221,8 +221,8 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated does not use standard units
-     * @return
+     * @deprecated does not use standard units
+     * @return the current arm position
      */
     public double getExtendPos() {
         extendPos = extendMotor.getCurrentPosition();
@@ -230,16 +230,16 @@ public class SCHSArm {
     }
 
     /**
-     * @Deprecated does not use standard units; should be based on DcMotorEx.getTargetPosition()
-     * @return
+     * @deprecated does not use standard units; should be based on DcMotorEx.getTargetPosition()
+     * @return the target lift position
      */
     public int getLiftEncoderTarget() {
         return liftEncoderTarget;
     }
 
     /**
-     * @Deprecated does not use standard units; should be based on DcMotorEx.getTargetPosition()
-     * @return
+     * @deprecated does not use standard units; should be based on DcMotorEx.getTargetPosition()
+     * @return the target arm position
      */
     public int getArmEncoderTarget() {
         return armEncoderTarget;
