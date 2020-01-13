@@ -70,7 +70,7 @@ public class SCHSDrive {
     private double distpertickRight = mWheelDiameterRight * Math.PI / (ticksPerWheelRev);
 
     // the robot pose
-    //   can have .updatePose(), .getPose()
+    //   can have .updatePose(), .getPose(), .setPose()
     //   using static would allow the Pose to be carried over from Autonomous to Teleop
     //     Autonomous can set the initial pose
     //     When Teleop starts, it can use the existing Pose
@@ -95,7 +95,7 @@ public class SCHSDrive {
      * Called during an OpMode init() routine.
      * gets the drive motors setup
      * @param hdmap the FTC hardwareMap of devices
-     * @param telem
+     * @param telem the telemetry object
      */
     public void init(HardwareMap hdmap, Telemetry telem) {
         // save the hardware map for future reference
@@ -110,6 +110,8 @@ public class SCHSDrive {
         // would like to raise an alarm if the Expansion Hub is out of date
 
         // get the battery voltage
+        //   measure this voltage just once
+        //   we do not need an update in the middle of a match
         voltageBattery = getBatteryVoltage();
 
         // find the drive motors
@@ -180,7 +182,7 @@ public class SCHSDrive {
     public void init_loop() {
         // check robot health
         if (telemetry != null && voltageBattery < 11.5) {
-            telemetry.addData("Battery", "RECHARGE or REPLACE BATTERY");
+            telemetry.addLine("RECHARGE or REPLACE BATTERY");
         }
     }
 
@@ -208,6 +210,9 @@ public class SCHSDrive {
         motorRight.setPower(0);
     }
 
+    /**
+     * @deprecated public method should not reset encoders
+     */
     public void resetEncoders(){
         setDrivePower(0,0);
         setDriveMode(RunMode.STOP_AND_RESET_ENCODER);
@@ -218,6 +223,9 @@ public class SCHSDrive {
         motorRight.setPower(Range.clip(powerRight, -1, 1));
     }
 
+    /**
+     * @deprecated why is this be needed? Is it trying to force completion?
+     */
     public void synchEncoders() {
         //	get and set the encoder targets
         leftEncoderTarget = motorLeft.getCurrentPosition();
@@ -238,10 +246,19 @@ public class SCHSDrive {
         motorRight.setMode(RunMode.RUN_USING_ENCODER);
     }
 
+    /**
+     * @deprecated public methods should use standard units
+     * @return
+     */
     public boolean encodersAtZero() {
         return ((Math.abs(getLeftPosition()) < 5) && (Math.abs(getRightPosition()) < 5));
     }
 
+    /**
+     * @deprecated public method should use standard units
+     * @param leftEncoder ticks to advance left wheel encoder
+     * @param rightEncoder ticks to advance right wheel encoder
+     */
     public void addEncoderTarget(int leftEncoder, int rightEncoder){
         motorLeft.setTargetPosition(leftEncoderTarget += leftEncoder);
         motorRight.setTargetPosition(rightEncoderTarget += rightEncoder);
@@ -284,18 +301,34 @@ public class SCHSDrive {
         return turnDist;
     }
 
+    /**
+     * @deprecated public method should use standard units
+     * @return current position for left wheel encoder
+     */
     public double getLeftPosition(){
         return (motorLeft.getCurrentPosition());
     }
 
+    /**
+     * @deprecated public method should use standard units
+     * @return current position for right wheel encoder
+     */
     public double getRightPosition() {
         return (motorRight.getCurrentPosition());
     }
 
+    /**
+     * @deprecated public method should use standard units; use DcMotorEx
+     * @return target position for left wheel encoder
+     */
     public int getLeftEncoderTarget() {
         return leftEncoderTarget;
     }
 
+    /**
+     * @deprecated public method should use standard units; use DcMotorEx
+     * @return target position for right wheel encoder
+     */
     public int getRightEncoderTarget() {
         return rightEncoderTarget;
     }

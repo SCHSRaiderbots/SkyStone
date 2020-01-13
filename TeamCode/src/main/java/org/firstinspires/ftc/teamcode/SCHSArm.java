@@ -150,6 +150,10 @@ public class SCHSArm {
 
     }
 
+    /**
+     * @deprecated
+     * @param servo
+     */
     public void closeServo(Servo servo) {
         //grabServo.setDirection(Servo.Direction.REVERSE);
         Log.d("SCHS: moveServo()", "in if, current Position before2:" + servo.getPosition());
