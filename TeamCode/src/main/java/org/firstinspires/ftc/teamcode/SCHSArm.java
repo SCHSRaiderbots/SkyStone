@@ -17,7 +17,6 @@ public class SCHSArm {
     private DcMotor liftMotor;
     private DcMotor extendMotor;
 
-    private SCHSServo botServos;
     protected Servo grabServo;
     protected Servo leftHook;
     protected Servo rightHook;
@@ -28,19 +27,23 @@ public class SCHSArm {
 
 
     public void initialize(HardwareMap hardwareMap) {
-        botServos = new SCHSServo();
-        botServos.initialize(hardwareMap);
-
+        // get the arm motors
         liftMotor = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
         extendMotor = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
 
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         extendMotor.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        grabServo = botServos.getGrabServo();
+        // get the grabber servo
+        grabServo = hardwareMap.get(Servo.class, "grabberServo");
+        //grabServo.setDirection(Servo.Direction.REVERSE);
 
-        leftHook = botServos.getLeftHook();
-        rightHook = botServos.getRightHook();
+        // get the hook servos
+        leftHook = hardwareMap.get(Servo.class, "leftHook");
+        rightHook = hardwareMap.get(Servo.class, "rightHook");
+
+        leftHook.setDirection(Servo.Direction.FORWARD);
+        rightHook.setDirection(Servo.Direction.FORWARD);
     }
 
     public void synchArmEncoder(int armPart) {
