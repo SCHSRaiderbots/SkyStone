@@ -196,7 +196,7 @@ public class BasicIterative extends OpMode
         //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         //   abstract to a common class (eg, Robot)
         motorArm = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
-        LogDevice.logMotor("motorArm", motorArm);
+        LogDevice.dump("motorArm", motorArm);
         // assume it is at position 0 right now
         motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         // Maybe use DcMotor.getCurrentPosition() as initial value?
@@ -211,7 +211,7 @@ public class BasicIterative extends OpMode
 
         // The elevator motor
         motorElevator = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
-        LogDevice.logMotor("motorElevator", motorElevator);
+        LogDevice.dump("motorElevator", motorElevator);
         // assume it is at position 0 right now
         motorElevator.setDirection(DcMotorSimple.Direction.REVERSE);
         motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -229,8 +229,8 @@ public class BasicIterative extends OpMode
         servoHookRight = hardwareMap.get(Servo.class, "rightHook");
 
         // dump information about the servos
-        LogDevice.logServo("servoHookLeft", servoHookLeft);
-        LogDevice.logServo("servoHookRight", servoHookRight);
+        LogDevice.dump("servoHookLeft", servoHookLeft);
+        LogDevice.dump("servoHookRight", servoHookRight);
 
         // set hooks to known state
         setHookState(false);

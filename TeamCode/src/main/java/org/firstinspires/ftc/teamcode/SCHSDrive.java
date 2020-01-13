@@ -133,8 +133,8 @@ public class SCHSDrive {
         // but report is now
         //   PIDF(rue) = 4.9600067138671875, 0.496002197265625, 0.0, 49.600006103515625 algorithm: PIDF
         //   PIDF(r2p) = 5.0, 0.0, 0.0, 0.0 algorithm: PIDF
-        LogDevice.logMotor("motorLeft", motorLeft);
-        LogDevice.logMotor("motorRight", motorRight);
+        LogDevice.dump("motorLeft", motorLeft);
+        LogDevice.dump("motorRight", motorRight);
 
         // remember the current encoder counts to do odometry
         // DcMotor Direction also affects the encoder counts
