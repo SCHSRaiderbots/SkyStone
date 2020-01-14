@@ -163,8 +163,9 @@ public class SCHSController extends OpMode {
                     startPath(testPathRun);
                     newState(State.STATE_TEST_2_INITIAL);
                 }
+                break;
 
-
+                
             case STATE_TEST_2_INITIAL:
                 if (pathComplete(DRIVE, false))
                 {
