@@ -1,10 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.util.Log;
-
-import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -12,9 +7,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+
 import static com.qualcomm.robotcore.hardware.DcMotor.*;
 
 import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
@@ -27,7 +20,7 @@ public class SCHSDrive {
     Telemetry telemetry = null;
 
     // battery voltage; used to warn of a low battery
-    double voltageBattery = 0.0;
+    private double voltageBattery = 0.0;
 
     // the drive motors
     protected DcMotorEx motorLeft;
@@ -59,7 +52,7 @@ public class SCHSDrive {
 
     // calculate the wheel's ticks per revolution
     //   Apparently, we only see 1/2 the counts that REV claims (28 instead of 56)
-    double ticksPerWheelRev = (56/2) * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
+    double ticksPerWheelRev = (56.0/2.0) * HD_HEX_GEAR_CART_5_1 * HD_HEX_GEAR_CART_4_1;
 
     // derived robot parameters
     // Distance per tick
@@ -71,14 +64,18 @@ public class SCHSDrive {
 
     // the robot pose
     //   can have .updatePose(), .getPose(), .setPose()
-    //   using static would allow the Pose to be carried over from Autonomous to Teleop
+    //   using static should allow the Pose to be carried over from Autonomous to Teleop
     //     Autonomous can set the initial pose
     //     When Teleop starts, it can use the existing Pose
-    //        If there was no teleop, then initial Pose is random
-    //        A button press during teleop's init_loop can set a known Pose
-    double xPose = 0.0;
-    double yPose = 0.0;
-    double thetaPose = 0.0;
+    //        If there was no autonomous, then initial Pose is random
+    //        A button press during teleop's init_loop could set a known Pose
+    static double xPose = 0.0;
+    static double yPose = 0.0;
+    static double thetaPose = 0.0;
+
+    static double xPoseInches = 0.0;
+    static double yPoseInches = 0.0;
+    static double thetaPoseDegrees = 0.0;
 
     // encoder counts
     // There's a subtle issue here
@@ -150,7 +147,7 @@ public class SCHSDrive {
     /**
      * old name for routine
      * @deprecated
-     * @param hardwareMap
+     * @param hardwareMap name to device mapper
      */
     public void initialize(HardwareMap hardwareMap) {
         init(hardwareMap, null);
@@ -159,7 +156,7 @@ public class SCHSDrive {
     /**
      * Want to use this code with last year's robot, but it has different parameters
      */
-    public void setRobot2019() {
+    void setRobot2019() {
         // set the wheel diameters
         mWheelDiameterLeft = 0.090;
         mWheelDiameterRight = 0.090;
@@ -218,7 +215,7 @@ public class SCHSDrive {
         setDriveMode(RunMode.STOP_AND_RESET_ENCODER);
     }
 
-    public void setDrivePower(double powerLeft, double powerRight){
+    void setDrivePower(double powerLeft, double powerRight){
         motorLeft.setPower(Range.clip(powerLeft, -1, 1));
         motorRight.setPower(Range.clip(powerRight, -1, 1));
     }
@@ -232,7 +229,7 @@ public class SCHSDrive {
         rightEncoderTarget = motorRight.getCurrentPosition();
     }
 
-    public void setDriveMode(RunMode mode) {
+    void setDriveMode(RunMode mode) {
         // Ensure the motors are in the correct mode.
         if (motorLeft.getMode() != mode)
             motorLeft.setMode(mode);
@@ -241,14 +238,14 @@ public class SCHSDrive {
             motorRight.setMode(mode);
     }
 
-    public void useConstantSpeed() {
+    void useConstantSpeed() {
         motorLeft.setMode(RunMode.RUN_USING_ENCODER);
         motorRight.setMode(RunMode.RUN_USING_ENCODER);
     }
 
     /**
      * @deprecated public methods should use standard units
-     * @return
+     * @return true if encoders are near zero
      */
     public boolean encodersAtZero() {
         return ((Math.abs(getLeftPosition()) < 5) && (Math.abs(getRightPosition()) < 5));
@@ -265,20 +262,15 @@ public class SCHSDrive {
     }
 
     public double[] arcTurnPower(int arcRadius, double arcAngle, double arcTime){
-        double outerRadius = 0;
-        double innerRadius = 0;
-        double innerTurnPower = 0;
-        double outerTurnPower = 0;
+        double outerRadius = arcRadius + (0.5*ROBOT_WIDTH);
+        double innerRadius = arcRadius + (0.5*ROBOT_WIDTH);
         double[] turnPower = new double[2];
-
-        outerRadius = arcRadius + (0.5*ROBOT_WIDTH);
-        innerRadius = arcRadius + (0.5*ROBOT_WIDTH);
 
         double innerTurnSpeed = ((arcAngle)/(arcTime))*(innerRadius);
         double outerTurnSpeed = ((arcAngle)/(arcTime))*(outerRadius);
 
-        innerTurnPower = innerTurnSpeed/ROBOT_MAX_SPEED;
-        outerTurnPower = outerTurnSpeed/ROBOT_MAX_SPEED;
+        double innerTurnPower = innerTurnSpeed/ROBOT_MAX_SPEED;
+        double outerTurnPower = outerTurnSpeed/ROBOT_MAX_SPEED;
 
         turnPower[0] = innerTurnPower;
         turnPower[1] = outerTurnPower;
@@ -394,22 +386,48 @@ public class SCHSDrive {
         yPose = yPose + dy;
         thetaPose = thetaPose + dtheta;
 
+        // convert to inches and degrees
+        xPoseInches = xPose / 0.0254;
+        yPoseInches = yPose / 0.0254;
+        thetaPoseDegrees = thetaPose * (180.0 / Math.PI);
+
         // change radians to degrees
         // telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
+    }
+
+    void setPoseInches(double x, double y, double theta) {
+        // convert to meters and set state variables
+        xPose = x * 0.0254;
+        yPose = y * 0.0254;
+        thetaPose = theta * (Math.PI / 180.0);
+
+        // copy to imperial to shadow state for consistency
+        xPoseInches = x;
+        yPoseInches = y;
+        thetaPoseDegrees = theta;
     }
 
     /**
      * Read the battery voltage from all available voltage sensors
      * @return the minimum battery voltage or positive infinity
      */
-    double getBatteryVoltage() {
+    private double getBatteryVoltage() {
+        // set an infinite voltage
         double result = Double.POSITIVE_INFINITY;
+
+        // examine each voltage sensors
         for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            // get the voltage reading for that sensor
             double voltage = sensor.getVoltage();
+
+            // if the voltage is reasonable
             if (voltage > 0) {
+                // then accumulate the result
                 result = Math.min(result, voltage);
             }
         }
+
+        // return the minimum voltage
         return result;
     }
 
