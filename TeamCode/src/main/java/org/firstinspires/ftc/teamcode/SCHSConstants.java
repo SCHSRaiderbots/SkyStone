@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-public class SCHSConstants {
+class SCHSConstants {
 
     // power constants between 1 and -1
     static final double POWER_FULL = 1;
@@ -21,18 +21,7 @@ public class SCHSConstants {
     static final int CYCLE_MS = 50;
 
 
-    // robot parameters
-    // abstract to a class (eg, Robot) where static parameters describe the robot
-    // the wheel diameters
-    private final double mWheelDiameterLeft = 0.090;
-    private final double mWheelDiameterRight = 0.090;
-    // half the distance between the wheels
-    private final double distWheel = 0.305 / 2;
-
     // derived robot parameters
-    // Distance per tick
-    //   leaving the units vague at this point
-    // Currently using direct drive with a CoreHex motor
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
     //   those attributes should be in the DcMotor class
     // The HD Hex Motor has 56 ticks per revolution
