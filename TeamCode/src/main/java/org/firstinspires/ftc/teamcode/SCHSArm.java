@@ -265,7 +265,7 @@ public class SCHSArm {
      * Actuate the gripper
      * @param state true means gripping (closed) and falwe means released (open)
      */
-    void setGrab(boolean state) {
+    void setGrabState(boolean state) {
         if (state) {
             // if true, then we are grabbing (jaws closed
             grabServo.setPosition(0.0);

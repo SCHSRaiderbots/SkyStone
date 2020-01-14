@@ -555,10 +555,10 @@ public class BasicIterative extends OpMode
         // simple servo hacks
         if (gamepad1.right_bumper) {
             telemetry.addData("grab", "released");
-            schsarm.setGrab(false);
+            schsarm.setGrabState(false);
         } else {
             telemetry.addData("grab", "gripping");
-            schsarm.setGrab(true);
+            schsarm.setGrabState(true);
         }
 
         // set arm position hack
