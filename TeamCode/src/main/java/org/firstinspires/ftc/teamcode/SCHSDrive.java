@@ -73,9 +73,10 @@ public class SCHSDrive {
     static double yPose = 0.0;
     static double thetaPose = 0.0;
 
-    static double xPoseInches = 0.0;
-    static double yPoseInches = 0.0;
-    static double thetaPoseDegrees = 0.0;
+    // this shadow state need not be static
+    double xPoseInches = 0.0;
+    double yPoseInches = 0.0;
+    double thetaPoseDegrees = 0.0;
 
     // encoder counts
     // There's a subtle issue here

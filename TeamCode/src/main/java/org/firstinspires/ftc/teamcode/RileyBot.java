@@ -318,9 +318,9 @@ public class RileyBot extends OpMode
         schsdrive.loop();
         // report pose in meters and degrees
         telemetry.addData("pose", "%8.3f %8.3f %8.2f",
-                schsdrive.xPose,
-                schsdrive.yPose,
-                schsdrive.thetaPose * 180 / Math.PI);
+                schsdrive.xPoseInches,
+                schsdrive.yPoseInches,
+                schsdrive.thetaPoseDegrees);
 
         // query the imu
         // Acquiring the angles is relatively expensive; we don't want
