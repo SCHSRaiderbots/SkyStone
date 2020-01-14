@@ -233,6 +233,141 @@ public class SCHSArm {
         return armEncoderTarget;
     }
 
+    /*
+     * Some constants for converting lift ticks to inches
+     */
+    private final double LIFT_TICKS_PER_INCH = 139.77;
+    private final double LIFT_INCH_OFFSET = 3.7;
+    private final double LIFT_HEIGHT_MIN = 3.7;
+    private final double LIFT_HEIGHT_MAX = 20.0;
+
+    /**
+     * Set the target height of lift in inches.
+     * TODO: define what the height means. eg, bottom of horizontal arm.
+     * @param inchHeight the target height in inches
+     */
+    void setLiftTargetHeight(double inchHeight) {
+        // clip the height
+        double inch = Range.clip(inchHeight, LIFT_HEIGHT_MIN, LIFT_HEIGHT_MAX);
+        // calculate the number of ticks needed
+        int ticks = (int)((inch - LIFT_INCH_OFFSET) * LIFT_TICKS_PER_INCH);
+
+        // command the motor to that position
+        liftMotor.setTargetPosition(ticks);
+    }
+
+    /**
+     * Get the target height of the lift in inches
+     * @return target height (inches)
+     */
+    double getLiftTargetHeight() {
+        // get the target position in ticks
+        int ticks = liftMotor.getTargetPosition();
+
+        // convert ticks to inches
+        return (ticks / LIFT_TICKS_PER_INCH) + LIFT_INCH_OFFSET;
+    }
+
+    /**
+     * Get the current height of the lift in inches
+     * @return current height (inches)
+     */
+    double getLiftCurrentPosition() {
+        // get the current position in ticks
+        int ticks = liftMotor.getCurrentPosition();
+
+        // convert ticks to inches
+        return (ticks / LIFT_TICKS_PER_INCH) + LIFT_INCH_OFFSET;
+    }
+
+    /**
+     * Check if the lift is still moving to its commanded position
+     * @return true if lift still moving
+     */
+    boolean isLiftBusy() {
+        return liftMotor.isBusy();
+    }
+
+    /**
+     * Set the lift height tolerance in inches
+     * @param inchTolerance inch tolerance
+     */
+    void setLiftTolerance(double inchTolerance) {
+
+        int tickTolerance = Math.max(5, (int)Math.abs(inchTolerance * LIFT_TICKS_PER_INCH));
+
+        // set the tolerance
+        liftMotor.setTargetPositionTolerance(tickTolerance);
+    }
+
+    /*
+     * Some constants for converting arm ticks to inches
+     */
+    private final double ARM_TICKS_PER_INCH = 80.0;
+    private final double ARM_INCH_OFFSET = 0.0;
+    // TODO: determine arm extend limits
+    private final double ARM_EXTENT_MIN = 0.0;
+    private final double ARM_EXTENT_MAX = 8.0;
+
+    /**
+     * Set the target extension of the arm in inches.
+     * TODO: define the extension.
+     * @param inchExtend the target height in inches
+     */
+    void setArmTargetExtension(double inchExtend) {
+        // clip the extension
+        double inch = Range.clip(inchExtend, ARM_EXTENT_MIN, ARM_EXTENT_MAX);
+        // calculate the number of ticks needed
+        int ticks = (int)((inch - ARM_INCH_OFFSET) * ARM_TICKS_PER_INCH);
+
+        // command the motor to that position
+        extendMotor.setTargetPosition(ticks);
+    }
+
+    /**
+     * Get the target extension of the arm in inches
+     * @return extension in inches
+     */
+    double getArmTargetExtension() {
+        // get the target position in ticks
+        int ticks = extendMotor.getTargetPosition();
+
+        // convert ticks to inches
+        return (ticks / ARM_TICKS_PER_INCH) + ARM_INCH_OFFSET;
+    }
+
+    /**
+     * Get the current extension of the arm in inches
+     * @return current extension (inches)
+     */
+    double getArmCurrentExtension() {
+        // get the current position in ticks
+        int ticks = extendMotor.getCurrentPosition();
+
+        // convert ticks to inches
+        return (ticks / ARM_TICKS_PER_INCH) + ARM_INCH_OFFSET;
+    }
+
+    /**
+     * Check if the lift is still moving to its commanded position
+     * @return true if arm extender is still moving
+     */
+    boolean isArmBusy() {
+        return extendMotor.isBusy();
+    }
+
+    /**
+     * Set the arm extension tolerance
+     * @param inchTolerance tolerance in inches
+     */
+    void setArmTolerance(double inchTolerance) {
+        // convert inches to ticks
+        int tickTolerance = Math.max(5, (int)Math.abs(inchTolerance * ARM_TICKS_PER_INCH));
+
+        // set the tolernace
+        liftMotor.setTargetPositionTolerance(tickTolerance);
+    }
+
     /**
      * Set the foundation Hooks to a known state
      * Tte servo position values are different, so there is probably bias in servo horn.
@@ -274,5 +409,15 @@ public class SCHSArm {
             grabServo.setPosition(1.0);
 
         }
+    }
+
+    /**
+     * Report the grabber's state.
+     * Makes a guess taht might be wrong if the grabber has not been actuated.
+     * @return true if the grabber is gripping (closed); false if released (open)
+     */
+    boolean getGrabState() {
+        //simple comparison should give the answer
+        return (grabServo.getPosition() < 0.5);
     }
 }
