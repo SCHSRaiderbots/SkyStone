@@ -56,7 +56,7 @@ public class SCHSArm {
 
     /**
      * @deprecated just getting the armPart position will do the synch; DcMotorEx will keep track of the position.
-     * @param armPart
+     * @param armPart act on LIFT or ARM
      */
     public void synchArmEncoder(int armPart) {
         //	get and set the encoder targets
@@ -69,8 +69,8 @@ public class SCHSArm {
 
     /**
      * @deprecated why switch on armPart?
-     * @param mode
-     * @param armPart
+     * @param mode desired motor mode (eg, run to position)
+     * @param armPart act on LIFT or ARM
      */
     public void setArmMode(DcMotor.RunMode mode, int armPart) {
         // Ensure the motors are in the correct mode.
@@ -84,9 +84,9 @@ public class SCHSArm {
     }
 
     /**
-     * @deprecated why use armPart?
-     * @param power
-     * @param armPart
+     * @deprecated why use armPart? Why public?
+     * @param power motor power to use
+     * @param armPart act on LIFT or ARM
      */
     public void setArmPower(double power, int armPart){
         if (armPart == LIFT ){
@@ -98,8 +98,8 @@ public class SCHSArm {
 
     /**
      * @deprecated why use armPart? does not use standard unit of measure
-     * @param encoder
-     * @param armPart
+     * @param encoder number of ticks to increment the encoder
+     * @param armPart act on LIFT or ARM
      */
     public void addEncoderTarget(int encoder, int armPart){
         if (armPart == LIFT ){
@@ -112,7 +112,7 @@ public class SCHSArm {
 
     /**
      * @deprecated The motors should use this run mode all the time
-     * @param armPart
+     * @param armPart act on LIFT or ARM
      */
     public void useConstantSpeed(int armPart) {
         if (armPart == LIFT ){
@@ -134,7 +134,7 @@ public class SCHSArm {
 
     /**
      * @deprecated Method should open or close the grabber rather than a generic servo
-     * @param servo
+     * @param servo servo to actuate (a hook or grabber)
      */
     public void openServo(Servo servo) {
         //grabServo.setDirection(Servo.Direction.FORWARD);
@@ -152,67 +152,13 @@ public class SCHSArm {
 
     /**
      * @deprecated
-     * @param servo
+     * @param servo  servo to actuate (hook or grabber)
      */
     public void closeServo(Servo servo) {
         //grabServo.setDirection(Servo.Direction.REVERSE);
         Log.d("SCHS: moveServo()", "in if, current Position before2:" + servo.getPosition());
         servo.setPosition(0.002);
         Log.d("SCHS: moveServo()", "current Position after turn2:" + servo.getPosition());
-    }
-
-    /**
-     * @deprecated Command servo to a new position; do not modulate its speed. NEVER sleep()
-     * @param position
-     * @param servoDirection
-     */
-    public void moveServoNew(double position, boolean servoDirection) {
-        if (servoDirection){
-            grabServo.setDirection(Servo.Direction.FORWARD);
-            Log.d("Status", "moveServoNew true:set direction to forward");
-
-            double maxPosition = position;
-            double currPosition = grabServo.getPosition();
-            Log.d("Status", "SCHSMotor:moveServo true: currPosition" + currPosition);
-
-            while (currPosition <= maxPosition) {
-                Log.d("Status", "SCHSMotor:moveServo true: entered while");
-                maxPosition += INCREMENT;
-                grabServo.setPosition(maxPosition);
-                Log.d("Status", "SCHSMotor:moveServo true: max position" + maxPosition);
-                sleep(CYCLE_MS);
-                currPosition = grabServo.getPosition();
-                Log.d("Status", "SCHSMotor:moveServo true: currPosition in loop" + currPosition);
-
-                if (currPosition >= position){
-                    Log.d("Status", "SCHSMotor:moveServo true: break");
-                    break;
-                }
-            }
-
-        } else {
-            grabServo.setDirection(Servo.Direction.REVERSE);
-            Log.d("Status", "moveServoNew false: set direction to forward");
-
-            double minPosition = position;
-            double currPosition = grabServo.getPosition();
-            Log.d("Status", "SCHSMotor:moveServo false: currPosition" + currPosition);
-
-            while (currPosition >= minPosition) {
-                Log.d("Status", "SCHSMotor:moveServo false: entered while");
-                minPosition += INCREMENT;
-                grabServo.setPosition(minPosition);
-                Log.d("Status", "SCHSMotor:moveServo false: max position" + minPosition);
-                sleep(CYCLE_MS);
-                currPosition = grabServo.getPosition();
-                Log.d("Status", "SCHSMotor:moveServo false: currPosition in loop" + currPosition);
-
-                if (currPosition <= position){
-                    Log.d("Status", "SCHSMotor:moveServo false: break");
-                    break;
-                }
-            }
-        }
     }
 
     /**
