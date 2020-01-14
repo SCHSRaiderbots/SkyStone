@@ -181,6 +181,11 @@ public class SCHSDrive {
         double countsPerInch = 0;
         double slowFactor = 0;
         long startTime = System.currentTimeMillis();
+        boolean isForward;
+        double totalDistLeft;
+        double totalDistRight;
+        double currDistLeft;
+        double currDistRight;
 
         Log.d("Status" , "SCHSDrive:gyroDrive: initial left position " + motorLeft.getCurrentPosition());
         Log.d("Status" , "SCHSDrive:gyroDrive: initial right position " + motorRight.getCurrentPosition());
@@ -204,6 +209,10 @@ public class SCHSDrive {
         newRightTarget = motorRight.getCurrentPosition() + encoderValue;
         Log.d("Status" , "SCHSDrive:gyroDrive: newLeftTarget " + newLeftTarget);
         Log.d("Status" , "SCHSDrive:gyroDrive: newRightTarget " + newRightTarget);
+
+        isForward = !((newLeftTarget < motorLeft.getCurrentPosition() || newRightTarget < motorRight.getCurrentPosition()));
+        totalDistLeft = Math.abs(newLeftTarget - motorLeft.getCurrentPosition());
+        totalDistRight = Math.abs(newRightTarget-motorRight.getCurrentPosition());
 
         motorLeft.setTargetPosition(newLeftTarget);
         motorRight.setTargetPosition(newRightTarget);
@@ -253,6 +262,9 @@ public class SCHSDrive {
             int distanceMovedLeft = motorLeft.getCurrentPosition();
             int distanceMovedRight = motorRight.getCurrentPosition();
 
+            currDistLeft = Math.abs(newLeftTarget-motorLeft.getCurrentPosition());
+            currDistRight = Math.abs(newRightTarget-motorRight.getCurrentPosition());
+
             /*
             if (distanceMovedLeft >= slowFactor * Math.abs(newLeftTarget)|| distanceMovedRight >= slowFactor * Math.abs(newRightTarget)) {
                 PCoeff = 0.75 * PCoeff;
@@ -262,16 +274,24 @@ public class SCHSDrive {
 //             feb 1st org
 //             if (distanceMovedLeft >= slowFactor * Math.abs(newLeftTarget) || distanceMovedRight>= slowFactor * Math.abs(newRightTarget)) {
 
-            if (Math.abs(distanceMovedLeft) >= slowFactor * Math.abs(newLeftTarget) || Math.abs(distanceMovedRight)>= slowFactor * Math.abs(newRightTarget)) {
-                speed = 0.75 * speed;
-                Log.d("Status" , "SCHSDrive:gyroDrive: speed modified slowfactor " + speed);
+            if (isForward){
+                if (Math.abs(distanceMovedLeft) >= slowFactor * Math.abs(newLeftTarget) || Math.abs(distanceMovedRight)>= slowFactor * Math.abs(newRightTarget)) {
+                    speed = 0.75 * speed;
+                    Log.d("Status" , "SCHSDrive:gyroDrive: (forward) speed modified slowfactor " + speed);
+                }
+            } else {
+                if (currDistLeft >= slowFactor * totalDistLeft || currDistRight >= slowFactor * totalDistRight) {
+                    speed = 0.75 * speed;
+                    Log.d("Status" , "SCHSDrive:gyroDrive: (backward) speed modified slowfactor " + speed);
+                }
             }
 
+
             // if reached the desired position, exit while loop. Helps to stop turning at end of motion.
-            if (distanceMovedLeft >= Math.abs(newLeftTarget) || distanceMovedRight >= Math.abs(newRightTarget)) {
+            /*if (Math.abs(distanceMovedLeft) >= Math.abs(newLeftTarget) || Math.abs(distanceMovedRight) >= Math.abs(newRightTarget)) {
                 Log.d("Status" , "SCHSDrive:gyroDrive: Position reached. Break while");
                 break;
-            }
+            }*/
 
             Log.d("Status" , "SCHSDrive:gyroDrive:leftSpeed " + leftSpeed);
             Log.d("Status" , "SCHSDrive:gyroDrive:rightSpeed " + rightSpeed);
