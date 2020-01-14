@@ -47,23 +47,6 @@ public class SCHSConstants {
     static final double HEX_HD_RATIO_5_1 = 68.0/13.0;
     static final double COUNTS_PER_REV = 56.0 * HEX_HD_RATIO_4_1 * HEX_HD_RATIO_5_1;
 
-
-    // The DcMotor class can allow some help
-    //   MotorConfigurationType .getMotorType()
-    //     MotorConfigurationType#getUnspecifiedMotorType()
-    //       do not know where the enum is
-    //   java.lang.String .getDeviceName() (not the config name)
-    //   HardwareDevice.Manufacturer .getManufacturer()
-    //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
-    //       possibly uninteresting
-    //   DcMotorEx has .getVelocity(AngleUnit unit), so it presumably knows the ticks per revolution
-    //     however, there is not a .getCurrentPostion(AngleUnit unit)
-    private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (4 * 72);
-    private final double distpertickRight = mWheelDiameterRight * Math.PI / (4 * 72);
-
-
-
-
     //245 counts ~ 90 degree turn
 
     //static final double COUNTS_PER_INCH = (288)/(3.54331*(Math.PI)); //for core hex motor
