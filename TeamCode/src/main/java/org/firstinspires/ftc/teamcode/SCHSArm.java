@@ -272,7 +272,7 @@ public class SCHSArm {
      * Get the current height of the lift in inches
      * @return current height (inches)
      */
-    double getLiftCurrentPosition() {
+    double getLiftCurrentHeight() {
         // get the current position in ticks
         int ticks = liftMotor.getCurrentPosition();
 

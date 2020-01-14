@@ -95,11 +95,11 @@ public class BasicIterative extends OpMode
     private DcMotorEx rightDrive = null;
 
     // arm motor
-    // abstract to a class (eg, Robot) where attributes can be static
+    // TODO: safe to remove
     private DcMotorEx motorArm = null;
 
     // elevator motor
-    // abstract to a class
+    // TODO: safe to remove
     private DcMotorEx motorElevator = null;
 
     // REV 2m distance sensor and attack mode
@@ -299,8 +299,7 @@ public class BasicIterative extends OpMode
                     // if the button is pressed, start initialization
 
                     // move the elevator up to clear elevator motor
-                    // TODO make this an absolute position
-                    motorElevator.setTargetPosition(500);
+                    schsarm.setLiftTargetHeight(10.0);
 
                     // advance the state
                     markovElevator++;
@@ -310,9 +309,9 @@ public class BasicIterative extends OpMode
             case 0:
                 // the elevator should be rising
                 // when it gets high enough, start the next step
-                if (motorElevator.getCurrentPosition() > 400) {
+                if (schsarm.getLiftCurrentHeight() > 6.0) {
                     // extend the arm
-                    motorArm.setTargetPosition(400);
+                    schsarm.setArmTargetExtension(4.0);
 
                     // advance the state
                     markovElevator++;
@@ -322,10 +321,10 @@ public class BasicIterative extends OpMode
             case 1:
                 // the arm is extending
                 // when it has gone far enough, start the next step
-                if (motorArm.getCurrentPosition() > 300) {
+                if (schsarm.getArmCurrentExtension() > 3.5) {
                     // should be able to slowly lower the elevator onto the limit switch
-                    // just bring it to 0 for now
-                    motorElevator.setTargetPosition(0);
+                    // just bring it to 4.0 for now
+                    schsarm.setLiftTargetHeight(4.0);
 
                     // advance the state
                     markovElevator++;
@@ -334,10 +333,10 @@ public class BasicIterative extends OpMode
 
             case 2:
                 // elevator is lowering onto switch
-                if (motorElevator.getCurrentPosition() < 20) {
+                if (schsarm.getLiftCurrentHeight() < 4.5) {
                     // figure we are done.
                     // send Elevator back up
-                    motorElevator.setTargetPosition(300);
+                    schsarm.setLiftTargetHeight(10.0);
 
                     // advance the state
                     markovElevator++;
@@ -346,9 +345,9 @@ public class BasicIterative extends OpMode
 
             case 3:
                 // elevator is rising again
-                if (motorElevator.getCurrentPosition() > 250) {
+                if (schsarm.getLiftCurrentHeight() > 6.0) {
                     // retract arm
-                    motorArm.setTargetPosition(0);
+                    schsarm.setArmTargetExtension(0.0);
 
                     // terminate the calibration
                     markovElevator = -1;
@@ -562,30 +561,13 @@ public class BasicIterative extends OpMode
         }
 
         // set arm position hack
-        // this needs a lot of work, but hardware has been removed
-        // TODO: set scale
-        // The arm is driven by a Core Hex motor with 288 counts per revolution.
-        // The winch spool is made from 60-tooth gears.
-        // The screws are at the 16 mm positions, but they do not form an equilateral triangle.
-        // Distance will vary until that is fixed.
-        // Mechanism is single stage with 1:1 spool to extension distance.
         // it is taking too long for isBusy() to report success, so just set the desired position.
-        if (motorArm.isBusy()) {
-            telemetry.addData("arm", "is busy");
-            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
-        } else {
-            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
-        }
+        // set 0 to 12 inches (method will clip)
+        schsarm.setArmTargetExtension(gamepad1.right_trigger * 12.0);
 
-        // set elevator position
-        // TODO: set scale
-        // the elevator is drivien by a Core Hex motor with 288 counts pre revolution.
-        // the motor drives spools made from 45 tooth gears with screws at 3 8mm positions.
-        // say a wrap averages 3 * 7/8 inches = 21/8 = 2 5/8 inches.
-        // Thus 500 counts should be about 5 inches.
-        // Elevator is continuous, so height is 1:1.
-        // So 500 counts raises elevator about 5 inches.
-        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 2500));
+        // set elevator height
+        // set 0 to 30 inches (method will clip)
+        schsarm.setLiftTargetHeight(gamepad1.left_trigger * 30.0);
 
         // control the hooks
         if (gamepad1.left_bumper) {
