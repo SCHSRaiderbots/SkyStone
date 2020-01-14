@@ -43,11 +43,9 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -79,7 +77,7 @@ public class BasicIterative extends OpMode
     private static final String TAG = "testbot";
     // so use Log.d(TAG, <string>) to log debugging messages
 
-    // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
+    // TODO: is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
     private ElapsedTime runtime = new ElapsedTime();
 
     // TODO: gyroscope mess
@@ -103,11 +101,6 @@ public class BasicIterative extends OpMode
     // elevator motor
     // abstract to a class
     private DcMotorEx motorElevator = null;
-
-    // abstract to a class (eg, Robot) where attributes can be static
-    // and static methods can .setHook()
-    private Servo servoHookLeft = null;
-    private Servo servoHookRight = null;
 
     // abstract to a class (eg, Robot) where attributes can be static
     private Servo servoGrab = null;
@@ -134,6 +127,9 @@ public class BasicIterative extends OpMode
 
     // SCHSDrive (has drive motors and other stuff)
     private SCHSDrive schsdrive = null;
+
+    // SCHSArm (has lift, extend, and hooks)
+    private SCHSArm schsarm = null;
 
     // for tests
     private boolean brun = false;
@@ -191,53 +187,18 @@ public class BasicIterative extends OpMode
         telemetry.addData("IMU", "initialize");
         imu.initialize(parameters);
 
+        // use the arm abstraction now
+        schsarm = new SCHSArm();
         // The arm motor
-        //   See comments at https://ftc-tricks.com/dc-motors/
-        //     .setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //   abstract to a common class (eg, Robot)
-        motorArm = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
-        LogDevice.dump("motorArm", motorArm);
-        // assume it is at position 0 right now
-        motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        // Maybe use DcMotor.getCurrentPosition() as initial value?
-        motorArm.setTargetPosition(0);
-        // use the arm as a servo
-        // target position must be set before RUN_TO_POSITION is invoked
-        motorArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        // do not ask for a lot of power yet
-        motorArm.setPower(1.0);
-        // choose FLOAT or BRAKE
-        motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
-
+        motorArm = schsarm.extendMotor;
         // The elevator motor
-        motorElevator = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
-        LogDevice.dump("motorElevator", motorElevator);
-        // assume it is at position 0 right now
-        motorElevator.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorElevator.setTargetPosition(0);
-        motorElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorElevator.setPower(1.0);
-        motorElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        // The foundation hooks
-        // for SCHSConfig
-        //   0: leftHook
-        //   1: rightHook
-        //   2: grabberServo
-        servoHookLeft = hardwareMap.get(Servo.class, "leftHook");
-        servoHookRight = hardwareMap.get(Servo.class, "rightHook");
-
-        // dump information about the servos
-        LogDevice.dump("servoHookLeft", servoHookLeft);
-        LogDevice.dump("servoHookRight", servoHookRight);
+        motorElevator = schsarm.liftMotor;
+        // The grabber actuator
+        servoGrab = schsarm.grabServo;
 
         // set hooks to known state
-        setHookState(false);
+        schsarm.setHookState(false);
 
-        // The grabber actuator
-        servoGrab = hardwareMap.get(Servo.class, "grabberServo");
 
         // find the REV 2m distance sensor
         // *** sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
@@ -500,26 +461,6 @@ public class BasicIterative extends OpMode
         Log.d(TAG, "start() complete");
     }
 
-    /**
-     * Set Hooks to a known state
-     * Tte values are different, so there is probably bias in servo horn.
-     * The servo horn has 25 teeth, so it can only be positioned to 360/25 = 14.4 degrees
-     * Set for a small change now to avoid hitting the elevator winch.
-     * TODO provide a tracking variable or read servo position
-     * TODO remember the time the command was issue so completion can be estimated
-     */
-    private void setHookState (boolean state) {
-        if (state) {
-            // set the hook
-            servoHookLeft.setPosition(0.5);     // larger is lower down
-            servoHookRight.setPosition(0.55);    // smaller is lower down
-        } else {
-            // release the hook
-            servoHookLeft.setPosition(0.0);
-            servoHookRight.setPosition(1.0);
-        }
-    }
-
     /*
      * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
      */
@@ -654,9 +595,9 @@ public class BasicIterative extends OpMode
 
         // control the hooks
         if (gamepad1.left_bumper) {
-            setHookState(true);
+            schsarm.setHookState(true);
         } else {
-            setHookState(false);
+            schsarm.setHookState(false);
         }
 
         // try an attack mode
@@ -710,7 +651,7 @@ public class BasicIterative extends OpMode
         rightDrive.setPower(0);
 
         // make sure hooks are in known state
-        setHookState(false);
+        schsarm.setHookState(false);
 
         Log.d(TAG, "stop() complete");
     }

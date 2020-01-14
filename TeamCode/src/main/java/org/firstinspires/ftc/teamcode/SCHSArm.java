@@ -16,13 +16,23 @@ import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
  * The class for the elevator, arm, and hooks.
  */
 public class SCHSArm {
+    // the lift (elevator) motor - a CoreHex
+    // TODO: rename to motorLift;
+    DcMotorEx liftMotor;
 
-    private DcMotor liftMotor;
-    private DcMotor extendMotor;
+    // the arrm externd motor - a CoreHex
+    // TODO: rename to motorExtend;
+    DcMotorEx extendMotor;
 
-    protected Servo grabServo;
-    protected Servo leftHook;
-    protected Servo rightHook;
+    // the grabber (gripper) servo
+    // TODO: rename to servoGrabber
+    Servo grabServo;
+
+    // the foundation hooks
+    // TODO: make hooks private to force using the setHookState() method
+    // TODO: rename to servoHookLeft and servoHookRigth
+    Servo leftHook;
+    Servo rightHook;
 
     private int liftEncoderTarget;
     private int armEncoderTarget;
@@ -30,21 +40,46 @@ public class SCHSArm {
     private double liftPos;
     private double extendPos;
 
-    public void initialize(HardwareMap hardwareMap) {
+    // TODO: rename to init()
+    void initialize(HardwareMap hardwareMap) {
+
         // the elevator lift motor
         liftMotor = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
-        // ah, this explains why it wrapped the otehr way...
+        // set direction should always be safe to do
+        // ah, this explains why it wrapped the other way...
         liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        // use the lift as a servo
+        // set the target position to the current position.
+        liftMotor.setTargetPosition(liftMotor.getCurrentPosition());
+        liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // set power level to make it move
+        liftMotor.setPower(1.0);
+        // set zero power behavior (not needed with nonzero power level)
+        liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         LogDevice.dump("liftMotor", liftMotor);
 
         // the arm extend motor
         extendMotor = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
+        // configure the motor
+        // resetting the direction should always be safe
         extendMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        LogDevice.dump("extendMtoro", extendMotor);
+        // TODO: zero the extend motor
+        //   may not want to zero extend motor at start of teleop because something might be in the way
+        // We want to use the extendMotor as a servvo (run to position)
+        // using DcMotor.getCurrentPosition() as initial value should always be safe
+        extendMotor.setTargetPosition(extendMotor.getCurrentPosition());
+        // target position must be set before RUN_TO_POSITION is invoked
+        extendMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        // set the power to make the servo move
+        extendMotor.setPower(1.0);
+        // choose FLOAT or BRAKE (not needed if power is nonzero)
+        extendMotor.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
+        LogDevice.dump("extendMotor", extendMotor);
 
         // get the grabber servo
         grabServo = hardwareMap.get(Servo.class, "grabberServo");
         //grabServo.setDirection(Servo.Direction.REVERSE);
+        LogDevice.dump("grabServo", grabServo);
 
         // get the hook servos
         leftHook = hardwareMap.get(Servo.class, "leftHook");
@@ -52,6 +87,9 @@ public class SCHSArm {
 
         leftHook.setDirection(Servo.Direction.FORWARD);
         rightHook.setDirection(Servo.Direction.FORWARD);
+
+        LogDevice.dump("leftHook", leftHook);
+        LogDevice.dump("rightHook", rightHook);
     }
 
     /**
@@ -195,4 +233,22 @@ public class SCHSArm {
         return armEncoderTarget;
     }
 
+    /**
+     * Set the foundation Hooks to a known state
+     * Tte servo position values are different, so there is probably bias in servo horn.
+     * The servo horn has 25 teeth, so it can only be positioned to 360/25 = 14.4 degrees
+     * Set for a small change now to avoid hitting the elevator winch.
+     * TODO remember the time the command was issue so completion can be estimated
+     */
+    void setHookState (boolean state) {
+        if (state) {
+            // set the hook
+            leftHook.setPosition(0.5);     // larger is lower down
+            rightHook.setPosition(0.55);    // smaller is lower down
+        } else {
+            // release the hook
+            leftHook.setPosition(0.0);
+            rightHook.setPosition(1.0);
+        }
+    }
 }
