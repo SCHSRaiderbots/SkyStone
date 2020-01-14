@@ -102,9 +102,6 @@ public class BasicIterative extends OpMode
     // abstract to a class
     private DcMotorEx motorElevator = null;
 
-    // abstract to a class (eg, Robot) where attributes can be static
-    private Servo servoGrab = null;
-
     // REV 2m distance sensor and attack mode
     // Also Rev2mDistanceSensor
     // *** private DistanceSensor sensorRange2m;
@@ -193,12 +190,9 @@ public class BasicIterative extends OpMode
         motorArm = schsarm.extendMotor;
         // The elevator motor
         motorElevator = schsarm.liftMotor;
-        // The grabber actuator
-        servoGrab = schsarm.grabServo;
 
         // set hooks to known state
         schsarm.setHookState(false);
-
 
         // find the REV 2m distance sensor
         // *** sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
@@ -561,10 +555,10 @@ public class BasicIterative extends OpMode
         // simple servo hacks
         if (gamepad1.right_bumper) {
             telemetry.addData("grab", "released");
-            servoGrab.setPosition(0.1);
+            schsarm.setGrab(false);
         } else {
             telemetry.addData("grab", "gripping");
-            servoGrab.setPosition(0.6);
+            schsarm.setGrab(true);
         }
 
         // set arm position hack

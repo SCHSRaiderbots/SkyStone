@@ -251,4 +251,28 @@ public class SCHSArm {
             rightHook.setPosition(1.0);
         }
     }
+
+    /**
+     * Make a guess at the current Hook state by looking at left hook position.
+     * The result might be wrong if the hooks were never commonanded.
+     * @return true if the hooks are (probably) set
+     */
+    boolean getHookState () {
+        return (leftHook.getPosition() > 0.25);
+    }
+
+    /**
+     * Actuate the gripper
+     * @param state true means gripping (closed) and falwe means released (open)
+     */
+    void setGrab(boolean state) {
+        if (state) {
+            // if true, then we are grabbing (jaws closed
+            grabServo.setPosition(0.0);
+        } else {
+            // if false, then we are not grabbing (jaws open)
+            grabServo.setPosition(1.0);
+
+        }
+    }
 }
