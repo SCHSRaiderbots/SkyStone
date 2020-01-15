@@ -178,7 +178,7 @@ public class SCHSArm {
         //grabServo.setDirection(Servo.Direction.FORWARD);
         Log.d("SCHS: moveServo()", "in if, current Position before" + servo.getPosition());
         //for (int i=0; i<1000; i++){
-            servo.setPosition(0.99);
+            servo.setPosition(0.5);
             Log.d("SCHS: moveServo()", "current Position after turn1:" + servo.getPosition());
             //grabServo.setPosition(0);
             //Log.d("SCHS: moveServo()", "current Position after turn2:" + grabServo.getPosition());
