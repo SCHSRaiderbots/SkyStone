@@ -5,17 +5,10 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.util.ElapsedTime;
-
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-
-@Autonomous(name="Forward 24 inches", group="Test")
+@Autonomous(name="Forward 24 inches - Riley", group="Test")
 public class AutoForward24 extends OpMode {
     // Declare OpMode members.
 
@@ -36,6 +29,8 @@ public class AutoForward24 extends OpMode {
     // SCHSDrive (has drive motors and other stuff)
     private SCHSDrive schsdrive = null;
 
+    private int iState = 0;
+
     /**
      * Code to run ONCE when the driver hits INIT
      */
@@ -47,11 +42,12 @@ public class AutoForward24 extends OpMode {
         // the robot drive
         schsdrive = new SCHSDrive();
         schsdrive.init(hardwareMap, telemetry);
+        // use 2019 values
+        schsdrive.setRobot2019();
 
         // set the pose for testing
         schsdrive.setPoseInches(0,0,0);
 
-        // TODO stop using local copies
         leftDrive = schsdrive.motorLeft;
         rightDrive = schsdrive.motorRight;
 
@@ -76,7 +72,6 @@ public class AutoForward24 extends OpMode {
         schsdrive.init_loop();
 
         // update statistics for loop period
-        // TODO why is this loop taking 100 ms?
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
@@ -91,16 +86,14 @@ public class AutoForward24 extends OpMode {
 
         schsdrive.start();
 
-        int ticks = schsdrive.ticksFromInches(72.0);
-
-        leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + ticks);
-        rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + ticks);
+        leftDrive.setTargetPosition(leftDrive.getCurrentPosition());
+        rightDrive.setTargetPosition(rightDrive.getCurrentPosition());
 
         leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        leftDrive.setPower(0.5);
-        rightDrive.setPower(0.5);
+        leftDrive.setPower(1.0);
+        rightDrive.setPower(1.0);
 
         // reset timer statistics
         cLoop = 0;
@@ -114,6 +107,8 @@ public class AutoForward24 extends OpMode {
      */
     @Override
     public void loop() {
+        int ticks = schsdrive.ticksFromInches(24.0);
+
         // update statistics for loop period
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
@@ -126,6 +121,46 @@ public class AutoForward24 extends OpMode {
                 schsdrive.xPoseInches,
                 schsdrive.yPoseInches,
                 schsdrive.thetaPoseDegrees);
+
+        telemetry.addData("velocity", "%.3f %.3f ticks/second",
+                leftDrive.getVelocity(),
+                rightDrive.getVelocity());
+
+        telemetry.addData("state", " %3d", iState);
+
+        switch (iState) {
+            case 0:
+                leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + ticks);
+                rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + ticks);
+                iState++;
+                break;
+
+            case 1:
+                if (!leftDrive.isBusy() && !rightDrive.isBusy()) {
+                    telemetry.addLine("forward finished");
+
+                    // ticks = schsdrive.ticksFromMeters(0.5 * Math.PI * schsdrive.distWheel);
+
+                    // turn around
+                    // leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + ticks);
+                    // rightDrive.setTargetPosition(rightDrive.getCurrentPosition() - ticks);
+                    iState++;
+                }
+                break;
+
+            case 2:
+                if (!leftDrive.isBusy() && !rightDrive.isBusy()) {
+                    telemetry.addLine("turn finished");
+
+                    ticks=0;
+
+                    // drive back
+                    leftDrive.setTargetPosition(leftDrive.getCurrentPosition() - ticks);
+                    rightDrive.setTargetPosition(rightDrive.getCurrentPosition() - ticks);
+                    iState++;
+                }
+                break;
+        }
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + time);

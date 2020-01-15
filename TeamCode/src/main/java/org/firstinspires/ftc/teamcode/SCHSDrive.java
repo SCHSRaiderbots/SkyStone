@@ -33,7 +33,7 @@ public class SCHSDrive {
     
     // half the distance between the wheels
     // the new wheel separation 13 + 15/16
-    private double distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
+    double distWheel = (14.0 - (1.0/16.0)) * 0.0254 / 2;
 
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
     //   those attributes should be in the DcMotor class
@@ -163,7 +163,7 @@ public class SCHSDrive {
         mWheelDiameterRight = 0.090;
 
         // set the wheel half separation
-        distWheel =  0.305 / 2;
+        distWheel =  (0.305 / 2) * 360.0 / 362.0;
 
         // ticks per wheel revolution
         // CoreHex motor...
