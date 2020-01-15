@@ -391,9 +391,6 @@ public class SCHSDrive {
         xPoseInches = xPose / 0.0254;
         yPoseInches = yPose / 0.0254;
         thetaPoseDegrees = thetaPose * (180.0 / Math.PI);
-
-        // change radians to degrees
-        // telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
     }
 
     void setPoseInches(double x, double y, double theta) {

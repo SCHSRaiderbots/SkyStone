@@ -134,6 +134,9 @@ public class BasicIterative extends OpMode
         schsdrive = new SCHSDrive();
         schsdrive.init(hardwareMap, telemetry);
 
+        // set the pose for testing
+        schsdrive.setPoseInches(0,0,0);
+
         // TODO stop using local copies
         leftDrive = schsdrive.motorLeft;
         rightDrive = schsdrive.motorRight;

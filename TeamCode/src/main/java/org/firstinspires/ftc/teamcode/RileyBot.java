@@ -122,6 +122,9 @@ public class RileyBot extends OpMode
         // use 2019 values
         schsdrive.setRobot2019();
 
+        // set the pose for testing
+        schsdrive.setPoseInches(0,0,0);
+
         // TODO don't grab motors directly
         leftDrive = schsdrive.motorLeft;
         rightDrive = schsdrive.motorRight;
@@ -373,8 +376,8 @@ public class RileyBot extends OpMode
         double turn  =  gamepad1.right_stick_x;
 
         // adjust control
-        // drive = drive * Math.abs(drive);
-        // turn = turn * Math.abs(turn);
+        drive = drive * Math.abs(drive);
+        turn = turn * Math.abs(turn);
 
         // TODO: clipping is the wrong thing to do here.
         // Do I want to control velocity and clip to some max velocity?
