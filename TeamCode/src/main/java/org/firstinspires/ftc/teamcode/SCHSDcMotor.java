@@ -1,19 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class SCHSDcMotor {
 
-    private DcMotor motorleft = null;
-    private DcMotor motorRight = null;
+    private DcMotorEx motorleft = null;
+    private DcMotorEx motorRight = null;
     private DcMotor liftMotor = null;
     private DcMotor extendMotor = null;
 
     public void initialize(HardwareMap hardwareMap) {
-        motorleft = hardwareMap.get(DcMotor.class, "leftMotor");
-        motorRight = hardwareMap.get(DcMotor.class, "rightMotor");
+        motorleft = hardwareMap.get(DcMotorEx.class, "leftMotor");
+        motorRight = hardwareMap.get(DcMotorEx.class, "rightMotor");
         liftMotor = hardwareMap.get(DcMotor.class, "elevatorMotor");
         extendMotor = hardwareMap.get(DcMotor.class, "armExtenderMotor");
 
@@ -23,11 +24,11 @@ public class SCHSDcMotor {
         extendMotor.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
-    public DcMotor getMotorleft() {
+    public DcMotorEx getMotorleft() {
         return motorleft;
     }
 
-    public DcMotor getMotorRight() {
+    public DcMotorEx getMotorRight() {
         return motorRight;
     }
 

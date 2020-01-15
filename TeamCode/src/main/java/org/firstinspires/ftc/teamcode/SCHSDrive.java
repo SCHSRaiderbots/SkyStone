@@ -6,6 +6,7 @@ import android.util.Log;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
 
@@ -21,8 +22,11 @@ import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
 public class SCHSDrive {
 
     private SCHSDcMotor driveMotors;
-    private DcMotor motorLeft;
-    protected DcMotor motorRight;
+    //private DcMotor motorLeft;
+    //protected DcMotor motorRight;
+
+    protected DcMotorEx motorLeft;
+    protected DcMotorEx motorRight;
 
     private int leftEncoderTarget;
     private int rightEncoderTarget;

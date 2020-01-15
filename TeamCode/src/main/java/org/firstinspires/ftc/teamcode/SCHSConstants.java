@@ -71,10 +71,13 @@ public class SCHSConstants {
     static final double TURN_VALUE_MID_BLOCK = 700/COUNTS_PER_INCH; //left -635, right 768 turn left, avg701.5
     static final double TURN_VALUE_LEFT_BLOCK = 805/COUNTS_PER_INCH; //left -708, right 901 turn left, avg804.5
 
-    //Detection Constants
+    //Detection Constants, Left,Mid,Right correspond to red side
     static final int LEFT_POS = 1;
     static final int MID_POS = 2;
     static final int RIGHT_POS = 3;
+    static final int POS_1 = LEFT_POS;
+    static final int POS_2 = MID_POS;
+    static final int POS_3 = RIGHT_POS;
 
     //go to foundation
     static final SCHSPathSeg[] goToFDPath = {
@@ -158,7 +161,7 @@ public class SCHSConstants {
 
     static final SCHSPathSeg[] goToRBPath = {
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
-            new SCHSPathSeg( 8.25, 8.25, 0.5), //forward 8, change to 10, change to 6.5
+            new SCHSPathSeg( 9.25, 9.25, 0.5), //forward 8, change to 10, change to 6.5
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
             new SCHSPathSeg( 4.5, 4.5, 0.5), //forward 9, change to 7, change to 4.5
     };
@@ -180,12 +183,13 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] dropBlockFD = {
-            new SCHSPathSeg(LIFT, -2, 0.9, "yes"),
-            new SCHSPathSeg(ARM, -12, 0.9, "yes")
+            new SCHSPathSeg(LIFT, -8, 0.9, "yes"),
+            //new SCHSPathSeg(ARM, -12, 0.9, "yes")
+            new SCHSPathSeg(ARM, -8, 0.9, "yes")
     };
 
     static final SCHSPathSeg[] liftArm = {
-            new SCHSPathSeg(LIFT, 8, 0.9, "yes")
+            new SCHSPathSeg(LIFT, 4, 0.9, "yes")
     };
 
     static final SCHSPathSeg[] turnFDPATH = {
@@ -195,12 +199,14 @@ public class SCHSConstants {
 
     static final SCHSPathSeg[] backBlocksFirst = {
             new SCHSPathSeg( -6, -6, 0.5), //backward 6
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
+            //new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
     };
 
     static final SCHSPathSeg[] backToBlocksPath = {
             //SCHSPathSeg( -48, -48, POWER_FULL),
-            new SCHSPathSeg( -98.75, -98.75, POWER_FULL),
+            //new SCHSPathSeg( -98.75, -98.75, POWER_FULL),
+            new SCHSPathSeg( 98.75, 98.75, POWER_FULL),
             //new SCHSPathSeg( -25, -25, POWER_FULL),
             //new SCHSPathSeg( -23.75, -23.75, POWER_FULL), //backward 98.75, commented for testing
             //new SCHSPathSeg( -37, -37, POWER_FULL), //backward
@@ -229,8 +235,10 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] back2RBPath = {
-            new SCHSPathSeg( -4, -4, 0.5), //backward 4
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
+            //new SCHSPathSeg( -4, -4, 0.5), //backward 4
+            //new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
+            new SCHSPathSeg( 4, 4, 0.5), //forward 4
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
     };
 
     static final SCHSPathSeg[] retreat2RBPath = {

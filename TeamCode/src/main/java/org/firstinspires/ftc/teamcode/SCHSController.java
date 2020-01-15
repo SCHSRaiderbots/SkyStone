@@ -369,11 +369,13 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_LIFT_FD:
-                if (pathComplete(LONG_DRIVE, false)) {
+                //if (pathComplete(LONG_DRIVE, false)) {
+                if (pathComplete(DRIVE, false)) {
                     Log.d("SCHS", "inside STATE_STONES_LIFT_FD");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD);
                 }
+                break;
 
             case STATE_STONES_TURN_FD:
                 if (pathComplete(LIFT, false)){
@@ -410,6 +412,7 @@ public class SCHSController extends OpMode {
                 Log.d("SCHS","inside STATE_STONES_LIFT_ARM");
                 startPath(liftArm);
                 newState(State.STATE_STONES_RETREAT_FROM_FD);
+                break;
 
             case STATE_STONES_DROP_FD:
                 if (pathComplete(DRIVE, false)) {
@@ -458,7 +461,8 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_GO_TO_SECOND:
-                if (pathComplete(LONG_DRIVE, false)){
+                //if (pathComplete(LONG_DRIVE, false)){
+                if (pathComplete(DRIVE, false)){
                     if (skyPos == LEFT_POS) {
                         Log.d("SCHS:", "STATE_STONES_GO_TO_2nd left pos");
                         telemetry.addLine("STATES_STONES_GO_TO_SECOND, left pos");
@@ -515,7 +519,8 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_LIFT_FD_2:
-                if(pathComplete(LONG_DRIVE, false)){
+                //if(pathComplete(LONG_DRIVE, false)){
+                if(pathComplete(DRIVE, false)){
                     Log.d("SCHS:", "STATE_STONES_LIFT_FD_2");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD_2);
@@ -547,6 +552,7 @@ public class SCHSController extends OpMode {
                     startPath(stoneDownPath);
                     newState(State.STATE_STOP);
                 }
+                break;
 
             case STATE_STOP:
                 Log.d("SCHS", "inside STATES_STOP");
@@ -600,6 +606,8 @@ public class SCHSController extends OpMode {
                 rileyChassis.setDrivePower(currPath[currSeg].moveSpeed, currPath[currSeg].moveSpeed);
                 rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION); // Enable RunToPosition mode
                 telemetry.addLine("SCHS: startseg(): move straight/turn");
+                Log.d("SCHS", "startseg(), target encoder left" + Left);
+                Log.d("SCHS", "startseg(), target encoder right" + Right);
                 Log.d("SCHS: startseg():", "move straight/turn");
             } else if (currPath[currSeg].armPart == LIFT) { //move lift
                 lift = (int) (currPath[currSeg].liftDist * LIFT_FACTOR);
@@ -618,12 +626,23 @@ public class SCHSController extends OpMode {
                 rileyArm.setArmMode(DcMotor.RunMode.RUN_TO_POSITION, ARM);
                 telemetry.addLine("SCHS: startseg(): move arm extend after" + rileyArm.getExtendPos());
                 Log.d("SCHS: startseg():", "move arm extend after" + rileyArm.getExtendPos());
-            } else if(currPath[currSeg].armPart == LONG_DRIVE) {
-                rileyChassis.moveStraightWithGyro(currPath[currSeg].moveSpeed, currPath[currSeg].leftDist, currPath[currSeg].rightDist);
-                Log.d("SCHS:", "move straight long drive");
+                /*} else if(currPath[currSeg].armPart == LONG_DRIVE) {
+                //rileyChassis.moveStraightWithGyro(currPath[currSeg].moveSpeed, currPath[currSeg].leftDist, currPath[currSeg].rightDist);
+                //replaced with DcMotorEx code
+
+                Left = (int) (currPath[currSeg].leftDist * COUNTS_PER_INCH);
+                Right = (int) (currPath[currSeg].rightDist * COUNTS_PER_INCH);
+
+                Log.d("SCHS", "startseg(), target encoder left" + Left);
+                Log.d("SCHS", "startseg(), target encoder right" + Right);
+
+                rileyChassis.addEncoderTarget(Left, Right);
+                rileyChassis.setDrivePower(currPath[currSeg].moveSpeed, currPath[currSeg].moveSpeed);
+                rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION); // Enable RunToPosition mode
+                Log.d("SCHS:", "move straight long drive");*/
             } else {//arc turn
-                Left  = (int)(currPath[currSeg].leftDist * COUNTS_PER_INCH);
-                Right = (int)(currPath[currSeg].rightDist * COUNTS_PER_INCH);
+                Left = (int) (currPath[currSeg].leftDist * COUNTS_PER_INCH);
+                Right = (int) (currPath[currSeg].rightDist * COUNTS_PER_INCH);
                 rileyChassis.addEncoderTarget(Left, Right);
                 rileyChassis.setDrivePower(currPath[currSeg].leftSpeed, currPath[currSeg].rightSpeed);
                 rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION); // Enable RunToPosition mode
@@ -631,7 +650,6 @@ public class SCHSController extends OpMode {
                 Log.d("SCHS: startseg():", "arc turn");
             }
         }
-
         currSeg++;  // Move index to next segment of path
     }
 
@@ -642,11 +660,12 @@ public class SCHSController extends OpMode {
     private boolean pathComplete(int roboPart, boolean isBothArmLift) {
         // Wait for this Segement to end and then see what's next.
         if (moveComplete(roboPart, isBothArmLift)) {
-            Log.d("SCHS: moveComplete", "complete for arm true");
+            Log.d("SCHS: moveComplete", "moveComplete() true");
 
             // Start next Segement if there is one.
             if (currSeg < currPath.length)
             {
+                Log.d("SCHS", "inside pathComplete() if, moveComplete = true");
                 telemetry.addLine("SCHS: pathComplete(): move arm extend before startseg" + rileyArm.getExtendPos());
                 Log.d("SCHS: pathComplete(): ", "move arm extend before startseg" + rileyArm.getExtendPos());
                 startSeg();
@@ -656,6 +675,8 @@ public class SCHSController extends OpMode {
             }
             else  // Otherwise, stop and return done
             {
+                Log.d("SCHS", "inside pathComplete() else, moveComplete = true");
+
                 currPath= null;
                 currSeg= 0;
                 rileyChassis.setDrivePower(0, 0);
@@ -669,9 +690,8 @@ public class SCHSController extends OpMode {
                 return true;
             }
         }
-        Log.d("SCHS: moveComplete", "complete for arm false");
+        Log.d("SCHS: moveComplete", "moveComplete() false");
         telemetry.addLine("SCHS: startseg(): move arm extend false" + rileyArm.getExtendPos());
-        Log.d("SCHS: startseg():", "move arm extend false" + rileyArm.getExtendPos());
         return false;
     }
 
@@ -687,8 +707,14 @@ public class SCHSController extends OpMode {
                         (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10));
             }
         } else {
-            if (roboPart == DRIVE){
+            if (roboPart == DRIVE ){
                 Log.d("SCHS: moveComplete", "inside moveComplete() for DRIVE");
+                Log.d("SCHS", "moveComplete(), curr target left" + rileyChassis.getLeftEncoderTarget());
+                Log.d("SCHS", "moveComplete(), curr target right" + rileyChassis.getRightEncoderTarget());
+                Log.d("SCHS", "moveComplete(), curr encoder left" + rileyChassis.getLeftPosition());
+                Log.d("SCHS", "moveComplete(), curr encoder right" + rileyChassis.getRightPosition());
+                Log.d("SCHS", "finished moveComplete():" + ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
+                        (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)));
                 return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                         (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)); //10, change to 25
             } else if (roboPart == LIFT) {
@@ -699,10 +725,12 @@ public class SCHSController extends OpMode {
                 Log.d("SCHS:", "rileyArm getExtendPos = " +rileyArm.getExtendPos());
                 Log.d("SCHS:", "rileyArm getArmEncoderTarget = " +rileyArm.getArmEncoderTarget());
                 return (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10);
-            } else if(roboPart == LONG_DRIVE) {
+            } /*else if(roboPart == LONG_DRIVE) {
                 Log.d("SCHS:", "inside moveComplete() for LONG_DRIVE");
-                return rileyChassis.isMoveDone;
-            }
+                //return rileyChassis.isMoveDone;
+                return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
+                        (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)); //10, change to 25
+            }*/
         }
         Log.d("SCHS:", "moveComplete() no case entered");
         return false;

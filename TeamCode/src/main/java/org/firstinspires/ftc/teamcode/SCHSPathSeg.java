@@ -26,11 +26,12 @@ public class SCHSPathSeg {
         rightSpeed = 0;
         isTwoSpeed = false;
 
-        if (Math.abs(left) >= 48 && Math.abs(right) >= 48) {
+        armPart = DRIVE;
+        /*if (Math.abs(left) >= 48 && Math.abs(right) >= 48) {
             armPart = LONG_DRIVE;
         } else {
             armPart = DRIVE;
-        }
+        }*/
     }
 
     public SCHSPathSeg(double left, double right, double lSpeed, double rSpeed) {
