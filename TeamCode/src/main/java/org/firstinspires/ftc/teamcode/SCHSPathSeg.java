@@ -25,7 +25,13 @@ public class SCHSPathSeg {
         leftSpeed = 0;
         rightSpeed = 0;
         isTwoSpeed = false;
-        armPart = 0;
+
+        armPart = DRIVE;
+        /*if (Math.abs(left) >= 48 && Math.abs(right) >= 48) {
+            armPart = LONG_DRIVE;
+        } else {
+            armPart = DRIVE;
+        }*/
     }
 
     public SCHSPathSeg(double left, double right, double lSpeed, double rSpeed) {
@@ -36,7 +42,7 @@ public class SCHSPathSeg {
         leftSpeed = lSpeed;
         rightSpeed = rSpeed;
         isTwoSpeed = true;
-        armPart = 0;
+        armPart = DRIVE;
     }
 
     public SCHSPathSeg(int armPartNum, double dist, double speed, String isArmNum) {
@@ -51,5 +57,4 @@ public class SCHSPathSeg {
         }
         isArm = 1;
     }
-
 }
