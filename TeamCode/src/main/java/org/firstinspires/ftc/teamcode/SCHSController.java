@@ -36,7 +36,6 @@ public class SCHSController extends OpMode {
         STATE_STONES_RETREAT,
         STATE_STONES_ARM_DOWN,
         STATE_STONES_DELIVER,
-        STATE_STONES_RETURN_TO_STONES,
         STATE_STONES_DROP_STONE,
         STATE_STONES_GO_TO_SECOND,
         STATE_STONES_RETREAT_SECOND,
@@ -50,10 +49,8 @@ public class SCHSController extends OpMode {
         STATE_STONES_DROP_FD_2,
 
         STATE_STONES_CLOSE_STONE,
-        STATE_STONES_OPEN_STONE,
         STATE_STONES_RETRIEVE_STONE,
         STATE_STONES_SECOND_DROP,
-        STATE_STONES_EXTEND_OUT,
         STATE_STONES_EXTEND_IN,
         STATE_STONES_LIFT_FD,
         STATE_STONES_DROP_FD,
@@ -77,6 +74,7 @@ public class SCHSController extends OpMode {
     private ElapsedTime runtime = new ElapsedTime();
     private ElapsedTime currStateTime = new ElapsedTime();
 
+
     @Override
     public void init() {
         rileyChassis = new SCHSDrive();
@@ -87,6 +85,11 @@ public class SCHSController extends OpMode {
         rileyArm.initialize(hardwareMap);
         telemetry.addLine("Done Initializing");
         msStuckDetectLoop = 20000;
+        msStuckDetectInit = 20000;
+        msStuckDetectInitLoop = 20000;
+        /* added to raise arm above block during init */
+        startPath(liftArmInitial);
+        sleep(1000);
     }
 
     //@Override
@@ -130,7 +133,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_FD_TEST:
-                if (pathComplete(ARM, false))
+                if (pathComplete(ARM, false, false))
                 {
                     //startPath(testPath2);
                     telemetry.addLine("SCHS: startseg(): move arm extend" + rileyArm.getExtendPos());
@@ -166,7 +169,7 @@ public class SCHSController extends OpMode {
 
 
             case STATE_TEST_2_INITIAL:
-                if (pathComplete(DRIVE, false))
+                if (pathComplete(DRIVE, false, false))
                 {
                     rileyArm.openServo(rileyArm.rightHook);
                     rileyArm.closeServo(rileyArm.leftHook);
@@ -189,7 +192,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_FD_GO_TO_FOUNDATION:
-                if (pathComplete(ARM, false))
+                if (pathComplete(ARM, false, false))
                 {
                     //rileyChassis.setDrivePower(0, 0);
                     rileyArm.setArmPower(0, LIFT);
@@ -236,14 +239,16 @@ public class SCHSController extends OpMode {
                 if (rileyChassis.encodersAtZero()){
                     telemetry.addLine("STATES_STONES_FIRST");
                     Log.d("SCHS: DETECT_SKYSTONE", "inside STATES_STONES_FIRST");
-                    startPath(startBotPath);
+                    //startPath(startBotPath);
+                    /* new path for extending and moving forward */
+                    startPath(startBotExtendPath);
                     newState((State.STATE_STONES_GO_TO_SKYSTONE));
                 } else {
                 }
                 break;
 
             case STATE_STONES_GO_TO_SKYSTONE:
-                if (pathComplete(DRIVE, false)){
+                if (pathComplete(DRIVE, false, true)){
                     Log.d("SCHS", "inside STATES_STONES_GO_TO_SKYSTONE");
                     telemetry.addLine("STATES_STONES_GO_TO_SKYSTONE");
                     if (skyPos == LEFT_POS) {
@@ -269,7 +274,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_PICK_STONE:
-                if (pathComplete(DRIVE, false)){
+                if (pathComplete(DRIVE, false, false)){
                     Log.d("SCHS", "inside STATES_STONES_PICK_STONE");
                     telemetry.addLine("inside STATES_STONES_PICK_STONE");
                     startPath(pickStoneArmPath);
@@ -280,7 +285,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_CLOSE_STONE:
-                if (pathComplete(LIFT, true)){
+                if (pathComplete(LIFT, true, false)){
                     Log.d("SCHS", "inside STATES_STONES_CLOSE_STONE");
                     rileyArm.openServo(rileyArm.grabServo);
                     sleep(2000);
@@ -290,7 +295,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_RETRIEVE_STONE:
-                startPath(retreatStoneArmPath);
+                startPath(retrieveStoneArmPath);
                 Log.d("SCHS:", "inside STATES_STONES_RETRIEVE_STONE");
                 if (!isRoundTwo){
                     Log.d("SCHS:", "STATES_STONES_RETRIEVE_STONE, round one");
@@ -314,7 +319,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT:
-                if (pathComplete(LIFT, true)){
+                if (pathComplete(LIFT, true, false)){
                     //if (pathComplete(DRIVE, false)) {
                     Log.d("SCHS","inside STATES_STONES_RETREAT");
                     telemetry.addLine("STATES_STONES_RETREAT");
@@ -341,7 +346,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_ARM_DOWN:
-                if (pathComplete(DRIVE, false)) {
+                if (pathComplete(DRIVE, false, false)) {
                     startPath(stoneDownPath);
                     if (!isRoundTwo){
                         Log.d("SCHS:", "STATES_STONES_ARM_DOWN, round 1");
@@ -358,7 +363,7 @@ public class SCHSController extends OpMode {
 
 
             case STATE_STONES_DELIVER:
-                if (pathComplete(LIFT, false)){
+                if (pathComplete(LIFT, false, false)){
                     rileyChassis.isMoveDone = false;
                     Log.d("SCHS:", "STATE_STONES_DELIVER");
                     telemetry.addLine("STATES_STONES_DELIVER");
@@ -370,7 +375,7 @@ public class SCHSController extends OpMode {
 
             case STATE_STONES_LIFT_FD:
                 //if (pathComplete(LONG_DRIVE, false)) {
-                if (pathComplete(DRIVE, false)) {
+                if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_LIFT_FD");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD);
@@ -378,16 +383,16 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_TURN_FD:
-                if (pathComplete(LIFT, false)){
+                if (pathComplete(LIFT, false, false)){
                     Log.d("SCHS:", "STATE_STONES_TURN_FD");
-                    startPath(turnFDPATH);
+                    startPath(turnFDPath);
                     newState(State.STATE_STONES_DROP_STONE);
                 } else {
                 }
                 break;
 
             case STATE_STONES_DROP_STONE:
-                if (pathComplete(DRIVE, false)){
+                if (pathComplete(DRIVE, false, false)){
                     Log.d("SCHS","inside STATES_STONES_DROP_STONE");
                     telemetry.addLine("STATES_STONES_DROP_STONE");
                     //drop blocks
@@ -415,7 +420,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_DROP_FD:
-                if (pathComplete(DRIVE, false)) {
+                if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS","inside STATE_STONES_DROP_FD");
                     startPath(dropBlockFD);
                     newState(State.STATE_STONES_BACK_TO_BLOCKS);
@@ -424,7 +429,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_SECOND_DROP:
-                if (pathComplete(ARM, false)){
+                if (pathComplete(ARM, false, false)){
                     Log.d("SCHS","inside STATES_STONES_SECOND_DROP");
                     rileyArm.openServo(rileyArm.grabServo);
                     sleep(2000);
@@ -440,9 +445,9 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT_FROM_FD:
-                if (pathComplete(LIFT, false)) {
-                    Log.d("SCHS","inside STATES_STONES_RETURN_TO_STONES");
-                    telemetry.addLine("STATES_STONES_RETURN_TO_STONES");
+                if (pathComplete(LIFT, false, false)) {
+                    Log.d("SCHS","inside STATES_STONES_RETREAT_FROM_FD");
+                    telemetry.addLine("STATES_STONES_RETREAT_FROM_FD");
                     isRoundTwo = true;
                     startPath(backBlocksFirst);
                     newState(State.STATE_STONES_DROP_FD);
@@ -451,7 +456,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_BACK_TO_BLOCKS:
-                if (pathComplete(LIFT, true)) {
+                if (pathComplete(LIFT, true, false)) {
                     rileyChassis.isMoveDone = false;
                     Log.d("SCHS","inside STATES_STONES_BACK_TO_BLOCKS");
                     startPath(backToBlocksPath);
@@ -462,7 +467,7 @@ public class SCHSController extends OpMode {
 
             case STATE_STONES_GO_TO_SECOND:
                 //if (pathComplete(LONG_DRIVE, false)){
-                if (pathComplete(DRIVE, false)){
+                if (pathComplete(DRIVE, false, false)){
                     if (skyPos == LEFT_POS) {
                         Log.d("SCHS:", "STATE_STONES_GO_TO_2nd left pos");
                         telemetry.addLine("STATES_STONES_GO_TO_SECOND, left pos");
@@ -485,7 +490,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT_SECOND:
-                if (pathComplete(LIFT, true)){
+                if (pathComplete(LIFT, true, false)){
                     telemetry.addLine("STATES_STONES_RETREAT_SECOND");
                     if (skyPos == LEFT_POS) {
                         Log.d("SCHS:", "STATE_STONES_RETREAT_SECOND left pos");
@@ -508,7 +513,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_DELIVER_SECOND:
-                if (pathComplete(LIFT, false)){
+                if (pathComplete(LIFT, false, false)){
                     rileyChassis.isMoveDone = false;
                     Log.d("SCHS:", "STATE_STONES_DELIVER_SECOND");
                     telemetry.addLine("STATES_STONES_DELIVER_SECOND");
@@ -520,7 +525,7 @@ public class SCHSController extends OpMode {
 
             case STATE_STONES_LIFT_FD_2:
                 //if(pathComplete(LONG_DRIVE, false)){
-                if(pathComplete(DRIVE, false)){
+                if(pathComplete(DRIVE, false, false)){
                     Log.d("SCHS:", "STATE_STONES_LIFT_FD_2");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD_2);
@@ -529,15 +534,15 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_TURN_FD_2:
-                if (pathComplete(LIFT, false)) {
-                    startPath(turnFDPATH);
+                if (pathComplete(LIFT, false, false)) {
+                    startPath(turnFDPath);
                     newState(State.STATE_STONES_DROP_STONE);
                 } else {
                 }
                 break;
 
             case STATE_STONES_BACK_FD:
-                if (pathComplete(ARM, false)){
+                if (pathComplete(ARM, false, false)){
                     Log.d("SCHS", "inside STATE_STONES_BACK_FD");
                     telemetry.addLine("STATES_STONES_BACK_FD");
                     startPath(backFromFDPath);
@@ -547,7 +552,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_DROP_FD_2:
-                if (pathComplete(DRIVE, false)){
+                if (pathComplete(DRIVE, false, false)){
                     Log.d("SCHS", "inside STATE_STONES_DROP_FD_2");
                     startPath(stoneDownPath);
                     newState(State.STATE_STOP);
@@ -657,9 +662,9 @@ public class SCHSController extends OpMode {
     //As each segment completes, the next segment is started unless there are no more.
     //Returns true if the last leg has completed and the robot is stopped.
 
-    private boolean pathComplete(int roboPart, boolean isBothArmLift) {
+    private boolean pathComplete(int roboPart, boolean isBothArmLift, boolean isBothArmDrive) {
         // Wait for this Segement to end and then see what's next.
-        if (moveComplete(roboPart, isBothArmLift)) {
+        if (moveComplete(roboPart, isBothArmLift, isBothArmDrive)) {
             Log.d("SCHS: moveComplete", "moveComplete() true");
 
             // Start next Segement if there is one.
@@ -696,7 +701,7 @@ public class SCHSController extends OpMode {
     }
 
     // Return true if motors have both reached the desired encoder target
-    public boolean moveComplete(int roboPart, boolean isBothArmLift) {
+    public boolean moveComplete(int roboPart, boolean isBothArmLift, boolean isBothArmDrive) {
         if (isBothArmLift) {
             if (roboPart == LIFT || roboPart == ARM) {
                 Log.d("SCHS:", "inside moveComplete() lift/arm");
@@ -725,7 +730,17 @@ public class SCHSController extends OpMode {
                 Log.d("SCHS:", "rileyArm getExtendPos = " +rileyArm.getExtendPos());
                 Log.d("SCHS:", "rileyArm getArmEncoderTarget = " +rileyArm.getArmEncoderTarget());
                 return (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10);
-            } /*else if(roboPart == LONG_DRIVE) {
+            } else if (isBothArmDrive) {
+                Log.d("SCHS:", "inside moveComplete() arm + drive");
+                if(roboPart == ARM || roboPart == DRIVE) {
+                    Log.d("SCHS:", "executing arm+drive check moveComplete()");
+                    boolean armDone = Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10;
+                    boolean moveDone = (Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
+                            (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20);
+                    return (armDone && moveDone);
+                }
+            }
+            /* } else if(roboPart == LONG_DRIVE) {
                 Log.d("SCHS:", "inside moveComplete() for LONG_DRIVE");
                 //return rileyChassis.isMoveDone;
                 return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
