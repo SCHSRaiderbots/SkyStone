@@ -79,24 +79,32 @@ public class SCHSController extends OpMode {
     public void init() {
         rileyChassis = new SCHSDrive();
         rileyChassis.initialize(hardwareMap);
+
         rileyEnv = new SCHSDetection();
         rileyEnv.iniitialize(hardwareMap);
+
         rileyArm = new SCHSArm();
         rileyArm.initialize(hardwareMap);
+
         telemetry.addLine("Done Initializing");
+
         msStuckDetectLoop = 20000;
         msStuckDetectInit = 20000;
         msStuckDetectInitLoop = 20000;
+
+        // move resettting the encoders up
+        // TODO: Reset encoders should happen in SCHSDrive.initialize() and SCHSArm.initialize()
+        // reset encoders
+        rileyChassis.resetEncoders();
+        rileyArm.resetArmEncoders();
+
         /* added to raise arm above block during init */
         startPath(liftArmInitial);
-        sleep(1000);
     }
 
     //@Override
     public void init_loop() {
         //keep resetting encoders and show current values
-        rileyChassis.resetEncoders();
-        rileyArm.resetArmEncoders();
         telemetry.addData("ENC", String.format("L:R %s:%s", rileyChassis.getLeftPosition(), rileyChassis.getRightPosition()));
     }
 
@@ -107,6 +115,7 @@ public class SCHSController extends OpMode {
         rileyArm.setArmPower(0, LIFT);
         rileyArm.setArmPower(0, ARM);
         //rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+        
         runtime.reset();
         newState(State.STATE_STONES_INITIAL);
         //newState(State.STATE_TEST_3);

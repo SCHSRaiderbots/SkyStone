@@ -104,6 +104,9 @@ public class SCHSDrive {
 
     protected boolean isMoveDone;
 
+    // only log one report that IMU is calibrated.
+    private boolean boolIMUCalibrated = false;
+
     /**
      * Called during an OpMode init() routine.
      * gets the drive motors setup
@@ -170,13 +173,15 @@ public class SCHSDrive {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(gyroParameters);
 
-        // TODO: NEVER SLEEP! Check this in init_loop
+        /*
+        // NEVER SLEEP! Check this in init_loop
+        // condition is also backwards
         while (imu.isGyroCalibrated())  {
             Log.d("Status" , "SCHSMotor:moveStraightWithGyro: gyro is calibrating");
             sleep(50);
         }
-
-        Log.d("Status" , "SCHSMotor:moveStraightWithGyro: gyro done calibrating");
+         Log.d("Status" , "SCHSMotor:moveStraightWithGyro: gyro done calibrating");
+        */
     }
 
     /**
@@ -215,6 +220,16 @@ public class SCHSDrive {
         // check robot health
         if (telemetry != null && voltageBattery < 11.5) {
             telemetry.addLine("RECHARGE or REPLACE BATTERY");
+        }
+
+        // if we have an IMU, check if calibrated
+        if (imu != null && !boolIMUCalibrated) {
+            if (!imu.isGyroCalibrated()) {
+                Log.d("Status", "SCHSMotor:moveStraightWithGyro: gyro is calibrating");
+            } else {
+                boolIMUCalibrated = true;
+                Log.d("Status", "SCHSMotor:moveStraightWithGyro: gyro done calibrating");
+            }
         }
     }
 
