@@ -95,8 +95,12 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] arcTurnFDPath = {
-            //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8)
-            new SCHSPathSeg(-11, -33.58, 0.2,0.8)
+            //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8) --> ORIGINAL
+            // WORKING BUT SHIMMY new SCHSPathSeg(-30, -60, 0.3, POWER_FULL), //new value for turn
+            new SCHSPathSeg(-3, -3, 0.5),
+            //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL) --> WORKS TOO  WIDE
+            //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL)
+            new SCHSPathSeg(-15, -37.25, 0.5, POWER_FULL)
     };
 
     static final SCHSPathSeg[] pushFDPath = {

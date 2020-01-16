@@ -240,12 +240,9 @@ public class SCHSController extends OpMode {
                 if (rileyChassis.encodersAtZero()){
                     Log.d("SCHS", "inside STATES_STONES_INITIAL if case");
                     telemetry.addLine("STATES_STONES_INITIAL");
-                    //startPath(startBotPath);
                     skyPos = rileyEnv.detectSkyPos(); //scan blocks
-                    //skyPos = RIGHT_POS;
                     telemetry.addLine("skyPos:" + skyPos);
                     Log.d("SCHS: DETECT_SKYSTONE", "skyPos:" + skyPos);
-                    //newState(State.STATE_STONES_DETECT_SKYSTONE);
                     newState(State.STATE_STONES_FIRST_MOVE);
                 } else {
                     Log.d("SCHS", "inside STATES_STONES_INITIAL else case");
@@ -440,7 +437,7 @@ public class SCHSController extends OpMode {
 
             case STATE_STONES_DROP_HOOKS:
                 if (pathComplete(LIFT, false, false)) {
-                    Log.d("SCHS","inside STATE_STONES_DROP_HOOKS");
+                    Log.d("SCHS", "inside STATE_STONES_DROP_HOOKS");
                     //rileyArm.closeServo(rileyArm.rightHook);
                     rileyArm.closeHook(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
@@ -451,14 +448,15 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_PULL_FD:
-                Log.d("SCHS","inside STATE_STONES_PULL_FD");
-                startPath(arcTurnFDPath);
-                newState(State.STATE_STONES_PUSH_FD);
+                    Log.d("SCHS", "inside STATE_STONES_PULL_FD");
+                    startPath(arcTurnFDPath);
+                    newState(State.STATE_STONES_PUSH_FD);
                 break;
 
             case STATE_STONES_PUSH_FD:
                 if (pathComplete(DRIVE,false,false)) {
                     Log.d("SCHS","inside STATE_STONES_PUSH_FD");
+                    sleep(1000);
                     startPath(pushFDPath);
                     newState(State.STATE_STONES_LIFT_HOOKS);
                 } else {
@@ -468,7 +466,8 @@ public class SCHSController extends OpMode {
             case STATE_STONES_LIFT_HOOKS:
                 if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
-                    rileyArm.openServo(rileyArm.rightHook);
+                    //rileyArm.openServo(rileyArm.rightHook);
+                    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
                     rileyArm.closeServo(rileyArm.leftHook);
                     sleep(2000);
                     newState(State.STATE_STONES_PARK_BRIDGE);
