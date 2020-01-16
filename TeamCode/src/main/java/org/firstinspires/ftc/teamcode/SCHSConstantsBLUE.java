@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-class SCHSConstants {
+public class SCHSConstantsBLUE {
 
     // power constants between 1 and -1
     static final double POWER_FULL = 1;
@@ -22,7 +22,18 @@ class SCHSConstants {
     static final int CYCLE_MS = 50;
 
 
+    // robot parameters
+    // abstract to a class (eg, Robot) where static parameters describe the robot
+    // the wheel diameters
+    private final double mWheelDiameterLeft = 0.090;
+    private final double mWheelDiameterRight = 0.090;
+    // half the distance between the wheels
+    private final double distWheel = 0.305 / 2;
+
     // derived robot parameters
+    // Distance per tick
+    //   leaving the units vague at this point
+    // Currently using direct drive with a CoreHex motor
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
     //   those attributes should be in the DcMotor class
     // The HD Hex Motor has 56 ticks per revolution
@@ -36,6 +47,19 @@ class SCHSConstants {
     static final double HEX_HD_RATIO_4_1 = 76.0/21.0;
     static final double HEX_HD_RATIO_5_1 = 68.0/13.0;
     static final double COUNTS_PER_REV = 56.0 * HEX_HD_RATIO_4_1 * HEX_HD_RATIO_5_1;
+
+    // The DcMotor class can allow some help
+    //   MotorConfigurationType .getMotorType()
+    //     MotorConfigurationType#getUnspecifiedMotorType()
+    //       do not know where the enum is
+    //   java.lang.String .getDeviceName() (not the config name)
+    //   HardwareDevice.Manufacturer .getManufacturer()
+    //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
+    //       possibly uninteresting
+    //   DcMotorEx has .getVelocity(AngleUnit unit), so it presumably knows the ticks per revolution
+    //     however, there is not a .getCurrentPostion(AngleUnit unit)
+    private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (4 * 72);
+    private final double distpertickRight = mWheelDiameterRight * Math.PI / (4 * 72);
 
     //245 counts ~ 90 degree turn
 
@@ -71,8 +95,8 @@ class SCHSConstants {
     };
 
     static final SCHSPathSeg[] arcTurnFDPath = {
-            //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8)
-            new SCHSPathSeg(-11, -33.58, 0.2,0.8)
+            //new SCHSPathSeg((-((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8)
+            new SCHSPathSeg(-(((17*(Math.PI))/2)-4), (-((31*(Math.PI))/2)-8), 0.8, 0.6)
     };
 
     static final SCHSPathSeg[] pushFDPath = {
@@ -90,13 +114,13 @@ class SCHSConstants {
             new SCHSPathSeg(LIFT, -4.5,0.5,"yes") //lift down 4.5
              */
             /* new pathsegs b/c already lifted and extended prior, lifted 3 in*/
-            //new SCHSPathSeg(ARM, 7.5, 0.5, "yes"), // remaining extend 9 inches, change to 7.5 (total 12)
-            new SCHSPathSeg(LIFT, -4, 0.5, "yes"), // down 3 in", change to 4
+            new SCHSPathSeg(ARM, 9, 0.5, "yes"), // remaining extend 9 inches (total 12)
+            new SCHSPathSeg(LIFT, -3, 0.5, "yes"), // down 3 in"
     };
 
     static final SCHSPathSeg[] retrieveStoneArmPath = { //
             new SCHSPathSeg(LIFT, 5, 0.5,"yes"), //lift 5 up
-            new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4",
+            new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4"
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
@@ -134,7 +158,7 @@ class SCHSConstants {
 
     /* new pathseg to extend during first movement */
     static final SCHSPathSeg[] startBotExtendPath = {
-            new SCHSPathSeg(ARM, 12, 0.5, "yes"), //extend 3", change to 10.5
+            new SCHSPathSeg(ARM, 3.0, 0.5, "yes"), //extend 3"
             new SCHSPathSeg(15,15,0.5), //move forward 15"
 
     };
@@ -146,9 +170,10 @@ class SCHSConstants {
             new SCHSPathSeg( 4.5, 4.5, 0.5), //forward 4.5
     };
 
+    /* changed due to blue side */
     static final SCHSPathSeg[] retreatLBPath= {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5),  // right 90
-            new SCHSPathSeg( 20, 20, 0.5), //forward 20
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
+            new SCHSPathSeg( 4, 4, 0.5), //forward 4"
     };
 
     static final SCHSPathSeg[] goToMBPath = {
@@ -156,7 +181,7 @@ class SCHSConstants {
     };
 
     static final SCHSPathSeg[] retreatMBPath = {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5),  // right 90
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
             new SCHSPathSeg( 12, 12, 0.5), //forward 12
     };
 
@@ -168,8 +193,8 @@ class SCHSConstants {
     };
 
     static final SCHSPathSeg[] retreatRBPath = {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5),  // right 90
-            new SCHSPathSeg( 4, 4, 0.5), //forward 4
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
+            new SCHSPathSeg( 20, 20, 0.5), //forward 20
     };
 
     static final SCHSPathSeg[] deliverBlockPath = {
@@ -194,13 +219,13 @@ class SCHSConstants {
     };
 
     static final SCHSPathSeg[] turnFDPath = {
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
-            new SCHSPathSeg( 10, 10, 0.5), //forward 6
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
+            new SCHSPathSeg( 6, 6, 0.5), //forward 6
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {
             new SCHSPathSeg( -6, -6, 0.5), //backward 6
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
     };
 
     static final SCHSPathSeg[] backToBlocksPath = {
@@ -261,18 +286,18 @@ class SCHSConstants {
 
     static final double POS_3_LEFT_MIN = 318;
     static final double POS_3_LEFT_MAX = 418;
-    static final double POS_3_RIGHT_MIN = 580;
-    static final double POS_3_RIGHT_MAX = 680;
+    static final double POS_3_RIGHT_MIN = 570;
+    static final double POS_3_RIGHT_MAX = 670;
 
     static final double POS_2_LEFT_MIN = 135;
     static final double POS_2_LEFT_MAX = 235;
-    static final double POS_2_RIGHT_MIN = 400;
-    static final double POS_2_RIGHT_MAX = 500;
+    static final double POS_2_RIGHT_MIN = 380;
+    static final double POS_2_RIGHT_MAX = 480;
 
     static final double POS_1_LEFT_MIN = -50;
     static final double POS_1_LEFT_MAX = 50;
-    static final double POS_1_RIGHT_MIN = 190;
-    static final double POS_1_RIGHT_MAX = 290;
+    static final double POS_1_RIGHT_MIN = 125;
+    static final double POS_1_RIGHT_MAX = 225;
 
     //core hex motor constants
     static final double CHMOTOR_COUNTS_PER_REVOLUTION = 288;

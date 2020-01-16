@@ -189,7 +189,15 @@ public class SCHSArm {
     }
 
     /**
-     * @deprecated
+     * @deprecated SCHSArm knows which servos to use; the public should not know that detail
+     * @param servo  servo to actuate (hook or grabber)
+     */
+    public void closeHook(Servo servo) {
+        servo.setPosition(0.1);
+    }
+
+    /**
+     * @deprecated The public should not have access to these servos
      * @param servo  servo to actuate (hook or grabber)
      */
     public void closeServo(Servo servo) {

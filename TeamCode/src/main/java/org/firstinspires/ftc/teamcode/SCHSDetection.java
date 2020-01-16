@@ -73,21 +73,21 @@ public class SCHSDetection {
                             Log.d("SCHS:Tensor", "detected Skystone");
                             leftVal = recognition.getLeft();
                             rightVal = recognition.getRight();
-                            if (leftVal > POS_3_LEFT_MIN && leftVal < POS_3_LEFT_MAX && rightVal > POS_3_RIGHT_MIN && rightVal < POS_3_RIGHT_MAX) {
+                            if (/*leftVal > POS_3_LEFT_MIN && leftVal < POS_3_LEFT_MAX && */ rightVal > POS_3_RIGHT_MIN && rightVal < POS_3_RIGHT_MAX) {
                                 skyPos = 3;
                                 Log.d("SCHS:Tensor","skyPos 3 leftVal:" + leftVal);
                                 Log.d("SCHS:Tensor","skyPos 3 rightVal:" + rightVal);
                                 Log.d("SCHS:Tensor","skyPos :" + skyPos);
                                 isDone = true;
                                 break;
-                            } else if (leftVal > POS_2_LEFT_MIN && leftVal < POS_2_LEFT_MAX && rightVal > POS_2_RIGHT_MIN && rightVal < POS_2_RIGHT_MAX) {
+                            } else if (/*leftVal > POS_2_LEFT_MIN && leftVal < POS_2_LEFT_MAX && */ rightVal > POS_2_RIGHT_MIN && rightVal < POS_2_RIGHT_MAX) {
                                 skyPos = 2;
                                 Log.d("SCHS:Tensor","skyPos 2 leftVal:" + leftVal);
                                 Log.d("SCHS:Tensor","skyPos 2 rightVal:" + rightVal);
                                 Log.d("SCHS:Tensor","skyPos :" + skyPos);
                                 isDone = true;
                                 break;
-                            } else if (leftVal > POS_1_LEFT_MIN && leftVal < POS_1_LEFT_MAX && rightVal > POS_1_RIGHT_MIN && rightVal < POS_1_RIGHT_MAX) {
+                            } else if (/*leftVal > POS_1_LEFT_MIN && leftVal < POS_1_LEFT_MAX && */ rightVal > POS_1_RIGHT_MIN && rightVal < POS_1_RIGHT_MAX) {
                                 skyPos = 1;
                                 Log.d("SCHS:Tensor","skyPos 1 leftVal:" + leftVal);
                                 Log.d("SCHS:Tensor","skyPos 1 rightVal:" + rightVal);

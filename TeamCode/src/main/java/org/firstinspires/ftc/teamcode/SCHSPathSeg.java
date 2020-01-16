@@ -34,7 +34,7 @@ public class SCHSPathSeg {
         }*/
     }
 
-    public SCHSPathSeg(double left, double right, double lSpeed, double rSpeed) {
+    public SCHSPathSeg(double left, double right, double lSpeed, double rSpeed) { //arcturn
         leftDist = left;
         rightDist = right;
         moveSpeed = 0;
