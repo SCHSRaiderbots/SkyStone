@@ -162,7 +162,7 @@ public class SCHSConstants {
 
     /* new pathseg to extend during first movement */
     static final SCHSPathSeg[] startBotExtendPath = {
-            new SCHSPathSeg(ARM, 12, 0.5, "yes"), //extend 3", change to 10.5
+            new SCHSPathSeg(ARM, 12, 0.5, "yes"), //extend 3", change to 12
             new SCHSPathSeg(15,15,0.5), //move forward 15"
 
     };
@@ -223,7 +223,7 @@ public class SCHSConstants {
 
     static final SCHSPathSeg[] turnFDPath = {
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
-            new SCHSPathSeg( 10, 10, 0.5), //forward 6
+            new SCHSPathSeg( 10, 10, 0.5), //forward 6, change to 10
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {

@@ -105,6 +105,7 @@ public class SCHSControllerBLUE extends OpMode {
 
         /* added to raise arm above block during init */
         startPath(liftArmInitial);
+	rileyArm.closeServo(rileyArm.grabServo);
     }
 
     //@Override
@@ -239,12 +240,9 @@ public class SCHSControllerBLUE extends OpMode {
                 if (rileyChassis.encodersAtZero()){
                     Log.d("SCHS", "inside STATES_STONES_INITIAL if case");
                     telemetry.addLine("STATES_STONES_INITIAL");
-                    //startPath(startBotPath);
-                    //skyPos = rileyEnv.detectSkyPos(); //scan blocks
-                    skyPos = RIGHT_POS;
+                    skyPos = rileyEnv.detectSkyPos(); //scan blocks
                     telemetry.addLine("skyPos:" + skyPos);
                     Log.d("SCHS: DETECT_SKYSTONE", "skyPos:" + skyPos);
-                    //newState(State.STATE_STONES_DETECT_SKYSTONE);
                     newState(State.STATE_STONES_FIRST_MOVE);
                 } else {
                     Log.d("SCHS", "inside STATES_STONES_INITIAL else case");
@@ -303,7 +301,7 @@ public class SCHSControllerBLUE extends OpMode {
                 break;
 
             case STATE_STONES_CLOSE_STONE:
-                if (pathComplete(LIFT, true, false)){
+                if (pathComplete(LIFT, false, false)){
                     Log.d("SCHS", "inside STATES_STONES_CLOSE_STONE");
                     rileyArm.openServo(rileyArm.grabServo);
                     sleep(2000);
@@ -439,13 +437,14 @@ public class SCHSControllerBLUE extends OpMode {
 
             case STATE_STONES_DROP_HOOKS:
                 if (pathComplete(LIFT, false, false)) {
-                    Log.d("SCHS","inside STATE_STONES_DROP_HOOKS");
-                    rileyArm.closeServo(rileyArm.rightHook);
+                    Log.d("SCHS", "inside STATE_STONES_DROP_HOOKS");
+                    //rileyArm.closeServo(rileyArm.rightHook);
+		    rileyArm.closeHook(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
                     sleep(2000);
+		    newState(State.STATE_STONES_PULL_FD);
                 } else {
                 }
-                newState(State.STATE_STONES_PULL_FD);
                 break;
 
             case STATE_STONES_PULL_FD:
@@ -457,21 +456,23 @@ public class SCHSControllerBLUE extends OpMode {
             case STATE_STONES_PUSH_FD:
                 if (pathComplete(DRIVE,false,false)) {
                     Log.d("SCHS","inside STATE_STONES_PUSH_FD");
+		    sleep(1000);
                     startPath(pushFDPath);
+                    newState(State.STATE_STONES_LIFT_HOOKS);
                 } else {
                 }
-                newState(State.STATE_STONES_LIFT_HOOKS);
                 break;
 
             case STATE_STONES_LIFT_HOOKS:
                 if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
-                    rileyArm.openServo(rileyArm.rightHook);
+                    //rileyArm.openServo(rileyArm.rightHook);
+		    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
                     rileyArm.closeServo(rileyArm.leftHook);
                     sleep(2000);
+		    newState(State.STATE_STONES_PARK_BRIDGE);
                 } else {
                 }
-                newState(State.STATE_STONES_PARK_BRIDGE);
                 break;
 
             case STATE_STONES_PARK_BRIDGE:
@@ -754,10 +755,10 @@ public class SCHSControllerBLUE extends OpMode {
                 rileyChassis.setDrivePower(0, 0);
                 rileyChassis.useConstantSpeed();
 
-                rileyArm.setArmPower(0, LIFT);
-                rileyArm.setArmPower(0, ARM);
-                rileyArm.useConstantSpeed(LIFT);
-                rileyArm.useConstantSpeed(ARM);
+                //rileyArm.setArmPower(0, LIFT);
+                //rileyArm.setArmPower(0, ARM);
+                //rileyArm.useConstantSpeed(LIFT);
+                //rileyArm.useConstantSpeed(ARM);
 
                 return true;
             }
@@ -776,7 +777,7 @@ public class SCHSControllerBLUE extends OpMode {
                 Log.d("SCHS:", "moveComplete() arm encoder target=" + rileyArm.getArmEncoderTarget());
 
                 return ((Math.abs(rileyArm.getLiftPos() - rileyArm.getLiftEncoderTarget()) < 25) &&//10, change to 25
-                        (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10));
+                        (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10));//10, change to 25
             }
         } else {
             if (roboPart == DRIVE ){
@@ -789,8 +790,8 @@ public class SCHSControllerBLUE extends OpMode {
                         (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)));
 
                 if ((leftDist > 3300 || rightDist > 3300) && !isArcTurn){
-                    return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 40) &&
-                            (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 40));
+                    return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
+                            (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
                 } else {
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)); //10, change to 25
@@ -807,7 +808,7 @@ public class SCHSControllerBLUE extends OpMode {
                 Log.d("SCHS:", "inside moveComplete() arm + drive");
                 if(roboPart == ARM || roboPart == DRIVE) {
                     Log.d("SCHS:", "executing arm+drive check moveComplete()");
-                    boolean armDone = Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10;
+                    boolean armDone = Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 25; //<10 change to <25
                     boolean moveDone = (Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20);
                     return (armDone && moveDone);

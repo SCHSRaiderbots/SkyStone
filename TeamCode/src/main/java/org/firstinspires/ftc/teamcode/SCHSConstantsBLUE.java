@@ -95,8 +95,12 @@ public class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] arcTurnFDPath = {
-            //new SCHSPathSeg((-((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8)
-            new SCHSPathSeg(-(((17*(Math.PI))/2)-4), (-((31*(Math.PI))/2)-8), 0.8, 0.6)
+            //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8) --> ORIGINAL
+	    // WORKING BUT SHIMMY new SCHSPathSeg(-30, -60, 0.3, POWER_FULL), //new value for turn
+	    new SCHSPathSeg(-3, -3, 0.5),
+	    //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL) --> WORKS TOO  WIDE
+	    //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL)
+	    new SCHSPathSeg(-15, -37.25, 0.5, POWER_FULL)
     };
 
     static final SCHSPathSeg[] pushFDPath = {
@@ -114,13 +118,13 @@ public class SCHSConstantsBLUE {
             new SCHSPathSeg(LIFT, -4.5,0.5,"yes") //lift down 4.5
              */
             /* new pathsegs b/c already lifted and extended prior, lifted 3 in*/
-            new SCHSPathSeg(ARM, 9, 0.5, "yes"), // remaining extend 9 inches (total 12)
-            new SCHSPathSeg(LIFT, -3, 0.5, "yes"), // down 3 in"
+            //new SCHSPathSeg(ARM, 7.5, 0.5, "yes"), // remaining extend 9 inches, change to 7.5 (total 12)
+            new SCHSPathSeg(LIFT, -4, 0.5, "yes"), // down 3 in", change to 4
     };
 
     static final SCHSPathSeg[] retrieveStoneArmPath = { //
             new SCHSPathSeg(LIFT, 5, 0.5,"yes"), //lift 5 up
-            new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4"
+            new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4",
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
@@ -158,7 +162,7 @@ public class SCHSConstantsBLUE {
 
     /* new pathseg to extend during first movement */
     static final SCHSPathSeg[] startBotExtendPath = {
-            new SCHSPathSeg(ARM, 3.0, 0.5, "yes"), //extend 3"
+            new SCHSPathSeg(ARM, 12, 0.5, "yes"), //extend 3", change to 12
             new SCHSPathSeg(15,15,0.5), //move forward 15"
 
     };
@@ -220,7 +224,7 @@ public class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] turnFDPath = {
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
-            new SCHSPathSeg( 6, 6, 0.5), //forward 6
+            new SCHSPathSeg( 10, 10, 0.5), //forward 6, change to 10
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {
@@ -286,18 +290,18 @@ public class SCHSConstantsBLUE {
 
     static final double POS_3_LEFT_MIN = 318;
     static final double POS_3_LEFT_MAX = 418;
-    static final double POS_3_RIGHT_MIN = 570;
-    static final double POS_3_RIGHT_MAX = 670;
+    static final double POS_3_RIGHT_MIN = 580;
+    static final double POS_3_RIGHT_MAX = 680;
 
     static final double POS_2_LEFT_MIN = 135;
     static final double POS_2_LEFT_MAX = 235;
-    static final double POS_2_RIGHT_MIN = 380;
-    static final double POS_2_RIGHT_MAX = 480;
+    static final double POS_2_RIGHT_MIN = 400;
+    static final double POS_2_RIGHT_MAX = 500;
 
     static final double POS_1_LEFT_MIN = -50;
     static final double POS_1_LEFT_MAX = 50;
-    static final double POS_1_RIGHT_MIN = 125;
-    static final double POS_1_RIGHT_MAX = 225;
+    static final double POS_1_RIGHT_MIN = 190;
+    static final double POS_1_RIGHT_MAX = 290;
 
     //core hex motor constants
     static final double CHMOTOR_COUNTS_PER_REVOLUTION = 288;
