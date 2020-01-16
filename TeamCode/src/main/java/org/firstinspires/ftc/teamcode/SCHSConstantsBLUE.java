@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-public class SCHSConstants {
+public class SCHSConstantsBLUE {
 
     // power constants between 1 and -1
     static final double POWER_FULL = 1;
@@ -95,8 +95,8 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] arcTurnFDPath = {
-            //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8)
-            new SCHSPathSeg(-11, -33.58, 0.2,0.8)
+            //new SCHSPathSeg((-((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8)
+            new SCHSPathSeg(-(((17*(Math.PI))/2)-4), (-((31*(Math.PI))/2)-8), 0.8, 0.6)
     };
 
     static final SCHSPathSeg[] pushFDPath = {
@@ -114,13 +114,13 @@ public class SCHSConstants {
             new SCHSPathSeg(LIFT, -4.5,0.5,"yes") //lift down 4.5
              */
             /* new pathsegs b/c already lifted and extended prior, lifted 3 in*/
-            //new SCHSPathSeg(ARM, 7.5, 0.5, "yes"), // remaining extend 9 inches, change to 7.5 (total 12)
-            new SCHSPathSeg(LIFT, -4, 0.5, "yes"), // down 3 in", change to 4
+            new SCHSPathSeg(ARM, 9, 0.5, "yes"), // remaining extend 9 inches (total 12)
+            new SCHSPathSeg(LIFT, -3, 0.5, "yes"), // down 3 in"
     };
 
     static final SCHSPathSeg[] retrieveStoneArmPath = { //
             new SCHSPathSeg(LIFT, 5, 0.5,"yes"), //lift 5 up
-            new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4",
+            new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4"
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
@@ -158,7 +158,7 @@ public class SCHSConstants {
 
     /* new pathseg to extend during first movement */
     static final SCHSPathSeg[] startBotExtendPath = {
-            new SCHSPathSeg(ARM, 12, 0.5, "yes"), //extend 3", change to 10.5
+            new SCHSPathSeg(ARM, 3.0, 0.5, "yes"), //extend 3"
             new SCHSPathSeg(15,15,0.5), //move forward 15"
 
     };
@@ -170,9 +170,10 @@ public class SCHSConstants {
             new SCHSPathSeg( 4.5, 4.5, 0.5), //forward 4.5
     };
 
+    /* changed due to blue side */
     static final SCHSPathSeg[] retreatLBPath= {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5),  // right 90
-            new SCHSPathSeg( 20, 20, 0.5), //forward 20
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
+            new SCHSPathSeg( 4, 4, 0.5), //forward 4"
     };
 
     static final SCHSPathSeg[] goToMBPath = {
@@ -180,7 +181,7 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] retreatMBPath = {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5),  // right 90
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
             new SCHSPathSeg( 12, 12, 0.5), //forward 12
     };
 
@@ -192,8 +193,8 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] retreatRBPath = {
-            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5),  // right 90
-            new SCHSPathSeg( 4, 4, 0.5), //forward 4
+            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
+            new SCHSPathSeg( 20, 20, 0.5), //forward 20
     };
 
     static final SCHSPathSeg[] deliverBlockPath = {
@@ -218,13 +219,13 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] turnFDPath = {
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
-            new SCHSPathSeg( 10, 10, 0.5), //forward 6
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
+            new SCHSPathSeg( 6, 6, 0.5), //forward 6
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {
             new SCHSPathSeg( -6, -6, 0.5), //backward 6
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
+            new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
     };
 
     static final SCHSPathSeg[] backToBlocksPath = {
@@ -285,18 +286,18 @@ public class SCHSConstants {
 
     static final double POS_3_LEFT_MIN = 318;
     static final double POS_3_LEFT_MAX = 418;
-    static final double POS_3_RIGHT_MIN = 580;
-    static final double POS_3_RIGHT_MAX = 680;
+    static final double POS_3_RIGHT_MIN = 570;
+    static final double POS_3_RIGHT_MAX = 670;
 
     static final double POS_2_LEFT_MIN = 135;
     static final double POS_2_LEFT_MAX = 235;
-    static final double POS_2_RIGHT_MIN = 400;
-    static final double POS_2_RIGHT_MAX = 500;
+    static final double POS_2_RIGHT_MIN = 380;
+    static final double POS_2_RIGHT_MAX = 480;
 
     static final double POS_1_LEFT_MIN = -50;
     static final double POS_1_LEFT_MAX = 50;
-    static final double POS_1_RIGHT_MIN = 190;
-    static final double POS_1_RIGHT_MAX = 290;
+    static final double POS_1_RIGHT_MIN = 125;
+    static final double POS_1_RIGHT_MAX = 225;
 
     //core hex motor constants
     static final double CHMOTOR_COUNTS_PER_REVOLUTION = 288;

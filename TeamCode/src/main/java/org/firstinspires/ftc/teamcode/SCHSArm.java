@@ -104,6 +104,10 @@ public class SCHSArm {
 
     }
 
+    public void closeHook(Servo servo) {
+        servo.setPosition(0.1);
+    }
+
     public void closeServo(Servo servo) {
         //grabServo.setDirection(Servo.Direction.REVERSE);
         Log.d("SCHS: moveServo()", "in if, current Position before2:" + servo.getPosition());
