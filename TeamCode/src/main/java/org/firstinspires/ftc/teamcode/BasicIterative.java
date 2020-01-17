@@ -511,7 +511,6 @@ public class BasicIterative extends OpMode
         //     -x  0  +x
         //        +y
         //       need to check that x values are not reversed
-        // TOPDO: In Odemetry, angles are reported negative turning right is positive
         double drive = -gamepad1.left_stick_y;
         double turn  =  gamepad1.right_stick_x;
         leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
