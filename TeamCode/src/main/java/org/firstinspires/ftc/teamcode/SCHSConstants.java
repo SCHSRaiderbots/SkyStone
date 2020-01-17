@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.app.job.JobInfo;
+
 public class SCHSConstants {
 
     // power constants between 1 and -1
@@ -94,23 +96,91 @@ public class SCHSConstants {
             //new SCHSPathSeg( 28.5, 28.5, POWER_FULL),  // forward 2 feet
     };
 
+    static final SCHSPathSeg[] arcTurnPushPull = {
+            /*new SCHSPathSeg(0, 0.5*TURN_VALUE_90, POWER_FULL), //pivot on left, opposite direction
+            new SCHSPathSeg(6, 6, POWER_FULL), //push forward for clearing space
+            new SCHSPathSeg(0, -0.5*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-15, -37.25,0.5, POWER_FULL),
+            new SCHSPathSeg(10, 10, POWER_FULL)*
+             */
+            new SCHSPathSeg(-(3.5*TURN_VALUE_90), (3.5*TURN_VALUE_90),POWER_FULL)
+    };
+
     static final SCHSPathSeg[] arcTurnFDPath = {
             //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8) --> ORIGINAL
             // WORKING BUT SHIMMY new SCHSPathSeg(-30, -60, 0.3, POWER_FULL), //new value for turn
-            new SCHSPathSeg(-3, -3, 0.5),
+            //new SCHSPathSeg(-8, -8, 0.5), //3, change to 12 -> 8
             //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL) --> WORKS TOO  WIDE
             //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL)
-            new SCHSPathSeg(-15, -37.25, 0.5, POWER_FULL)
+
+            //new SCHSPathSeg(-8, -8, 0.5), //3, change to 12 -> 8
+            /*new SCHSPathSeg(0.25*TURN_VALUE_90,-0.25*TURN_VALUE_90,POWER_FULL),
+            new SCHSPathSeg(-8,-8,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),
+            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4,-4,POWER_FULL),*/
+
+            /*new SCHSPathSeg(-6, -6, POWER_FULL),
+            new SCHSPathSeg(0, -0.25*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-8, -8, POWER_FULL),
+            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4, -4, POWER_FULL),
+            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4, -4, POWER_FULL),
+            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4, -4, POWER_FULL),
+            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4, -4, POWER_FULL),
+            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
+            new SCHSPathSeg(-4, -4, POWER_FULL),
+            new SCHSPathSeg(10, 10, POWER_FULL),*/
+
+            //new SCHSPathSeg(-5, -12.42, 0.5, POWER_FULL)
+            //ratio of left to right arc turn: left * 2.4833333333333333333333333333333 = right
+            //15, 37.25 -> 5, 12.416666666666666666666666666667
     };
 
     static final SCHSPathSeg[] pushFDPath = {
             new SCHSPathSeg(18, 18, POWER_FULL)
     };
 
-    static final SCHSPathSeg[] parkBridgePath = {
-            new SCHSPathSeg(-40, -40, POWER_FULL)
+    static final SCHSPathSeg[] retreatFromFDPath = {
+            new SCHSPathSeg(-8, -8, 0.5)
     };
 
+    static final SCHSPathSeg[] parkBridgePath = {
+            new SCHSPathSeg((0.75*TURN_VALUE_90), -(0.75*TURN_VALUE_90), 0.5), // 1.2 * 90 previously --> crashed into pole
+    };
+
+
+    static final SCHSPathSeg[] parkUnderBridgePath = {
+            new SCHSPathSeg(54, 54, POWER_FULL) //48 -> 54
+    };
     static final SCHSPathSeg[] pickStoneArmPath = {
             //new SCHSPathSeg( LIFT, 4, 0.5, "yes"),  //lift 4 in --> replaced by 2-inch lift in init
             /*
@@ -123,13 +193,13 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] retrieveStoneArmPath = { //
-            new SCHSPathSeg(LIFT, 5, 0.5,"yes"), //lift 5 up
+            new SCHSPathSeg(LIFT, 6, 0.5,"yes"), //lift 5 up, change to 6
             new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4",
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
             //new SCHSPathSeg(LIFT, -4, 0.5, "yes") //lift down 4 --> changed to 2 to account for init
-            new SCHSPathSeg(LIFT, -5, 0.5, "yes") //lift down 2
+            new SCHSPathSeg(LIFT, -6, 0.5, "yes") //lift down 5, change to 6
     };
 
     static final SCHSPathSeg[] extendOutPath = {
@@ -160,11 +230,27 @@ public class SCHSConstants {
             new SCHSPathSeg( 15, 15, 0.5),  // Forward 15 in
     };
 
+    static final SCHSPathSeg[] positionToFD = {
+        new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5), //turn left
+        new SCHSPathSeg(34, 34, POWER_FULL), //18 -> 34
+        new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5), //turn right
+        //new SCHSPathSeg(2, 2, POWER_FULL),
+    };
+
+    static final SCHSPathSeg[] moveFD = {
+        new SCHSPathSeg(0.5*TURN_VALUE_90, -0.5*TURN_VALUE_90, POWER_FULL), //turn right
+        new SCHSPathSeg(20,20,POWER_FULL)
+    };
+
+    static final SCHSPathSeg[] moveToBridge = {
+        new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5),
+        new SCHSPathSeg(-12, -12,POWER_FULL)
+    };
+
     /* new pathseg to extend during first movement */
     static final SCHSPathSeg[] startBotExtendPath = {
-            new SCHSPathSeg(ARM, 12, 0.5, "yes"), //extend 3", change to 12
+            new SCHSPathSeg(ARM, 12.25, 0.5, "yes"), //extend 3", change to 11.75, change to 12.25
             new SCHSPathSeg(15,15,0.5), //move forward 15"
-
     };
 
     static final SCHSPathSeg[] goToLBPath = {
@@ -201,7 +287,8 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] deliverBlockPath = {
-            new SCHSPathSeg( 74.75,74.75, POWER_FULL), //74.75
+            new SCHSPathSeg( 74.75,74.75, POWER_FULL), //74.75, change to 77.75 -> 74.75
+            //new SCHSPathSeg( 45,45, POWER_FULL) //29 -> 41 -> 43 -> 45
     };
 
     static final SCHSPathSeg[] liftBlockFD = {
@@ -223,7 +310,7 @@ public class SCHSConstants {
 
     static final SCHSPathSeg[] turnFDPath = {
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
-            new SCHSPathSeg( 10, 10, 0.5), //forward 6, change to 10
+            new SCHSPathSeg( 12, 12, 0.5), //forward 12, change back 10
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {

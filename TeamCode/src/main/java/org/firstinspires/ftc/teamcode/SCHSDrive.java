@@ -52,12 +52,12 @@ public class SCHSDrive {
         gyroParameters.loggingEnabled      = false;
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(gyroParameters);
+        //imu.initialize(gyroParameters);
 
-        while (imu.isGyroCalibrated())  {
+        /* while (imu.isGyroCalibrated())  {
             Log.d("Status" , "SCHSMotor:moveStraightWithGyro: gyro is calibrating");
             sleep(50);
-        }
+        } */
 
         Log.d("Status" , "SCHSMotor:moveStraightWithGyro: gyro done calibrating");
 
