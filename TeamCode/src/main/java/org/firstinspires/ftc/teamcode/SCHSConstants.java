@@ -107,62 +107,6 @@ public class SCHSConstants {
     };
 
     static final SCHSPathSeg[] arcTurnFDPath = {
-            //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8) --> ORIGINAL
-            // WORKING BUT SHIMMY new SCHSPathSeg(-30, -60, 0.3, POWER_FULL), //new value for turn
-            //new SCHSPathSeg(-8, -8, 0.5), //3, change to 12 -> 8
-            //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL) --> WORKS TOO  WIDE
-            //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL)
-
-            //new SCHSPathSeg(-8, -8, 0.5), //3, change to 12 -> 8
-            /*new SCHSPathSeg(0.25*TURN_VALUE_90,-0.25*TURN_VALUE_90,POWER_FULL),
-            new SCHSPathSeg(-8,-8,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),
-            new SCHSPathSeg(0.25*TURN_VALUE_90, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4,-4,POWER_FULL),*/
-
-            /*new SCHSPathSeg(-6, -6, POWER_FULL),
-            new SCHSPathSeg(0, -0.25*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-8, -8, POWER_FULL),
-            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4, -4, POWER_FULL),
-            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4, -4, POWER_FULL),
-            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4, -4, POWER_FULL),
-            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4, -4, POWER_FULL),
-            new SCHSPathSeg(0, -0.75*TURN_VALUE_90, POWER_FULL),
-            new SCHSPathSeg(-4, -4, POWER_FULL),
-            new SCHSPathSeg(10, 10, POWER_FULL),*/
-
-            //new SCHSPathSeg(-5, -12.42, 0.5, POWER_FULL)
-            //ratio of left to right arc turn: left * 2.4833333333333333333333333333333 = right
-            //15, 37.25 -> 5, 12.416666666666666666666666666667
     };
 
     static final SCHSPathSeg[] pushFDPath = {
@@ -365,6 +309,16 @@ public class SCHSConstants {
 
     static final SCHSPathSeg[] backFromFDPath = {
             new SCHSPathSeg( -6, -6, 0.5), //backward 6
+    };
+
+    static final SCHSPathSeg[] extendArmPath = {
+            new SCHSPathSeg(ARM, 6, 0.5, "yes")
+    };
+
+    static final SCHSPathSeg[] parkAfterDepositionPath = {
+            new SCHSPathSeg(-6, -6, 0.5),
+            new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5),
+            new SCHSPathSeg(44, 44, POWER_FULL),
     };
 
     //Tensor Flow Object detection

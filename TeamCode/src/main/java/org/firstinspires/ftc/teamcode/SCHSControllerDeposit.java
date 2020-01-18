@@ -5,15 +5,59 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static android.os.SystemClock.sleep;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.ARM;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.ARM_FACTOR;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.COUNTS_PER_INCH;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.DRIVE;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.LEFT_POS;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.LIFT;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.LIFT_FACTOR;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.MID_POS;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.RIGHT_POS;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.arcTurnPushPull;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.back2LBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.back2MBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.back2RBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.backBlocksFirst;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.backFromFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.backToBlocksPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.deliver2BlockPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.deliverBlockPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.dropBlockFD;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.extendInPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.extendOutPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.goToLBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.goToMBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.goToRBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.liftArm;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.liftArmInitial;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.liftBlockFD;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.moveFD;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.parkAfterDepositionPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.parkBridgePath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.parkUnderBridgePath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.pickStoneArmPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.positionToFD;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.pushFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2LBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2MBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2RBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatFromFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatLBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatMBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatRBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.retrieveStoneArmPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.startBotExtendPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.stoneDownPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.testPathRun;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.turnFDPath;
 
-@Autonomous(name="SCHSController", group="SCHS")
+@Autonomous(name="SCHSControllerDeposit", group="SCHS")
 //@Disabled
-public class SCHSController extends OpMode {
+public class SCHSControllerDeposit extends OpMode {
 
     private SCHSDrive rileyChassis = null;
     private boolean isInitialized = false;
@@ -75,6 +119,8 @@ public class SCHSController extends OpMode {
         STATE_TEST_1_5,
         STATE_TEST_2_INITIAL,
         STATE_TEST_3,
+
+        STATE_STONES_DEPOSIT_PARK,
 
         STATE_STOP,
     }
@@ -448,7 +494,15 @@ public class SCHSController extends OpMode {
             case STATE_STONES_LIFT_ARM:
                 Log.d("SCHS","inside STATE_STONES_LIFT_ARM");
                 startPath(liftArm);
-                newState(State.STATE_STONES_DROP_HOOKS);
+                newState(State.STATE_STONES_DEPOSIT_PARK);
+                break;
+
+            case STATE_STONES_DEPOSIT_PARK:
+                if (pathComplete(LIFT, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_DEPOSIT_PARK");
+                    startPath(parkAfterDepositionPath);
+                    newState(State.STATE_STOP);
+                } else {}
                 break;
 
             case STATE_STONES_DROP_HOOKS:
@@ -843,13 +897,10 @@ public class SCHSController extends OpMode {
                 if ((leftDist > 3300 || rightDist > 3300) && !isArcTurn) {
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))) {
+                } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))){
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                } else if (currState == State.STATE_STONES_DROP_STONE) {
-                    return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
-                            (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                }else{
+                } else{
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)); //10, change to 25
                 }

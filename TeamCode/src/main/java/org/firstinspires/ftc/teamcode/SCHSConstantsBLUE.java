@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.app.job.JobInfo;
+
 public class SCHSConstantsBLUE {
 
     // power constants between 1 and -1
@@ -94,23 +96,30 @@ public class SCHSConstantsBLUE {
             //new SCHSPathSeg( 28.5, 28.5, POWER_FULL),  // forward 2 feet
     };
 
+    static final SCHSPathSeg[] arcTurnPushPull = {
+    	    new SCHSPathSeg(-6, -6, POWER_FULL), //diff from red constants to reach BS
+            new SCHSPathSeg(4.5*TURN_VALUE_90, -(4.5*TURN_VALUE_90), POWER_FULL) //diff from red constants, not completing turn at 3.5*
+    };
+
     static final SCHSPathSeg[] arcTurnFDPath = {
-            //new SCHSPathSeg(-(((31*(Math.PI))/2)-8), -(((17*(Math.PI))/2)-4), 0.6, 0.8) --> ORIGINAL
-	    // WORKING BUT SHIMMY new SCHSPathSeg(-30, -60, 0.3, POWER_FULL), //new value for turn
-	    new SCHSPathSeg(-3, -3, 0.5),
-	    //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL) --> WORKS TOO  WIDE
-	    //new SCHSPathSeg(-20, -45, 0.5, POWER_FULL)
-	    new SCHSPathSeg(-15, -37.25, 0.5, POWER_FULL)
     };
 
     static final SCHSPathSeg[] pushFDPath = {
             new SCHSPathSeg(18, 18, POWER_FULL)
     };
 
-    static final SCHSPathSeg[] parkBridgePath = {
-            new SCHSPathSeg(-40, -40, POWER_FULL)
+    static final SCHSPathSeg[] retreatFromFDPath = {
+            new SCHSPathSeg(-8, -8, 0.5)
     };
 
+    static final SCHSPathSeg[] parkBridgePath = {
+            new SCHSPathSeg(-0.75*TURN_VALUE_90, 0.75*TURN_VALUE_90, 0.5) //1.2 * 90 previously
+    };
+
+    
+    static final SCHSPathSeg[] parkUnderBridgePath = {
+	    new SCHSPathSeg(54, 54, POWER_FULL) //48 -> 54
+    };
     static final SCHSPathSeg[] pickStoneArmPath = {
             //new SCHSPathSeg( LIFT, 4, 0.5, "yes"),  //lift 4 in --> replaced by 2-inch lift in init
             /*
@@ -119,17 +128,17 @@ public class SCHSConstantsBLUE {
              */
             /* new pathsegs b/c already lifted and extended prior, lifted 3 in*/
             //new SCHSPathSeg(ARM, 7.5, 0.5, "yes"), // remaining extend 9 inches, change to 7.5 (total 12)
-            new SCHSPathSeg(LIFT, -4, 0.5, "yes"), // down 3 in", change to 4
+            new SCHSPathSeg(LIFT, -4, 0.9, "yes"), // down 3 in", change to 4
     };
 
     static final SCHSPathSeg[] retrieveStoneArmPath = { //
-            new SCHSPathSeg(LIFT, 5, 0.5,"yes"), //lift 5 up
-            new SCHSPathSeg(ARM, -4, 0.5, "yes"), //retract 4",
+            new SCHSPathSeg(LIFT, 6.5, 0.9,"yes"), //lift 5 up, change to 6 -> 6.5
+            new SCHSPathSeg(ARM, -4, 0.9, "yes"), //retract 4",
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
             //new SCHSPathSeg(LIFT, -4, 0.5, "yes") //lift down 4 --> changed to 2 to account for init
-            new SCHSPathSeg(LIFT, -5, 0.5, "yes") //lift down 2
+            new SCHSPathSeg(LIFT, -6.5, 0.9, "yes") //lift down 5, change to 6 -> 6.5
     };
 
     static final SCHSPathSeg[] extendOutPath = {
@@ -160,16 +169,21 @@ public class SCHSConstantsBLUE {
             new SCHSPathSeg( 15, 15, 0.5),  // Forward 15 in
     };
 
+    static final SCHSPathSeg[] positionToFD = {
+	    new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5), // turn right
+	    new SCHSPathSeg(34, 34, POWER_FULL), //18 -> 34
+	    new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5), //turn left
+    };
+
     /* new pathseg to extend during first movement */
     static final SCHSPathSeg[] startBotExtendPath = {
-            new SCHSPathSeg(ARM, 12, 0.5, "yes"), //extend 3", change to 12
-            new SCHSPathSeg(15,15,0.5), //move forward 15"
-
+            new SCHSPathSeg(ARM, 12.25, 0.5, "yes"), //extend 3", change to 11.75, change to 12.25
+            new SCHSPathSeg(15,15,0.5), //move forward 15
     };
 
     static final SCHSPathSeg[] goToLBPath = {
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
-            new SCHSPathSeg( 8.25, 8.25, 0.5), //forward 8.25
+            new SCHSPathSeg( 7.25, 7.25, 0.5), //diff from red constants, forward 8.25, change to 7.25
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
             new SCHSPathSeg( 4.5, 4.5, 0.5), //forward 4.5
     };
@@ -216,6 +230,7 @@ public class SCHSConstantsBLUE {
     static final SCHSPathSeg[] dropBlockFD = {
             new SCHSPathSeg(LIFT, -8, 0.9, "yes"),
             new SCHSPathSeg(ARM, -8, 0.9, "yes")
+
     };
 
     static final SCHSPathSeg[] liftArm = {
@@ -224,7 +239,7 @@ public class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] turnFDPath = {
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
-            new SCHSPathSeg( 10, 10, 0.5), //forward 6, change to 10
+            new SCHSPathSeg( 12, 12, 0.5), //forward 12, change back 10
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {
@@ -236,6 +251,7 @@ public class SCHSConstantsBLUE {
             new SCHSPathSeg( 98.75, 98.75, POWER_FULL), //forward 98.75"
     };
 
+    
     static final SCHSPathSeg[] back2LBPath = {
             new SCHSPathSeg( -12, -12, 0.5), //backward 12
             new SCHSPathSeg( -TURN_VALUE_LEFT_BLOCK, TURN_VALUE_LEFT_BLOCK, 0.5), //left 124
@@ -279,6 +295,16 @@ public class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] backFromFDPath = {
             new SCHSPathSeg( -6, -6, 0.5), //backward 6
+    };
+
+    static final SCHSPathSeg[] extendArmPath = {
+            new SCHSPathSeg(ARM, 6, 0.5, "yes")
+    };
+
+    static final SCHSPathSeg[] parkAfterDepositionPath = {
+            new SCHSPathSeg(-6, -6, 0.5),
+            new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5),
+            new SCHSPathSeg(44, 44, POWER_FULL),
     };
 
     //Tensor Flow Object detection

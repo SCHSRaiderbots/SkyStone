@@ -5,15 +5,58 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static android.os.SystemClock.sleep;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.parkAfterDepositionPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.ARM;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.ARM_FACTOR;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.COUNTS_PER_INCH;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.DRIVE;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.LEFT_POS;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.LIFT;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.LIFT_FACTOR;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.MID_POS;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.RIGHT_POS;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.arcTurnFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.back2LBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.back2MBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.back2RBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.backBlocksFirst;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.backFromFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.backToBlocksPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.deliver2BlockPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.deliverBlockPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.dropBlockFD;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.extendInPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.extendOutPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.goToLBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.goToMBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.goToRBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.liftArm;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.liftArmInitial;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.liftBlockFD;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.parkBridgePath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.parkUnderBridgePath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.pickStoneArmPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.positionToFD;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.pushFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retreat2LBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retreat2MBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retreat2RBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retreatFromFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retreatLBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retreatMBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retreatRBPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.retrieveStoneArmPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.startBotExtendPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.stoneDownPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.testPathRun;
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.turnFDPath;
 
-@Autonomous(name="SCHSController", group="SCHS")
+@Autonomous(name="SCHSControllerDepositBLUE", group="SCHS")
 //@Disabled
-public class SCHSController extends OpMode {
+public class SCHSControllerDepositBLUE extends OpMode {
 
     private SCHSDrive rileyChassis = null;
     private boolean isInitialized = false;
@@ -63,11 +106,11 @@ public class SCHSController extends OpMode {
         STATE_STONES_PULL_FD,
         STATE_STONES_PUSH_FD,
         STATE_STONES_PARK_BRIDGE,
-        STATE_STONES_ALIGN_FD,
-        STATE_STONES_GO_TO_BS,
-        STATE_STONES_BACK_FROM_FD,
-        STATE_STONES_LIFT_DOWN_BRIDGE,
-        STATE_STONES_MOVE_TO_BRIDGE,
+	STATE_STONES_ALIGN_FD,
+	STATE_STONES_GO_TO_BS,
+	STATE_STONES_BACK_FROM_FD,
+	STATE_STONES_LIFT_DOWN_BRIDGE,
+	STATE_STONES_MOVE_TO_BRIDGE,
 
         STATE_FD_TEST,
         STATE_EXTEND_TEST,
@@ -75,6 +118,8 @@ public class SCHSController extends OpMode {
         STATE_TEST_1_5,
         STATE_TEST_2_INITIAL,
         STATE_TEST_3,
+
+        STATE_STONES_DEPOSIT_PARK,
 
         STATE_STOP,
     }
@@ -110,7 +155,7 @@ public class SCHSController extends OpMode {
 
         /* added to raise arm above block during init */
         startPath(liftArmInitial);
-        rileyArm.closeServo(rileyArm.grabServo);
+	rileyArm.closeServo(rileyArm.grabServo);
     }
 
     //@Override
@@ -132,8 +177,7 @@ public class SCHSController extends OpMode {
         //rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
         runtime.reset();
         newState(State.STATE_STONES_INITIAL);
-        //newState(State.STATE_STONES_DROP_HOOKS);
-        //newState(State.STATE_STONES_PARK_BRIDGE);
+        //newState(State.STATE_TEST_3);
     }
 
     @Override
@@ -401,16 +445,16 @@ public class SCHSController extends OpMode {
                     Log.d("SCHS", "inside STATE_STONES_LIFT_FD");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD);
-                    //newState(State.STATE_STONES_ALIGN_FD);
-                }
-                break;
 
-            case STATE_STONES_ALIGN_FD:
-                if (pathComplete(LIFT, false, false)){
-                    Log.d("SCHS","inside STATE_STONES_ALIGN_FD");
-                    startPath(positionToFD);
-                    newState(State.STATE_STONES_DROP_STONE);
-                } else {
+	    	}
+	    	break;
+
+	    case STATE_STONES_ALIGN_FD:
+		if (pathComplete(LIFT, false, false)) {
+			Log.d("SCHS", "inside STATE_STONES_ALIGN_FD");
+			startPath(positionToFD);
+			newState(State.STATE_STONES_DROP_STONE);
+		} else {
                 }
                 break;
 
@@ -447,40 +491,48 @@ public class SCHSController extends OpMode {
 
             case STATE_STONES_LIFT_ARM:
                 Log.d("SCHS","inside STATE_STONES_LIFT_ARM");
-                startPath(liftArm);
-                newState(State.STATE_STONES_DROP_HOOKS);
+                startPath(SCHSConstants.liftArm);
+                newState(State.STATE_STONES_DEPOSIT_PARK);
+                break;
+
+            case STATE_STONES_DEPOSIT_PARK:
+                if (pathComplete(SCHSConstants.LIFT, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_DEPOSIT_PARK");
+                    startPath(parkAfterDepositionPath);
+                    newState(State.STATE_STOP);
+                } else {}
                 break;
 
             case STATE_STONES_DROP_HOOKS:
                 if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_DROP_HOOKS");
                     //rileyArm.closeServo(rileyArm.rightHook);
-                    rileyArm.closeHook(rileyArm.rightHook);
+		    rileyArm.closeHook(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
                     sleep(2000);
-                    //newState(State.STATE_STONES_GO_TO_BS);
-                    newState(State.STATE_STONES_PULL_FD);
+		    
+		    newState(State.STATE_STONES_PULL_FD);
                 } else {
                 }
                 break;
 
-            case STATE_STONES_GO_TO_BS:
-                Log.d("SCHS","inside STATE_STONES_GO_TO_BS");
-                startPath(moveFD);
-                newState(State.STATE_STONES_LIFT_HOOKS);
-                break;
+	    case STATE_STONES_GO_TO_BS:
+		Log.d("SCHS", "inside STATE_STONES_GO_TO_BS");
+		//startPath(moveFD);
+		newState(State.STATE_STONES_LIFT_HOOKS);
+		break;
 
             case STATE_STONES_PULL_FD:
-                    Log.d("SCHS", "inside STATE_STONES_PULL_FD");
-                    startPath(arcTurnPushPull);
-                    //newState(State.STATE_STONES_PUSH_FD);
-                    newState(State.STATE_STONES_LIFT_HOOKS);
+                Log.d("SCHS","inside STATE_STONES_PULL_FD");
+                startPath(arcTurnFDPath);
+                //newState(State.STATE_STONES_PUSH_FD);
+		newState(State.STATE_STONES_LIFT_HOOKS);
                 break;
 
             case STATE_STONES_PUSH_FD:
                 if (pathComplete(DRIVE,false,false)) {
                     Log.d("SCHS","inside STATE_STONES_PUSH_FD");
-                    sleep(1000);
+		    sleep(1000);
                     startPath(pushFDPath);
                     newState(State.STATE_STONES_LIFT_HOOKS);
                 } else {
@@ -491,47 +543,48 @@ public class SCHSController extends OpMode {
                 if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
                     //rileyArm.openServo(rileyArm.rightHook);
-                    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
+		    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
                     rileyArm.closeServo(rileyArm.leftHook);
                     sleep(2000);
-                    newState(State.STATE_STONES_BACK_FROM_FD);
-                } else {
-                }
-                break;
+		    newState(State.STATE_STONES_BACK_FROM_FD);
+		} else {
+		}
+		break;
 
-            case STATE_STONES_BACK_FROM_FD:
-                Log.d("SCHS","inside STATE_STONES_BACK_FROM_FD");
-                startPath(retreatFromFDPath);
-                newState(State.STATE_STONES_PARK_BRIDGE);
-                break;
+	    case STATE_STONES_BACK_FROM_FD:
+		Log.d("SCHS", "inside STATE_STONES_BACK_FROM_FD");
+		startPath(retreatFromFDPath);
+		newState(State.STATE_STONES_PARK_BRIDGE);
+		break;
 
-            case STATE_STONES_LIFT_DOWN_BRIDGE:
-                if (pathComplete(DRIVE, false, false)){
-                    Log.d("SCHS","inside STATE_STONES_LIFT_DOWN_BRIDGE");
-                    //startPath(bridgeDownPath);
-                    newState(State.STATE_STONES_PARK_BRIDGE);
+	    case STATE_STONES_LIFT_DOWN_BRIDGE:
+		if (pathComplete(DRIVE, false, false)) {
+			Log.d("SCHS", "inside STATE_STONES_LIFT_DOWN_BRIDGE");
+			//startPath(bridgeDownPath);
+			newState(State.STATE_STONES_PARK_BRIDGE);
                 } else {
                 }
                 break;
 
             case STATE_STONES_PARK_BRIDGE:
-                if (pathComplete(DRIVE, false, false)){
-                    Log.d("SCHS","inside STATE_STONES_PARK_BRIDGE");
-                    startPath(parkBridgePath);
-                    newState(State.STATE_STONES_MOVE_TO_BRIDGE);
-                } else {
-                }
+		if (pathComplete(DRIVE, false, false)){
+                Log.d("SCHS","inside STATE_STONES_PARK_BRIDGE");
+                startPath(parkBridgePath);
+                newState(State.STATE_STONES_MOVE_TO_BRIDGE);
+		} else {
+		}
                 break;
 
-            case STATE_STONES_MOVE_TO_BRIDGE:
-                if (pathComplete(DRIVE, false, false)) {
-                    Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
-                    startPath(parkUnderBridgePath);
-                    newState(State.STATE_STOP);
-                } else {
+	    case STATE_STONES_MOVE_TO_BRIDGE:
+		if (pathComplete(DRIVE, false, false)) {
+			Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
+			startPath(parkUnderBridgePath);
+			newState(State.STATE_STOP);
+		} else {
+		
+		}
+		break;
 
-                }
-                break;
 
             case STATE_STONES_DROP_FD:
                 if (pathComplete(DRIVE, false, false)) {
@@ -674,9 +727,9 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STOP:
-                    Log.d("SCHS", "inside STATES_STOP");
-                    telemetry.addLine("STATES_STOP");
-                    isRoundTwo = false;
+                Log.d("SCHS", "inside STATES_STOP");
+                telemetry.addLine("STATES_STOP");
+                isRoundTwo = false;
                 break;
         }
     }
@@ -843,14 +896,11 @@ public class SCHSController extends OpMode {
                 if ((leftDist > 3300 || rightDist > 3300) && !isArcTurn) {
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))) {
-                    return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
-                            (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                } else if (currState == State.STATE_STONES_DROP_STONE) {
-                    return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
-                            (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                }else{
-                    return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
+                } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))){
+			return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
+				(Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
+		} else{
+			return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)); //10, change to 25
                 }
             } else if (roboPart == LIFT) {
@@ -896,3 +946,4 @@ public class SCHSController extends OpMode {
         }
     }
 }
+
