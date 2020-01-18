@@ -8,52 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static android.os.SystemClock.sleep;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.ARM;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.ARM_FACTOR;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.COUNTS_PER_INCH;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.DRIVE;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.LEFT_POS;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.LIFT;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.LIFT_FACTOR;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.MID_POS;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.RIGHT_POS;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.arcTurnPushPull;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.back2LBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.back2MBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.back2RBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.backBlocksFirst;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.backFromFDPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.backToBlocksPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.deliver2BlockPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.deliverBlockPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.dropBlockFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.extendInPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.extendOutPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.goToLBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.goToMBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.goToRBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.liftArm;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.liftArmInitial;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.liftBlockFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.moveFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.parkAfterDepositionPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.parkBridgePath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.parkUnderBridgePath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.pickStoneArmPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.positionToFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.pushFDPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2LBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2MBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2RBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatFromFDPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatLBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatMBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatRBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retrieveStoneArmPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.startBotExtendPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.stoneDownPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.testPathRun;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.turnFDPath;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
 
 @Autonomous(name="SCHSControllerDeposit", group="SCHS")
 //@Disabled
@@ -308,15 +263,19 @@ public class SCHSControllerDeposit extends OpMode {
                     telemetry.addLine("STATES_STONES_FIRST");
                     Log.d("SCHS: DETECT_SKYSTONE", "inside STATES_STONES_FIRST");
                     //startPath(startBotPath);
-                    /* new path for extending and moving forward */
-                    startPath(startBotExtendPath);
+                    if (skyPos == 1 || skyPos == 3) {
+                        /* new path for extending and moving forward */
+                        startPath(startBotExtendPath);
+                    } else {
+                        startPath(startBotPath);
+                    }
                     newState((State.STATE_STONES_GO_TO_SKYSTONE));
                 } else {
                 }
                 break;
 
             case STATE_STONES_GO_TO_SKYSTONE:
-                if (pathComplete(DRIVE, false, true)){
+                if (pathComplete(DRIVE, false, false)){ //change isBothArmDrive true -> false
                     Log.d("SCHS", "inside STATES_STONES_GO_TO_SKYSTONE");
                     telemetry.addLine("STATES_STONES_GO_TO_SKYSTONE");
                     if (skyPos == LEFT_POS) {
@@ -345,7 +304,11 @@ public class SCHSControllerDeposit extends OpMode {
                 if (pathComplete(DRIVE, false, false)){
                     Log.d("SCHS", "inside STATES_STONES_PICK_STONE");
                     telemetry.addLine("inside STATES_STONES_PICK_STONE");
-                    startPath(pickStoneArmPath);
+                    if (skyPos == 1 || skyPos == 3) {
+                        startPath(pickStoneArmPath);
+                    } else {
+                        startPath(pickMBStoneArmPath);
+                    }
                     newState(State.STATE_STONES_CLOSE_STONE);
                     //pick up blocks
                 } else {

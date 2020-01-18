@@ -77,6 +77,8 @@ public class SCHSController extends OpMode {
         STATE_TEST_3,
 
         STATE_STOP,
+
+	STATE_STONES_LOWER_ARM_MB
     }
 
     private State currState; //current state machine
@@ -262,15 +264,19 @@ public class SCHSController extends OpMode {
                     telemetry.addLine("STATES_STONES_FIRST");
                     Log.d("SCHS: DETECT_SKYSTONE", "inside STATES_STONES_FIRST");
                     //startPath(startBotPath);
-                    /* new path for extending and moving forward */
-                    startPath(startBotExtendPath);
+                    if (skyPos == 1 || skyPos == 3) {
+                        /* new path for extending and moving forward */
+                        startPath(startBotExtendPath);
+                    } else {
+                        startPath(startBotPath);
+                    }
                     newState((State.STATE_STONES_GO_TO_SKYSTONE));
                 } else {
                 }
                 break;
 
             case STATE_STONES_GO_TO_SKYSTONE:
-                if (pathComplete(DRIVE, false, true)){
+                if (pathComplete(DRIVE, false, false)){ //change isBothArmDrive true -> false
                     Log.d("SCHS", "inside STATES_STONES_GO_TO_SKYSTONE");
                     telemetry.addLine("STATES_STONES_GO_TO_SKYSTONE");
                     if (skyPos == LEFT_POS) {
@@ -299,12 +305,25 @@ public class SCHSController extends OpMode {
                 if (pathComplete(DRIVE, false, false)){
                     Log.d("SCHS", "inside STATES_STONES_PICK_STONE");
                     telemetry.addLine("inside STATES_STONES_PICK_STONE");
-                    startPath(pickStoneArmPath);
-                    newState(State.STATE_STONES_CLOSE_STONE);
+                    if (skyPos == 1 || skyPos == 3) {
+                        startPath(pickStoneArmPath);
+			newState(State.STATE_STONES_CLOSE_STONE);
+
+                    } else {
+                        startPath(pickMBStoneArmPath);
+			newState(State.STATE_STONES_LOWER_ARM_MB);
+                    }
+
                     //pick up blocks
                 } else {
                 }
                 break;
+case STATE_STONES_LOWER_ARM_MB:
+		if (pathComplete(ARM, false, false)) {
+			startPath(dropLiftArmPathMB);
+			newState(State.STATE_STONES_CLOSE_STONE);
+		} else {}
+		break;
 
             case STATE_STONES_CLOSE_STONE:
                 if (pathComplete(LIFT, false, false)){
@@ -341,7 +360,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT:
-                if (pathComplete(LIFT, false, false)){
+                if (pathComplete(LIFT, true, false)){ //isBothArmLift false -> true
                     //if (pathComplete(DRIVE, false)) {
                     Log.d("SCHS","inside STATES_STONES_RETREAT");
                     telemetry.addLine("STATES_STONES_RETREAT");
@@ -506,7 +525,7 @@ public class SCHSController extends OpMode {
                 break;
 
             case STATE_STONES_LIFT_DOWN_BRIDGE:
-                if (pathComplete(DRIVE, false, false)){
+                if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_DOWN_BRIDGE");
                     //startPath(bridgeDownPath);
                     newState(State.STATE_STONES_PARK_BRIDGE);
@@ -523,15 +542,15 @@ public class SCHSController extends OpMode {
                 }
                 break;
 
-            case STATE_STONES_MOVE_TO_BRIDGE:
-                if (pathComplete(DRIVE, false, false)) {
-                    Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
-                    startPath(parkUnderBridgePath);
-                    newState(State.STATE_STOP);
-                } else {
+	    case STATE_STONES_MOVE_TO_BRIDGE:
+		if (pathComplete(DRIVE, false, false)) {
+			Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
+			startPath(parkUnderBridgePath);
+			newState(State.STATE_STOP);
+		} else {
 
-                }
-                break;
+		}
+		break;
 
             case STATE_STONES_DROP_FD:
                 if (pathComplete(DRIVE, false, false)) {
