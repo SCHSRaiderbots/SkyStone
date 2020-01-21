@@ -110,7 +110,6 @@ public class SCHSDetection {
                 break;
             }
         }//end of while
-
         return skyPos;
     }//end of detectSkyPos()
 

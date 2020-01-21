@@ -5,15 +5,14 @@ import android.util.Log;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static android.os.SystemClock.sleep;
-import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.*;
+import static org.firstinspires.ftc.teamcode.SCHSConstants.*;
 
-@Autonomous(name="SCHSControllerBLUE", group="SCHS")
+@Autonomous(name="SCHSControllerDeposit", group="SCHS")
 //@Disabled
-public class SCHSControllerBLUE extends OpMode {
+public class SCHSControllerDeposit extends OpMode {
 
     private SCHSDrive rileyChassis = null;
     private boolean isInitialized = false;
@@ -63,11 +62,11 @@ public class SCHSControllerBLUE extends OpMode {
         STATE_STONES_PULL_FD,
         STATE_STONES_PUSH_FD,
         STATE_STONES_PARK_BRIDGE,
-	STATE_STONES_ALIGN_FD,
-	STATE_STONES_GO_TO_BS,
-	STATE_STONES_BACK_FROM_FD,
-	STATE_STONES_LIFT_DOWN_BRIDGE,
-	STATE_STONES_MOVE_TO_BRIDGE,
+        STATE_STONES_ALIGN_FD,
+        STATE_STONES_GO_TO_BS,
+        STATE_STONES_BACK_FROM_FD,
+        STATE_STONES_LIFT_DOWN_BRIDGE,
+        STATE_STONES_MOVE_TO_BRIDGE,
 
         STATE_FD_TEST,
         STATE_EXTEND_TEST,
@@ -76,9 +75,10 @@ public class SCHSControllerBLUE extends OpMode {
         STATE_TEST_2_INITIAL,
         STATE_TEST_3,
 
-        STATE_STOP,
+        STATE_STONES_DEPOSIT_PARK,
 
-        STATE_STONES_LOWER_ARM_MB
+        STATE_STOP,
+	STATE_STONES_LOWER_ARM_MB
     }
 
     private State currState; //current state machine
@@ -112,7 +112,7 @@ public class SCHSControllerBLUE extends OpMode {
 
         /* added to raise arm above block during init */
         startPath(liftArmInitial);
-	rileyArm.closeServo(rileyArm.grabServo);
+        rileyArm.closeServo(rileyArm.grabServo);
     }
 
     //@Override
@@ -134,7 +134,8 @@ public class SCHSControllerBLUE extends OpMode {
         //rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
         runtime.reset();
         newState(State.STATE_STONES_INITIAL);
-        //newState(State.STATE_TEST_3);
+        //newState(State.STATE_STONES_DROP_HOOKS);
+        //newState(State.STATE_STONES_PARK_BRIDGE);
     }
 
     @Override
@@ -264,12 +265,12 @@ public class SCHSControllerBLUE extends OpMode {
                     Log.d("SCHS: DETECT_SKYSTONE", "inside STATES_STONES_FIRST");
                     //startPath(startBotPath);
                     if (skyPos == 1 || skyPos == 3) {
-			/* new path for extending and moving forward */
-                    	startPath(startBotExtendPath);
+                        /* new path for extending and moving forward */
+                        startPath(startBotExtendPath);
                     } else {
-                    startPath(startBotPath);
+                        startPath(startBotPath);
                     }
-                   newState((State.STATE_STONES_GO_TO_SKYSTONE));
+                    newState((State.STATE_STONES_GO_TO_SKYSTONE));
                 } else {
                 }
                 break;
@@ -305,25 +306,23 @@ public class SCHSControllerBLUE extends OpMode {
                     Log.d("SCHS", "inside STATES_STONES_PICK_STONE");
                     telemetry.addLine("inside STATES_STONES_PICK_STONE");
                     if (skyPos == 1 || skyPos == 3) {
-			            startPath(pickStoneArmPath);
-			            newState(State.STATE_STONES_CLOSE_STONE);
-
-		            } else {
-			            startPath(pickMBStoneArmPath);
-			            newState(State.STATE_STONES_LOWER_ARM_MB);
-		            }
-
+                        startPath(pickStoneArmPath);
+			newState(State.STATE_STONES_CLOSE_STONE);
+                    } else {
+                        startPath(pickMBStoneArmPath);
+			newState(State.STATE_STONES_LOWER_ARM_MB);
+                    }
                     //pick up blocks
                 } else {
                 }
                 break;
+	case STATE_STONES_LOWER_ARM_MB:
+		if (pathComplete(ARM, false, false)) {
+			startPath(dropLiftArmPathMB);
+			newState(State.STATE_STONES_CLOSE_STONE);
+		} else {}
+		break;
 
-            case STATE_STONES_LOWER_ARM_MB:
-                if (pathComplete(ARM, false, false)) {
-                    startPath(dropLiftArmPathMB);
-                    newState(State.STATE_STONES_CLOSE_STONE);
-                } else {}
-                break;
 
             case STATE_STONES_CLOSE_STONE:
                 if (pathComplete(LIFT, false, false)){
@@ -360,7 +359,7 @@ public class SCHSControllerBLUE extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT:
-                if (pathComplete(LIFT, true, false)){ //isBothArmLift false -> true
+                if (pathComplete(LIFT, true, false)) { //isBothArmLift false -> true
                     //if (pathComplete(DRIVE, false)) {
                     Log.d("SCHS","inside STATES_STONES_RETREAT");
                     telemetry.addLine("STATES_STONES_RETREAT");
@@ -420,16 +419,16 @@ public class SCHSControllerBLUE extends OpMode {
                     Log.d("SCHS", "inside STATE_STONES_LIFT_FD");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD);
-		    //newState(State.STATE_STONES_ALIGN_FD);
-		}
-	    	break;
+                    //newState(State.STATE_STONES_ALIGN_FD);
+                }
+                break;
 
-	    case STATE_STONES_ALIGN_FD:
-		if (pathComplete(LIFT, false, false)){
-			Log.d("SCHS", "inside STATE_STONES_ALIGN_FD");
-			startPath(positionToFD);
-			newState(State.STATE_STONES_DROP_STONE);
-		} else {
+            case STATE_STONES_ALIGN_FD:
+                if (pathComplete(LIFT, false, false)){
+                    Log.d("SCHS","inside STATE_STONES_ALIGN_FD");
+                    startPath(positionToFD);
+                    newState(State.STATE_STONES_DROP_STONE);
+                } else {
                 }
                 break;
 
@@ -467,39 +466,47 @@ public class SCHSControllerBLUE extends OpMode {
             case STATE_STONES_LIFT_ARM:
                 Log.d("SCHS","inside STATE_STONES_LIFT_ARM");
                 startPath(liftArm);
-                newState(State.STATE_STONES_DROP_HOOKS);
+                newState(State.STATE_STONES_DEPOSIT_PARK);
+                break;
+
+            case STATE_STONES_DEPOSIT_PARK:
+                if (pathComplete(LIFT, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_DEPOSIT_PARK");
+                    startPath(parkAfterDepositionPath);
+                    newState(State.STATE_STOP);
+                } else {}
                 break;
 
             case STATE_STONES_DROP_HOOKS:
                 if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_DROP_HOOKS");
                     //rileyArm.closeServo(rileyArm.rightHook);
-		    rileyArm.closeHook(rileyArm.rightHook);
+                    rileyArm.closeHook(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
                     sleep(2000);
-		    
-		    newState(State.STATE_STONES_PULL_FD);
+                    //newState(State.STATE_STONES_GO_TO_BS);
+                    newState(State.STATE_STONES_PULL_FD);
                 } else {
                 }
                 break;
 
-	    case STATE_STONES_GO_TO_BS:
-		Log.d("SCHS", "inside STATE_STONES_GO_TO_BS");
-		//startPath(moveFD);
-		newState(State.STATE_STONES_LIFT_HOOKS);
-		break;
+            case STATE_STONES_GO_TO_BS:
+                Log.d("SCHS","inside STATE_STONES_GO_TO_BS");
+                startPath(moveFD);
+                newState(State.STATE_STONES_LIFT_HOOKS);
+                break;
 
             case STATE_STONES_PULL_FD:
-                Log.d("SCHS","inside STATE_STONES_PULL_FD");
-                startPath(arcTurnPushPull);
-                //newState(State.STATE_STONES_PUSH_FD);
-		newState(State.STATE_STONES_LIFT_HOOKS);
+                    Log.d("SCHS", "inside STATE_STONES_PULL_FD");
+                    startPath(arcTurnPushPull);
+                    //newState(State.STATE_STONES_PUSH_FD);
+                    newState(State.STATE_STONES_LIFT_HOOKS);
                 break;
 
             case STATE_STONES_PUSH_FD:
                 if (pathComplete(DRIVE,false,false)) {
                     Log.d("SCHS","inside STATE_STONES_PUSH_FD");
-		    sleep(1000);
+                    sleep(1000);
                     startPath(pushFDPath);
                     newState(State.STATE_STONES_LIFT_HOOKS);
                 } else {
@@ -510,48 +517,47 @@ public class SCHSControllerBLUE extends OpMode {
                 if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
                     //rileyArm.openServo(rileyArm.rightHook);
-		    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
+                    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
                     rileyArm.closeServo(rileyArm.leftHook);
                     sleep(2000);
-		    newState(State.STATE_STONES_BACK_FROM_FD);
-		} else {
-		}
-		break;
+                    newState(State.STATE_STONES_BACK_FROM_FD);
+                } else {
+                }
+                break;
 
-	    case STATE_STONES_BACK_FROM_FD:
-		Log.d("SCHS", "inside STATE_STONES_BACK_FROM_FD");
-		startPath(retreatFromFDPath);
-		newState(State.STATE_STONES_PARK_BRIDGE);
-		break;
+            case STATE_STONES_BACK_FROM_FD:
+                Log.d("SCHS","inside STATE_STONES_BACK_FROM_FD");
+                startPath(retreatFromFDPath);
+                newState(State.STATE_STONES_PARK_BRIDGE);
+                break;
 
-	    case STATE_STONES_LIFT_DOWN_BRIDGE:
-		if (pathComplete(DRIVE, false, false)) {
-			Log.d("SCHS", "inside STATE_STONES_LIFT_DOWN_BRIDGE");
-			//startPath(bridgeDownPath);
-			newState(State.STATE_STONES_PARK_BRIDGE);
+            case STATE_STONES_LIFT_DOWN_BRIDGE:
+                if (pathComplete(DRIVE, false, false)){
+                    Log.d("SCHS","inside STATE_STONES_LIFT_DOWN_BRIDGE");
+                    //startPath(bridgeDownPath);
+                    newState(State.STATE_STONES_PARK_BRIDGE);
                 } else {
                 }
                 break;
 
             case STATE_STONES_PARK_BRIDGE:
-		if (pathComplete(DRIVE, false, false)){
-                	Log.d("SCHS","inside STATE_STONES_PARK_BRIDGE");
-                	startPath(parkBridgePath);
-                	newState(State.STATE_STONES_MOVE_TO_BRIDGE);
-		} else {
-		}
+                if (pathComplete(DRIVE, false, false)){
+                    Log.d("SCHS","inside STATE_STONES_PARK_BRIDGE");
+                    startPath(parkBridgePath);
+                    newState(State.STATE_STONES_MOVE_TO_BRIDGE);
+                } else {
+                }
                 break;
 
-	    case STATE_STONES_MOVE_TO_BRIDGE:
-		if (pathComplete(DRIVE, false, false)) {
-			Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
-			startPath(parkUnderBridgePath);
-			newState(State.STATE_STOP);
-		} else {
-		
-		}
-		break;
+            case STATE_STONES_MOVE_TO_BRIDGE:
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
+                    startPath(parkUnderBridgePath);
+                    newState(State.STATE_STOP);
+                } else {
 
+                }
+                break;
 
             case STATE_STONES_DROP_FD:
                 if (pathComplete(DRIVE, false, false)) {
@@ -694,9 +700,9 @@ public class SCHSControllerBLUE extends OpMode {
                 break;
 
             case STATE_STOP:
-                Log.d("SCHS", "inside STATES_STOP");
-                telemetry.addLine("STATES_STOP");
-                isRoundTwo = false;
+                    Log.d("SCHS", "inside STATES_STOP");
+                    telemetry.addLine("STATES_STOP");
+                    isRoundTwo = false;
                 break;
         }
     }
@@ -864,13 +870,13 @@ public class SCHSControllerBLUE extends OpMode {
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
                 } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))){
-			return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
-				(Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-		        } else if (currState == State.STATE_STONES_DROP_STONE) {
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                } else{
-			        return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
+		} else if (currState == State.STATE_STONES_DROP_STONE) {
+			return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
+				(Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
+		} else{
+                    return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)); //10, change to 25
                 }
             } else if (roboPart == LIFT) {

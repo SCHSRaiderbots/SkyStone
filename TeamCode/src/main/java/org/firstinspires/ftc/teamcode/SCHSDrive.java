@@ -165,30 +165,16 @@ public class SCHSDrive {
         gyroParameters = new BNO055IMU.Parameters();
         isMoveDone = false;
 
-        gyroParameters.mode                = BNO055IMU.SensorMode.IMU;
-        gyroParameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        gyroParameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        gyroParameters.loggingEnabled      = false;
+        gyroParameters.mode = BNO055IMU.SensorMode.IMU;
+        gyroParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        gyroParameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        gyroParameters.loggingEnabled = false;
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(gyroParameters);
-
-        /*
-        // NEVER SLEEP! Check this in init_loop
-        // condition is also backwards
-        while (imu.isGyroCalibrated())  {
-            Log.d("Status" , "SCHSMotor:moveStraightWithGyro: gyro is calibrating");
-            sleep(50);
-        }
-         Log.d("Status" , "SCHSMotor:moveStraightWithGyro: gyro done calibrating");
-        */
+        //imu.initialize(gyroParameters);
     }
 
-    /**
-     * old name for routine
-     * @deprecated
-     * @param hardwareMap name to device mapper
-     */
+    /* added from master */
     public void initialize(HardwareMap hardwareMap) {
         init(hardwareMap, null);
     }
@@ -237,7 +223,6 @@ public class SCHSDrive {
      * An OpMode should call this during its start() method
      */
     public void start() {
-
     }
 
     /**

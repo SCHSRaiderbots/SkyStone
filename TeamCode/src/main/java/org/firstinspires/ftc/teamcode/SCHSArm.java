@@ -193,7 +193,11 @@ public class SCHSArm {
      * @param servo  servo to actuate (hook or grabber)
      */
     public void closeHook(Servo servo) {
-        servo.setPosition(0.1);
+        servo.setPosition(0.5); //0.1, changed to 0.4
+    }
+
+    public void openHook(Servo servo) {
+        servo.setPosition(0.95);
     }
 
     /**

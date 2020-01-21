@@ -9,9 +9,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 
-@TeleOp(name="SCHSDriveCarJan10", group="Iterative Opmode")
+@TeleOp(name="SCHSDriveCarJan17", group="Iterative Opmode")
 
-public class SCHSCarDriveJan10 extends OpMode {
+public class SCHSCarDriveJan15 extends OpMode {
 
     //OpMode Members
 
@@ -29,26 +29,28 @@ public class SCHSCarDriveJan10 extends OpMode {
     private double turn;
     private double lPower;
     private double rPower;
-    private double grabberPosition; //it is possible that the min/fully retracted position could be 0
-    private double grabberPositionIncrement;
-    private int towerHeight;
+    private double grabberPosition;
 
-    private final double EXTENDER_POWER = 0.9; //arbitrary value to prevent extending too quickly
+    private final double EXTENDER_POWER = 1; //arbitrary value to prevent extending too quickly
     private final double driveMultiplier = 0.5;
-    private final double turnMultiplier  = 0.4;
+    private double turnMultiplier = 0.4;
 
     private double armPower;
 
-    private int minElevatorPos = 120;
-    private int minExtenderPos = 0;
+    private int minElevatorPos = -99999;
+    private int minExtenderPos = -99999;
 
-    private int maxElevatorPos = 2400;
-    private int maxExtenderPos = 1100;
+    private int maxElevatorPos = 2460;
+    private int maxExtenderPos = 99999;
+
+    private final int creepConstant = 904;
+    private int[] creepArray = new int[2];
 
     //false if the hooks are up, true if the hooks are down
     private boolean hooksEngaged;
-    private boolean isThereBumperInput;
+    private boolean servoClosed;
 
+    private boolean isThereBumperInput;
 
 
     //methods
@@ -57,15 +59,13 @@ public class SCHSCarDriveJan10 extends OpMode {
 
         turn = 0;
         grabberPosition = 0;
-        towerHeight = 0;
-        grabberPositionIncrement = 0.05; //testing value
         isThereBumperInput = false;
 
         telemetry.addData("Status:", "Initialized");
 
         //initialize motors
 
-        leftMotor  = hardwareMap.get(DcMotor.class, "leftMotor");
+        leftMotor = hardwareMap.get(DcMotor.class, "leftMotor");
         rightMotor = hardwareMap.get(DcMotor.class, "rightMotor");
         elevatorMotor = hardwareMap.get(DcMotor.class, "elevatorMotor");
         extenderMotor = hardwareMap.get(DcMotor.class, "armExtenderMotor"); //temp name
@@ -75,7 +75,7 @@ public class SCHSCarDriveJan10 extends OpMode {
         extenderMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         elevatorMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //TODO: ADD CODE TO RESET THE LEFT,  RIGHT MOTOR
+        //TODO: ADD CODE TO RESET THE LEFT, RIGHT MOTOR
         //elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);  //must set position before switching to RUN_TO_POSITION MODE
 
         leftMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -84,7 +84,7 @@ public class SCHSCarDriveJan10 extends OpMode {
 
         //initialize servos
 
-        leftHook  = hardwareMap.get(Servo.class, "leftHook");  //port 0
+        leftHook = hardwareMap.get(Servo.class, "leftHook");  //port 0
         rightHook = hardwareMap.get(Servo.class, "rightHook"); //port 1
         grabberServo = hardwareMap.get(Servo.class, "grabberServo"); //port 2
 
@@ -95,6 +95,9 @@ public class SCHSCarDriveJan10 extends OpMode {
         //code to reset hooks to up state - setting hooksEngaged to false should be done in this method
         hooksEngaged = false;
 
+        //servo will be open by default when starting match
+        servoClosed = false;
+
         telemetry.addData("Status:", "finished loading");
 
         //method to reset servo position
@@ -104,8 +107,14 @@ public class SCHSCarDriveJan10 extends OpMode {
     public void init_loop() {
 
         telemetry.addData("Status:", "Waiting");
+        telemetry.addData("Make sure everything is reset properly!", "");
+
+        grabberServo.setPosition(0);
 
         //raises the elevator slightly to allow the extender to retract fully
+
+        /*
+
         if (elevatorMotor.getCurrentPosition() < minElevatorPos) {
 
             elevatorMotor.setTargetPosition(minElevatorPos);
@@ -114,16 +123,17 @@ public class SCHSCarDriveJan10 extends OpMode {
 
         }
 
+         */
 
     }
 
-    public void start(){
+    public void start() {
 
         runtime.reset();
 
     }
 
-    public void loop(){
+    public void loop() {
 
         /*
 
@@ -131,38 +141,38 @@ public class SCHSCarDriveJan10 extends OpMode {
 
         Gamepad 1:
         -Left, Right Triggers: forward and backward movement
-
-        -x button + left stick: on the spot rotation
-            -perhaps change to just left stick button + left stick y value
-        -D pad up/down: keeps track of how many blocks are stacked
+        -left stick: on the spot rotation
+        -D pad up/down: controls hooks (up: hooks up, down: hooks down)
         -y: removes the "restrictor plate" and allows the robot to go at full speed
-        -[Undecided]: Attack mode
-        -[Undecided]: Incremental movement
 
         Gamepad 2:
         -Left, Right Triggers: move elevator up and down - need to switch to encoder position based
-        -a, b: grabber servo movement (CHANGE TO A AND B WHEN LIMITS ARE FOUND)
-        -Left, Right Buttons: extending arm for the servo
-        -D pad up/down: controls hooks (up: hooks up, down: hooks down)
+        -x: retracts the grabber servo fully
+        -b: extends the grabber servo fully
+        -a: moves the robot back a small distance
+        -y: moves the robot forward a small distance
+        -Left, Right Bumpers: extending arm for the servo
+
 
          */
 
 
         //situational tank turning with x button
 
-        turn = gamepad1.left_stick_x * turnMultiplier;
 
-        spotTurn();
-
-        //default mode
-        normalCar();
+        if (gamepad1.left_stick_button)
+            spotTurn(); //on the spot turning
+        else if (gamepad2.dpad_up || gamepad2.dpad_down || gamepad2.dpad_left || gamepad2.dpad_right)
+            creep();
+        else
+            normalCar();
 
         hooks();
 
 
-        towerHeight();
         elevatorMovement();
         extenderMovement();
+
         grabberServoMovement();
 
         update();
@@ -170,6 +180,12 @@ public class SCHSCarDriveJan10 extends OpMode {
     }
 
     public void stop() {
+
+        while (leftHook.getPosition() != 0 || rightHook.getPosition() != 0)
+            resetHooks();
+
+
+        super.stop();
 
         //also need to return extender to default lowest state
 
@@ -201,21 +217,12 @@ public class SCHSCarDriveJan10 extends OpMode {
     //MISC HELPERS
 
 
-    private void towerHeight() {
-
-        if (gamepad2.dpad_up)
-            towerHeight++;
-
-        if (gamepad2.dpad_down)
-            towerHeight--;
-    }
-
     //determines if there is input from the left trigger and no input from right trigger
     //for other methods to select any possible left trigger input accordingly
     private boolean leftTriggerInput(double rightInput, double leftInput) {
 
         //rightInput will be the right trigger/bumper, leftInput corresponds
-        if(leftInput > 0 && rightInput == 0) {
+        if (leftInput > 0 && rightInput == 0) {
 
             return true;
 
@@ -239,61 +246,61 @@ public class SCHSCarDriveJan10 extends OpMode {
     //checks if there is button/bumper input
     private void isThereBumperInput() {
 
-        if(gamepad2.left_bumper || gamepad2.right_bumper)
+        if (gamepad2.left_bumper || gamepad2.right_bumper)
             isThereBumperInput = true;
         else
             isThereBumperInput = false;
     }
 
-    //TODO: need to fix the issue in which its standing still after exceeding the range
-    //temp solution: remove min encoder position
-    //TODO: Convert to switch statement?
-    private void powerClip(double power, int minEncoderPos, int maxEncoderPos, DcMotor desiredMotor) {
-
-        if (desiredMotor.getCurrentPosition() < minEncoderPos) {
-
-            if (power > 0)
-                desiredMotor.setPower(power);
-
-        }
-
-        if (desiredMotor.getCurrentPosition() > maxEncoderPos) {
-
-            if (power < 0)
-                desiredMotor.setPower(power);
-
-        }
-
-        if (desiredMotor.getCurrentPosition() > minEncoderPos
-                && desiredMotor.getCurrentPosition() < maxEncoderPos)
-            desiredMotor.setPower(power);
-
-    }
-
     //DRIVER PERIOD
 
-    private void spotTurn(){
+    //TODO: make the robot not turn without trigger inputs, find another button for spot turning instead of left stick button
+    private void setTurn() {
 
-        if(gamepad1.left_stick_button) {
+        turn = gamepad1.left_stick_x;
 
-            //get power values; rPower is negative lPower so robot can turn like tank
-            lPower = gamepad1.left_stick_x / 2.77;
-            rPower = -lPower;
+        if (gamepad1.a && gamepad1.x) {
 
-            leftMotor.setPower(lPower);
-            rightMotor.setPower(rPower);
+            // a and x buttons are pressed
+            //turn faster
+
+            turnMultiplier = 0.8;
+
+        } else {
+
+            //default
+            turnMultiplier = 0.3;
 
         }
 
+        turn = turn * turnMultiplier;
+
     }
 
+    private void spotTurn() {
 
-    private void normalCar(){
+        //get power values; rPower is negative lPower so robot can turn like tank
+        lPower = gamepad1.left_stick_x;
+        lPower = Math.pow(lPower, 2); //squared inputs for precise turning
+        rPower = -lPower;
+
+        leftMotor.setPower(lPower);
+        rightMotor.setPower(rPower);
+
+
+    }
+
+    private void normalCar() {
+
+        setTurn();
+
+        leftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         //use triggers for power inputs
 
         //first condition: need to reverse - left trigger input and no right trigger input
-        if(leftTriggerInput(gamepad1.right_trigger, gamepad1.left_trigger)) {
+        if (leftTriggerInput(gamepad1.right_trigger, gamepad1.left_trigger)) {
 
             reverse();
 
@@ -307,7 +314,7 @@ public class SCHSCarDriveJan10 extends OpMode {
 
     private double restrictorPlate(double power) {
 
-        if(!gamepad1.y) {
+        if (!gamepad1.y) {
 
             power = power * driveMultiplier;
 
@@ -347,8 +354,8 @@ public class SCHSCarDriveJan10 extends OpMode {
         //hooksEngaged is false, hooks are up, lower the hooks
         if (gamepad1.dpad_down && hooksEngaged == false) {
 
-            leftHook.setPosition(0.4);
-            rightHook.setPosition(0.4);
+            leftHook.setPosition(0.5);
+            rightHook.setPosition(0.5);
 
             hooksEngaged = true;
         }
@@ -366,17 +373,101 @@ public class SCHSCarDriveJan10 extends OpMode {
 
     //SERVO AND ARM MOTOR HELPER METHODS
 
-    private String hooksInfo(){
+    private String hooksInfo() {
 
         if (hooksEngaged == false)
             return "UP";
         if (hooksEngaged == true)
             return "DOWN";
 
-        return("joe");
+        return ("joe");
     }
 
-    private void increment() {
+    //TODO: MAKE similar methods to move the extender/elevator very slightly or just slow it down completely
+    //Creep methods and helper methods
+    //by Radiohead
+    private void creep() {
+
+        int currentPosLeft = leftMotor.getCurrentPosition();
+        int currentPosRight = rightMotor.getCurrentPosition();
+
+        setCreepArray(0, 0); //changed to be similar to old creep method which reset targets to 0 every time it ran
+
+        //DEFAULT ELSE WILL NEVER BE CALLED BECAUSE THE METHOD IS ONLY EVER CALLED WHENEVER THE DPAD IS PRESSED
+        if (gamepad2.dpad_left)
+            creepLeft(currentPosLeft, currentPosRight);
+        else if (gamepad2.dpad_right)
+            creepRight(currentPosLeft, currentPosRight);
+        else if (gamepad2.dpad_up)
+            creepForward(currentPosLeft, currentPosRight);
+        else if (gamepad2.dpad_down)
+            creepBack(currentPosLeft, currentPosRight);
+
+
+        leftMotor.setTargetPosition(getCreepArrayLeftPosition());
+        rightMotor.setTargetPosition(getCreepArrayRightPosition());
+
+        leftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        leftMotor.setPower(0.1);
+        rightMotor.setPower(0.1);
+
+
+    }
+
+    private void creepBack(int leftPos, int rightPos) {
+
+        int targetPosLeft = leftPos - creepConstant;
+        int targetPosRight = rightPos - creepConstant;
+
+        setCreepArray(targetPosLeft, targetPosRight);
+
+    }
+
+    private void creepForward(int leftPos, int rightPos) {
+
+        int targetPosLeft = leftPos + creepConstant;
+        int targetPosRight = rightPos + creepConstant;
+
+        setCreepArray(targetPosLeft, targetPosRight);
+
+    }
+
+    private void creepLeft(int leftPos, int rightPos) {
+
+        int targetPosLeft = leftPos - creepConstant;
+        int targetPosRight = rightPos + creepConstant;
+
+        setCreepArray(targetPosLeft, targetPosRight);
+
+    }
+
+    private void creepRight(int leftPos, int rightPos) {
+
+        int targetPosLeft = leftPos + creepConstant;
+        int targetPosRight = rightPos - creepConstant;
+
+        setCreepArray(targetPosLeft, targetPosRight);
+
+    }
+
+    private void setCreepArray(int leftTarget, int rightTarget) {
+
+        creepArray[0] = leftTarget;
+        creepArray[1] = rightTarget;
+
+    }
+
+    private int getCreepArrayLeftPosition() {
+
+        return creepArray[0];
+
+    }
+
+    private int getCreepArrayRightPosition() {
+
+        return creepArray[1];
 
     }
 
@@ -390,9 +481,32 @@ public class SCHSCarDriveJan10 extends OpMode {
 
     }
 
+    //TODO: actually use this to retract the elevator or extender
+    private void retract(DcMotor desiredMotor, int minPos) {
+
+        if (desiredMotor.getCurrentPosition() > minPos) {
+
+            desiredMotor.setTargetPosition(minPos);
+            desiredMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            desiredMotor.setPower(0.5);
+
+        }
+
+    }
+
+    private void retractExtender() {
+
+        retract(extenderMotor, minExtenderPos);
+
+    }
+
+    private void retractElevator() {
+
+        retract(elevatorMotor, minExtenderPos);
+
+    }
+
     //controls the elevator - :sadjuri:
-    //TODO: check if left TRIGGER makes it go down, right trigger makes it go up
-    //TODO: find min/ max for range.clip
     private void elevatorMovement() {
 
         //OLD CODE Before Jan 10
@@ -419,17 +533,17 @@ public class SCHSCarDriveJan10 extends OpMode {
         if (leftTriggerInput(gamepad2.right_trigger, gamepad2.left_trigger))
             armPower = -gamepad2.left_trigger;
         else
-            armPower =  gamepad2.right_trigger;
+            armPower = gamepad2.right_trigger;
 
         int currentPosition = elevatorMotor.getCurrentPosition();
-        int targetPosition  = currentPosition + (int)(armPower * 300);
+        int targetPosition = currentPosition + (int) (armPower * 300);
 
 
-        //targetPosition = Range.clip(targetPosition, minElevatorPos + 10, maxElevatorPos);
+        targetPosition = Range.clip(targetPosition, minElevatorPos, maxElevatorPos);
 
         elevatorMotor.setTargetPosition(targetPosition);
         elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        elevatorMotor.setPower(armPower);
+        elevatorMotor.setPower(armPower * 1.2);
 
 
         //TARGET POSITION NOT SET EXCEPTION has been fixed
@@ -439,8 +553,7 @@ public class SCHSCarDriveJan10 extends OpMode {
     //extends the grabbing arm based on left/right buttons
     //left should be UP right should be DOWN
 
-    //TODO: test, find min and max values for Range.clip
-    private void extenderMovement(){
+    private void extenderMovement() {
 
         int currentPosition = extenderMotor.getCurrentPosition();
         int targetPosition;
@@ -449,14 +562,14 @@ public class SCHSCarDriveJan10 extends OpMode {
         isThereBumperInput();
 
         //this is here so it does not extend without any bumper input - the bumpers return false compared to the triggers' 0 when not pressed
-        if(isThereBumperInput) {
+        if (isThereBumperInput) {
 
             if (leftBumperInput(gamepad2.right_bumper, gamepad2.left_bumper)) {
 
                 //old code not designed for RUN_TO_POSITION
                 //powerClip(-EXTENDER_POWER, 0, maxExtenderPos, extenderMotor);
 
-                targetPosition = currentPosition + (int)(-EXTENDER_POWER * 100);
+                targetPosition = currentPosition + (int) (-EXTENDER_POWER * 100);
                 extenderPower = -EXTENDER_POWER;
 
             } else {
@@ -466,10 +579,12 @@ public class SCHSCarDriveJan10 extends OpMode {
                 //old code not designed for RUN_TO_POSITION
                 //powerClip(EXTENDER_POWER, 0, maxExtenderPos, extenderMotor);
 
-                targetPosition = currentPosition + (int)(EXTENDER_POWER * 100);
-                extenderPower =  EXTENDER_POWER;
+                targetPosition = currentPosition + (int) (EXTENDER_POWER * 100);
+                extenderPower = EXTENDER_POWER;
 
             }
+
+            targetPosition = Range.clip(targetPosition, minExtenderPos, maxExtenderPos);
 
             extenderMotor.setTargetPosition(targetPosition);
             extenderMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -484,29 +599,96 @@ public class SCHSCarDriveJan10 extends OpMode {
     }
 
     //can grab blocks at driver request via button if [unmade] conditions are met
-    //make this into "attack mode" method?
+    //make this into "attack mode" method with distance sensor?
     private void grabBlock() {
 
     }
 
 
-    //uses incremental thing to find limiting values
-    //once these are found, TODO: make it so that the servo either goes to open position or closed position ONLY with a and b keys
+    //TODO in next iteration: make same key open and close the grabber
+    //Perhaps make it stay open ONLY when the button is held?
     private void grabberServoMovement() {
 
-        //retract the grabber
-        if (gamepad2.dpad_down) {
 
-            grabberPosition -= grabberPositionIncrement;
+        //retract the grabber
+        if (gamepad2.x) {
+
+            grabberPosition = 0;
 
             //extend the grabber
-        } else if (gamepad2.dpad_up) {
+        } else if (gamepad2.b) {
 
-            grabberPosition += grabberPositionIncrement;
+            grabberPosition = 0.998;
 
         }
 
         grabberServo.setPosition(grabberPosition);
+
+
+
+        //uses A button to open and close servo
+
+        /*
+
+        if (gamepad2.a) {
+
+            //servoClosed is false, servo is open, close the servo
+            if (servoClosed == false) {
+
+                //grabberPosition = 0.998;
+                grabberServo.setPosition(0.998);
+
+                servoClosed = true;
+
+            }
+
+            if (servoClosed == true) {
+
+                //grabberPosition = 0.002;
+                grabberServo.setPosition(0.002);
+
+                servoClosed = false;
+
+            }
+
+
+
+        }
+
+
+         */
+
+        //grabberServo.setPosition(grabberPosition);
+
+        /*
+
+        double currentPos = grabberServo.getPosition();
+
+        if (gamepad2.a) {
+
+            //servoClosed is false, servo is open, close the servo
+            if (currentPos < 0.3) {
+
+                //grabberPosition = 0.998;
+                grabberServo.setPosition(0.998);
+
+                servoClosed = true;
+
+            }
+
+            if (currentPos > 0.7) {
+
+                //grabberPosition = 0.002;
+                grabberServo.setPosition(0.002);
+
+                servoClosed = false;
+
+            }
+
+        }
+
+
+         */
 
     }
 
@@ -514,23 +696,25 @@ public class SCHSCarDriveJan10 extends OpMode {
     //update telemetry info
     private void update() {
 
-        telemetry.addData("Left Motor Encoder Position",  leftMotor.getCurrentPosition());
-        telemetry.addData("Right Motor Encoder Position", rightMotor.getCurrentPosition());
-        //telemetry.addData("Turn Multiplier value:", turnMultiplier);
+            //telemetry.addData("Left Motor Encoder Position",  leftMotor.getCurrentPosition());
+            //telemetry.addData("Right Motor Encoder Position", rightMotor.getCurrentPosition());
+            //telemetry.addData("Turn Multiplier value:", turnMultiplier);
 
-        telemetry.addData(" ", " ");
+            telemetry.addData(" ", " ");
 
-        //telemetry.addData("Hook Status", hooksInfo());
+            //telemetry.addData("Hook Status", hooksInfo());
 
-        telemetry.addData("Elevator Encoder Position", elevatorMotor.getCurrentPosition());
-        telemetry.addData("Extender Encoder Position", extenderMotor.getCurrentPosition());
-        telemetry.addData("grabberServo position:", grabberServo.getPosition());
+            telemetry.addData("Elevator Encoder Position", elevatorMotor.getCurrentPosition());
+            telemetry.addData("Extender Encoder Position", extenderMotor.getCurrentPosition());
+            telemetry.addData("grabberServo position:", grabberServo.getPosition());
+            telemetry.addData("Is the servo closed? ", servoClosed);
 
-        telemetry.addData(" ", " ");
+            telemetry.addData(" ", " ");
 
-        telemetry.addData("towerHeight:", towerHeight);
+            telemetry.addData("Creep Array Values", "Left: " + getCreepArrayLeftPosition() + " Right:" + getCreepArrayRightPosition());
 
-    }
+
+        }
 
 }
 
@@ -561,3 +745,32 @@ public class SCHSCarDriveJan10 extends OpMode {
 
 
 //1/8: Max extender position
+
+/* TODO: GOALS
+
+1. use distance sensor to find distance to the block
+    a. figure out extender length as a function of encoder value
+    b. return a boolean that describes whether the block is grab-able or not
+        i.   compare extender length to the distance to the block
+        ii.  find "tolerance values"
+        iii. return result to phone where coach/players can see
+
+2. swap creep method to using D-pad inputs
+    a. left and right turning
+
+3. fix turning without trigger inputs - robot should not turn at all without trigger inputs
+
+4. stop the servo from moving immediately when the program runs
+
+5. fix the hooks - use SCHS Arm object?
+
+ */
+
+/* TODO: TESTING
+
+1. see if servo opening/closing works properly
+2. see if reverse works properly (have robot going backwards, front facing me)
+3. see if new creep works properly
+
+
+ */
