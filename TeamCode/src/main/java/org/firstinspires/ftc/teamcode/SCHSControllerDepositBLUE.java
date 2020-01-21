@@ -78,6 +78,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
         STATE_STONES_DEPOSIT_PARK,
 
         STATE_STOP,
+
+	STATE_STONES_LOWER_ARM_MB
     }
 
     private State currState; //current state machine
@@ -274,7 +276,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_GO_TO_SKYSTONE:
-                if (pathComplete(DRIVE, false, true)){
+                if (pathComplete(DRIVE, false, false)) {//change isBothArmDrive true -> false
                     Log.d("SCHS", "inside STATES_STONES_GO_TO_SKYSTONE");
                     telemetry.addLine("STATES_STONES_GO_TO_SKYSTONE");
                     if (skyPos == LEFT_POS) {
@@ -305,14 +307,22 @@ public class SCHSControllerDepositBLUE extends OpMode {
                     telemetry.addLine("inside STATES_STONES_PICK_STONE");
                     if (skyPos == 1 || skyPos == 3) {
                         startPath(pickStoneArmPath);
-                    } else {
+			newState(State.STATE_STONES_CLOSE_STONE);
+                    
+		    } else {
                         startPath(pickMBStoneArmPath);
+			newState(State.STATE_STONES_LOWER_ARM_MB);
                     }
-                    newState(State.STATE_STONES_CLOSE_STONE);
                     //pick up blocks
                 } else {
                 }
                 break;
+	    case STATE_STONES_LOWER_ARM_MB:
+		if (pathComplete(ARM, false, false)) {
+			startPath(dropLiftArmPathMB);
+			newState(State.STATE_STONES_CLOSE_STONE);
+		} else {}
+		break;
 
             case STATE_STONES_CLOSE_STONE:
                 if (pathComplete(LIFT, false, false)){
@@ -349,7 +359,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT:
-                if (pathComplete(LIFT, false, false)){
+                if (pathComplete(LIFT, true, false)){ //isBothArmLift false -> true
                     //if (pathComplete(DRIVE, false)) {
                     Log.d("SCHS","inside STATES_STONES_RETREAT");
                     telemetry.addLine("STATES_STONES_RETREAT");
@@ -863,6 +873,10 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))){
 			return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
 				(Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
+		} else if (currState == State.STATE_STONES_DROP_STONE) {
+			return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
+					(Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
+		
 		} else{
 			return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)); //10, change to 25

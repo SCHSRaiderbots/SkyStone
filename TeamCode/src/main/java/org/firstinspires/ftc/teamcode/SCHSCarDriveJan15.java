@@ -543,7 +543,7 @@ public class SCHSCarDriveJan15 extends OpMode {
 
         elevatorMotor.setTargetPosition(targetPosition);
         elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        elevatorMotor.setPower(armPower);
+        elevatorMotor.setPower(armPower * 1.2);
 
 
         //TARGET POSITION NOT SET EXCEPTION has been fixed

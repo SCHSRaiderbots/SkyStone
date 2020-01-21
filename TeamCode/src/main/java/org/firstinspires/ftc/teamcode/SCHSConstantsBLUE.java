@@ -98,7 +98,7 @@ public class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] arcTurnPushPull = {
     	    new SCHSPathSeg(-6, -6, POWER_FULL), //diff from red constants to reach BS
-            new SCHSPathSeg(4.5*TURN_VALUE_90, -(4.5*TURN_VALUE_90), POWER_FULL) //diff from red constants, not completing turn at 3.5*
+            new SCHSPathSeg(4.8*TURN_VALUE_90, -(4.8*TURN_VALUE_90), POWER_FULL) //diff from red constants, not completing turn at 3.5*
     };
 
     static final SCHSPathSeg[] arcTurnFDPath = {
@@ -193,7 +193,7 @@ public class SCHSConstantsBLUE {
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
             new SCHSPathSeg( 7.25, 7.25, 0.5), //diff from red constants, forward 8.25, change to 7.25
             new SCHSPathSeg( 0.95*TURN_VALUE_90, -(0.95*TURN_VALUE_90), 0.5), //right 90
-            new SCHSPathSeg( 4.5, 4.5, 0.5), //forward 4.5
+            new SCHSPathSeg( 5, 5, 0.5), //forward 4.5 -> 5
     };
 
     /* changed due to blue side */
@@ -203,7 +203,7 @@ public class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] goToMBPath = {
-            new SCHSPathSeg( 6, 6, 0.5), //forward 9, change to 4.5 -> 6
+            new SCHSPathSeg( 6.5, 6.5, 0.5), //forward 9, change to 4.5 -> 6 -> 6.5
     };
 
     static final SCHSPathSeg[] retreatMBPath = {
@@ -215,7 +215,7 @@ public class SCHSConstantsBLUE {
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
             new SCHSPathSeg( 10, 10, 0.5), //forward 8, change to 9.25 -> 10
             new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5), //left 90
-            new SCHSPathSeg( 5, 5, 0.5), //forward 9, change to 7, change to 4.5 -> 5
+            new SCHSPathSeg( 5.5, 5.5, 0.5), //forward 9, change to 7, change to 4.5 -> 5 -> 5.5
     };
 
     static final SCHSPathSeg[] retreatRBPath = {
@@ -224,7 +224,7 @@ public class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] deliverBlockPath = {
-            new SCHSPathSeg( 74.75,74.75, POWER_FULL), //74.75
+            new SCHSPathSeg( 72.25,72.25, POWER_FULL), //74.75 -> 72.25
     };
 
     static final SCHSPathSeg[] liftBlockFD = {
