@@ -70,6 +70,12 @@ public class RobotEx extends SCHSDrive {
         if (digitalTouch == null) {
             // the sensor was not found, so presume it is the 2020 robot
             robotIdentity = "2020 Robot";
+
+            // get the arm
+            arm = new SCHSArm();
+
+            // and initialize it
+            arm.initialize(hardwareMap);
         } else {
             // the sensor was not found, so presume it is the 2019 robot
             robotIdentity = "2019 Robot";
