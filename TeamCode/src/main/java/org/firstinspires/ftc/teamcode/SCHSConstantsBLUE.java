@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.app.job.JobInfo;
-
-public class SCHSConstantsBLUE {
+class SCHSConstantsBLUE {
 
     // power constants between 1 and -1
     static final double POWER_FULL = 1;

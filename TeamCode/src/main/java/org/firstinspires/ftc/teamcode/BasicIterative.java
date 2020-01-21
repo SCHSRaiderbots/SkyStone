@@ -32,33 +32,19 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-
-import java.util.Locale;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -77,10 +63,10 @@ public class BasicIterative extends OpMode
     // Declare OpMode members.
 
     // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html
-    private static final String TAG = "Testbot";
+    private static final String TAG = "testbot";
     // so use Log.d(TAG, <string>) to log debugging messages
 
-    // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
+    // TODO: is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
     private ElapsedTime runtime = new ElapsedTime();
 
     // TODO: gyroscope mess
@@ -98,84 +84,22 @@ public class BasicIterative extends OpMode
     private DcMotorEx rightDrive = null;
 
     // arm motor
-    // abstract to a class (eg, Robot) where attributes can be static
+    // TODO: safe to remove
     private DcMotorEx motorArm = null;
 
     // elevator motor
-    // abstract to a class
+    // TODO: safe to remove
     private DcMotorEx motorElevator = null;
-
-    // abstract to a class (eg, Robot) where attributes can be static
-    // and static methods can .setHook()
-    private Servo servoHookLeft = null;
-    private Servo servoHookRight = null;
-
-    // abstract to a class (eg, Robot) where attributes can be static
-    private Servo servoGrab = null;
-
-    // robot parameters
-    // abstract to a class (eg, Robot) where static parameters describe the robot
-    // the wheel diameters
-    private final double mWheelDiameterLeft = 0.090;
-    private final double mWheelDiameterRight = 0.090;
-    // half the distance between the wheels
-    private final double distWheel = 0.305 / 2;
-
-    // derived robot parameters
-    // Distance per tick
-    //   leaving the units vague at this point
-    // Currently using direct drive with a CoreHex motor
-    // The CoreHex motor has 4 ticks per revolution and is geared down by 72
-    //   those attributes should be in the DcMotor class
-    // The HD Hex Motor has 56 ticks per revolution
-    //    the 20:1 is geared 20 to 1
-    //    the 40:1 is geared 40 to 1
-    // The HD Hex Motor is also used with the Ultraplanetary gearbox
-    //    the 3:1 cartridge is actually 84:29 (2.9...)
-    //    the 4:1 cartridge is actually 76:21 (3.6...)
-    //    the 5:1 cartridge is actually 68:13 (5.2...)
-    // The DcMotor class can allow some help
-    //   MotorConfigurationType .getMotorType()
-    //     MotorConfigurationType#getUnspecifiedMotorType()
-    //       do not know where the enum is
-    //   java.lang.String .getDeviceName() (not the config name)
-    //   HardwareDevice.Manufacturer .getManufacturer()
-    //     https://ftctechnh.github.io/ftc_app/doc/javadoc/index.html?com/qualcomm/robotcore/hardware/HardwareMap.html
-    //       possibly uninteresting
-    //   DcMotorEx has .getVelocity(AngleUnit unit), so it presumably knows the ticks per revolution
-    //     however, there is not a .getCurrentPostion(AngleUnit unit)
-    private final double distpertickLeft = mWheelDiameterLeft * Math.PI / (4 * 72);
-    private final double distpertickRight = mWheelDiameterRight * Math.PI / (4 * 72);
-
-    // the robot pose
-    // abstract to a class (eg, Robot) with static parameters
-    //   that class can have .updatePose(), .getPose()
-    //   such a step may allow the Pose to be carried over from Autonomous to Teleop
-    //     Autonomous can set the initial pose
-    //     When Teleop starts, it can use the existing Pose
-    //        If there was no teleop, then initial Pose is random
-    //        A button press during teleop's init_loop can set a known Pose
-    private double xPose = 0.0;
-    private double yPose = 0.0;
-    private double thetaPose = 0.0;
-
-    // encoder counts
-    // abstract to a class coupled to the drive motors (eg, Robot) as static
-    // There's a subtle issue here
-    //    If robot is not moving, it is OK to set these values to the current encoder counts
-    //    That could always happen during .init()
-    private int cEncoderLeft;
-    private int cEncoderRight;
 
     // REV 2m distance sensor and attack mode
     // Also Rev2mDistanceSensor
-    private DistanceSensor sensorRange2m;
+    // *** private DistanceSensor sensorRange2m;
     private double distAttack = 0.0;
     private boolean bAttack = false;
 
     // Color distance sensor
-    private DistanceSensor sensorDistance;
-    private ColorSensor sensorColor;
+    //*** private DistanceSensor sensorDistance;
+    //*** private ColorSensor sensorColor;
 
     // REV touch sensor as digital channel
     private DigitalChannel digitalTouch;
@@ -187,14 +111,35 @@ public class BasicIterative extends OpMode
     private int cLoop = 0;
     private double timeLoop = 0;
 
-    /*
+    // SCHSDrive (has drive motors and other stuff)
+    private SCHSDrive schsdrive = null;
+
+    // SCHSArm (has lift, extend, and hooks)
+    private SCHSArm schsarm = null;
+
+    // for tests
+    private boolean brun = false;
+    private boolean bspin = false;
+
+    /**
      * Code to run ONCE when the driver hits INIT
-     * @TODO Zero the arm position
+     * TODO: Zero the arm position
      */
     @Override
     public void init() {
         Log.d(TAG, "init()");
         telemetry.addData("Status", "Initializing");
+
+        // the robot drive
+        schsdrive = new SCHSDrive();
+        schsdrive.init(hardwareMap, telemetry);
+
+        // set the pose for testing
+        schsdrive.setPoseInches(0,0,0);
+
+        // TODO stop using local copies
+        leftDrive = schsdrive.motorLeft;
+        rightDrive = schsdrive.motorRight;
 
         // for I2C busses
         // for glr
@@ -231,84 +176,22 @@ public class BasicIterative extends OpMode
         telemetry.addData("IMU", "initialize");
         imu.initialize(parameters);
 
-        // find the drive motors
-        // abstract to a common Class (eg, Robot)
-        // for SCHSConfig
-        //    0: rightMotor
-        //    1: leftMotor
-        //    2: armExtenderMotor
-        //    3: elevatorMotor
-        leftDrive  = hardwareMap.get(DcMotorEx.class, "leftMotor");
-        rightDrive = hardwareMap.get(DcMotorEx.class, "rightMotor");
-
-        LogDevice.logMotor("motorLeft", leftDrive);
-        LogDevice.logMotor("motorRight", rightDrive);
-
-        // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
-        leftDrive.setDirection(DcMotor.Direction.REVERSE);
-        rightDrive.setDirection(DcMotor.Direction.FORWARD);
-
-        // DcMotor Direction also affects the encoder counts
-        // remember the current encoder counts
-        // Should always do this (even if not resetting the Pose)
-        cEncoderLeft = leftDrive.getCurrentPosition();
-        cEncoderRight = rightDrive.getCurrentPosition();
-
+        // use the arm abstraction now
+        schsarm = new SCHSArm();
         // The arm motor
-        //   See comments at https://ftc-tricks.com/dc-motors/
-        //     .setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        //     .setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        //   abstract to a common class (eg, Robot)
-        motorArm = hardwareMap.get(DcMotorEx.class, "armExtenderMotor");
-        LogDevice.logMotor("motorArm", motorArm);
-        // assume it is at position 0 right now
-        motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        // Maybe use DcMotor.getCurrentPosition() as initial value?
-        motorArm.setTargetPosition(0);
-        // use the arm as a servo
-        // target position must be set before RUN_TO_POSITION is invoked
-        motorArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        // do not ask for a lot of power yet
-        motorArm.setPower(1.0);
-        // choose FLOAT or BRAKE
-        motorArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.FLOAT));
-
+        motorArm = schsarm.extendMotor;
         // The elevator motor
-        motorElevator = hardwareMap.get(DcMotorEx.class, "elevatorMotor");
-        LogDevice.logMotor("motorElevator", motorElevator);
-        // assume it is at position 0 right now
-        motorElevator.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorElevator.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorElevator.setTargetPosition(0);
-        motorElevator.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorElevator.setPower(1.0);
-        motorElevator.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        // The foundation hooks
-        // for SCHSConfig
-        //   0: leftHook
-        //   1: rightHook
-        //   2: grabberServo
-        servoHookLeft = hardwareMap.get(Servo.class, "leftHook");
-        servoHookRight = hardwareMap.get(Servo.class, "rightHook");
-
-        // dump information about the servos
-        LogDevice.logServo("servoHookLeft", servoHookLeft);
-        LogDevice.logServo("servoHookRight", servoHookRight);
+        motorElevator = schsarm.liftMotor;
 
         // set hooks to known state
-        setHookState(false);
-
-        // The grabber actuator
-        servoGrab = hardwareMap.get(Servo.class, "grabberServo");
+        schsarm.setHookState(false);
 
         // find the REV 2m distance sensor
-        sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
+        // *** sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
 
         // The color/distance sensor
-        sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
-        sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
+        //*** sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
+        //*** sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
 
         // touch sensor
         digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
@@ -333,6 +216,9 @@ public class BasicIterative extends OpMode
     public void init_loop() {
         telemetry.addData("init", "looping; look for config info");
 
+        // update drive chassis
+        schsdrive.init_loop();
+
         // update statistics for loop period
         // TODO why is this loop taking 100 ms?
         cLoop++;
@@ -348,6 +234,7 @@ public class BasicIterative extends OpMode
         // report digital touch sensor
         telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
 
+        /* ***
         // report color
         // had used graph to scale red / 0.86, green / 0.98, and blue / 0.61
         // get values
@@ -395,7 +282,7 @@ public class BasicIterative extends OpMode
         // telemetry.addData("ID", String.format("%x", sensorTimeOfFlight.getModelID()));
         // this is always "false" (even with distance = 819cm (8 meters out)
         // telemetry.addData("did time out", Boolean.toString(sensorTimeOfFlight.didTimeoutOccur()));
-
+*/
         /* */
         // do complicated initialization of elevator
         switch (markovElevator) {
@@ -404,8 +291,7 @@ public class BasicIterative extends OpMode
                     // if the button is pressed, start initialization
 
                     // move the elevator up to clear elevator motor
-                    // TODO make this an absolute position
-                    motorElevator.setTargetPosition(500);
+                    schsarm.setLiftTargetHeight(10.0);
 
                     // advance the state
                     markovElevator++;
@@ -415,9 +301,9 @@ public class BasicIterative extends OpMode
             case 0:
                 // the elevator should be rising
                 // when it gets high enough, start the next step
-                if (motorElevator.getCurrentPosition() > 400) {
+                if (schsarm.getLiftCurrentHeight() > 6.0) {
                     // extend the arm
-                    motorArm.setTargetPosition(400);
+                    schsarm.setArmTargetExtension(4.0);
 
                     // advance the state
                     markovElevator++;
@@ -427,10 +313,10 @@ public class BasicIterative extends OpMode
             case 1:
                 // the arm is extending
                 // when it has gone far enough, start the next step
-                if (motorArm.getCurrentPosition() > 300) {
+                if (schsarm.getArmCurrentExtension() > 3.5) {
                     // should be able to slowly lower the elevator onto the limit switch
-                    // just bring it to 0 for now
-                    motorElevator.setTargetPosition(0);
+                    // just bring it to 4.0 for now
+                    schsarm.setLiftTargetHeight(4.0);
 
                     // advance the state
                     markovElevator++;
@@ -439,10 +325,10 @@ public class BasicIterative extends OpMode
 
             case 2:
                 // elevator is lowering onto switch
-                if (motorElevator.getCurrentPosition() < 20) {
+                if (schsarm.getLiftCurrentHeight() < 4.5) {
                     // figure we are done.
                     // send Elevator back up
-                    motorElevator.setTargetPosition(300);
+                    schsarm.setLiftTargetHeight(10.0);
 
                     // advance the state
                     markovElevator++;
@@ -451,9 +337,9 @@ public class BasicIterative extends OpMode
 
             case 3:
                 // elevator is rising again
-                if (motorElevator.getCurrentPosition() > 250) {
+                if (schsarm.getLiftCurrentHeight() > 6.0) {
                     // retract arm
-                    motorArm.setTargetPosition(0);
+                    schsarm.setArmTargetExtension(0.0);
 
                     // terminate the calibration
                     markovElevator = -1;
@@ -461,6 +347,74 @@ public class BasicIterative extends OpMode
                 break;
         }
         /**/
+
+        // for debugging drive motors
+        if (!bspin) {
+            // not spinning -- look to start
+            bspin = true;
+
+            if (gamepad1.x) {
+                // make the motors turn 10 revolutions
+                int ticks = (int)(10 * schsdrive.ticksPerWheelRev);
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                schsdrive.motorLeft.setTargetPosition(
+                        schsdrive.motorLeft.getCurrentPosition() + ticks);
+                schsdrive.motorRight.setTargetPosition(
+                        schsdrive.motorRight.getCurrentPosition() + ticks);
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                leftDrive.setPower(0.8);
+                rightDrive.setPower(0.8);
+            }
+        } else {
+            if (! schsdrive.motorLeft.isBusy() && ! schsdrive.motorRight.isBusy()) {
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                // we are done
+                bspin = false;
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+        }
+
+        if (!brun) {
+            // try running
+            brun = true;
+            if (gamepad1.y) {
+                // make the motors move 48 inches (two tiles)
+                int ticks = schsdrive.ticksFromInches(48.0);
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                schsdrive.motorLeft.setTargetPosition(
+                        schsdrive.motorLeft.getCurrentPosition() + ticks);
+                schsdrive.motorRight.setTargetPosition(
+                        schsdrive.motorRight.getCurrentPosition() + ticks);
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                leftDrive.setPower(0.8);
+                rightDrive.setPower(0.8);
+            }
+        } else {
+            if (! schsdrive.motorLeft.isBusy() && ! schsdrive.motorRight.isBusy()) {
+                DcMotorEx leftDrive = schsdrive.motorLeft;
+                DcMotorEx rightDrive = schsdrive.motorRight;
+
+                // we are done
+                brun = false;
+
+                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+        }
     }
 
     /*
@@ -476,6 +430,8 @@ public class BasicIterative extends OpMode
         //   In other words, I think Opmode supplies a reasonable time.
         runtime.reset();
 
+        schsdrive.start();
+
         // reset timer statistics
         cLoop = 0;
         timeLoop = time;
@@ -490,71 +446,6 @@ public class BasicIterative extends OpMode
         Log.d(TAG, "start() complete");
     }
 
-    /**
-     * Set Hooks to a known state
-     * Tte values are different, so there is probably bias in servo horn.
-     * The servo horn has 25 teeth, so it can only be positioned to 360/25 = 14.4 degrees
-     * Set for a small change now to avoid hitting the elevator winch.
-     * TODO provide a tracking variable or read servo position
-     * TODO remember the time the command was issue so completion can be estimated
-     */
-    private void setHookState (boolean state) {
-        if (state) {
-            // set the hook
-            servoHookLeft.setPosition(0.5);     // larger is lower down
-            servoHookRight.setPosition(0.55);    // smaller is lower down
-        } else {
-            // release the hook
-            servoHookLeft.setPosition(0.0);
-            servoHookRight.setPosition(1.0);
-        }
-    }
-
-    /**
-     * Update the robot pose.
-     * Uses small angle approximations.
-     * See COS495-Odometry by Chris Clark, 2011,
-     * <a href="https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf">https://www.cs.princeton.edu/courses/archive/fall11/cos495/COS495-Lecture5-Odometry.pdf</a>
-     * TODO: Move to a common class (eg, Robot)
-     */
-    private void updateRobotPose() {
-        // several calculations are needed
-
-        // get the new encoder positions
-        int cLeft = leftDrive.getCurrentPosition();
-        int cRight = rightDrive.getCurrentPosition();
-
-        // calculate the arc length deltas
-        int dsLeft = cLeft - cEncoderLeft;
-        int dsRight = cRight - cEncoderRight;
-
-        // save the new encoder positions for the next time around
-        cEncoderLeft = cLeft;
-        cEncoderRight = cRight;
-
-        double distL = dsLeft * distpertickLeft;
-        double distR = dsRight * distpertickRight;
-
-        // approximate the arc length as the average of the left and right arcs
-        double ds = (distR + distL) / 2;
-        // approximate the angular change as the difference in the arcs divided by wheel offset from
-        // center of rotation.
-        double dtheta = (distR - distL) / ( 2 * distWheel);
-
-        // approximate the hypotenuse as just ds
-        // approximate the average change in direction as one half the total angular change
-        double dx = ds * Math.cos(thetaPose + 0.5 * dtheta);
-        double dy = ds * Math.sin(thetaPose + 0.5 * dtheta);
-
-        // update the current pose
-        xPose = xPose + dx;
-        yPose = yPose + dy;
-        thetaPose = thetaPose + dtheta;
-
-        // change radians to degrees
-        telemetry.addData("pose", "%8.2f %8.2f %8.2f", xPose, yPose, thetaPose * 180 / Math.PI);
-    }
-
     /*
      * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
      */
@@ -564,8 +455,14 @@ public class BasicIterative extends OpMode
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
-        // update the robot pose
-        updateRobotPose();
+        // update robot position
+        schsdrive.loop();
+
+        // report position in meters and degrees
+        telemetry.addData("pose", "%8.2f %8.2f %8.2f",
+                schsdrive.xPoseInches,
+                schsdrive.yPoseInches,
+                schsdrive.thetaPoseDegrees);
 
         // query the imu
         // Acquiring the angles is relatively expensive; we don't want
@@ -649,43 +546,26 @@ public class BasicIterative extends OpMode
         // simple servo hacks
         if (gamepad1.right_bumper) {
             telemetry.addData("grab", "released");
-            servoGrab.setPosition(0.1);
+            schsarm.setGrabState(false);
         } else {
             telemetry.addData("grab", "gripping");
-            servoGrab.setPosition(0.6);
+            schsarm.setGrabState(true);
         }
 
         // set arm position hack
-        // this needs a lot of work, but hardware has been removed
-        // TODO: set scale
-        // The arm is driven by a Core Hex motor with 288 counts per revolution.
-        // The winch spool is made from 60-tooth gears.
-        // The screws are at the 16 mm positions, but they do not form an equilateral triangle.
-        // Distance will vary until that is fixed.
-        // Mechanism is single stage with 1:1 spool to extension distance.
         // it is taking too long for isBusy() to report success, so just set the desired position.
-        if (motorArm.isBusy()) {
-            telemetry.addData("arm", "is busy");
-            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
-        } else {
-            motorArm.setTargetPosition((int)(gamepad1.right_trigger * 500));
-        }
+        // set 0 to 12 inches (method will clip)
+        schsarm.setArmTargetExtension(gamepad1.right_trigger * 12.0);
 
-        // set elevator position
-        // TODO: set scale
-        // the elevator is drivien by a Core Hex motor with 288 counts pre revolution.
-        // the motor drives spools made from 45 tooth gears with screws at 3 8mm positions.
-        // say a wrap averages 3 * 7/8 inches = 21/8 = 2 5/8 inches.
-        // Thus 500 counts should be about 5 inches.
-        // Elevator is continuous, so height is 1:1.
-        // So 500 counts raises elevator about 5 inches.
-        motorElevator.setTargetPosition((int)(gamepad1.left_trigger * 2500));
+        // set elevator height
+        // set 0 to 30 inches (method will clip)
+        schsarm.setLiftTargetHeight(gamepad1.left_trigger * 30.0);
 
         // control the hooks
         if (gamepad1.left_bumper) {
-            setHookState(true);
+            schsarm.setHookState(true);
         } else {
-            setHookState(false);
+            schsarm.setHookState(false);
         }
 
         // try an attack mode
@@ -695,11 +575,11 @@ public class BasicIterative extends OpMode
                 Log.d(TAG, "Attack start");
 
                 // calculate the attack distance
-                distAttack = sensorRange2m.getDistance(DistanceUnit.CM);
+                distAttack = 30; // ***  sensorRange2m.getDistance(DistanceUnit.CM);
                 // should only attack if distance is reasonable
                 if (distAttack < 60) {
                     // distance is less than 40 cm.
-                    int cEncoder = (int)((distAttack - 5) * 0.01 / distpertickLeft);
+                    int cEncoder = schsdrive.ticksFromMeters((distAttack - 5) * 0.01);
 
                     // set the target positions
                     leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + cEncoder);
@@ -731,29 +611,16 @@ public class BasicIterative extends OpMode
     public void stop() {
         Log.d(TAG, "stop()");
 
+        schsdrive.stop();
+
         // turn off the drive motors
         //   abstract to a common class (eg, Robot)
         leftDrive.setPower(0);
         rightDrive.setPower(0);
 
         // make sure hooks are in known state
-        setHookState(false);
+        schsarm.setHookState(false);
 
         Log.d(TAG, "stop() complete");
     }
-
-    // Read the battery voltage
-    // Put this is the robot class
-    // put the sensor in a class variable
-    double getBatteryVoltage() {
-        double result = Double.POSITIVE_INFINITY;
-        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
-            double voltage = sensor.getVoltage();
-            if (voltage > 0) {
-                result = Math.min(result, voltage);
-            }
-        }
-        return result;
-    }
-
 }
