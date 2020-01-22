@@ -42,26 +42,28 @@ public class TeleopTest extends OpMode {
 
     private double inchTargetDistance = 100.0;
 
+    // possibly clean up the hook state after calibration
+    private boolean bHookStateUnknown = true;
+
     /**
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
         Log.d(TAG, "init()");
-        telemetry.addData("Status", "Initializing");
 
-        // the robot drive
+        // the robot hardware (driver, arm, ...)
         robot = new RobotEx();
         robot.init(hardwareMap, telemetry);
 
         // set the pose for testing
         robot.setPoseInches(0,0,0);
 
-        // use the arm abstraction now
-        // schsarm = new SCHSArm();
-
-        // set hooks to known state
-        // schsarm.setHookState(false);
+        // if this robot has an arm
+        if (robot.arm != null) {
+            // set hooks to known state
+            robot.arm.setHookState(false);
+        }
 
         // elevator initialization state
         markovElevator = -1;
@@ -70,12 +72,16 @@ public class TeleopTest extends OpMode {
         cLoop = 0;
         timeLoop = time;
 
-        // Tell the driver station that initialization is complete.
-        telemetry.addData("Status", "Initialized");
-
         Log.d(TAG, "init() complete");
     }
 
+
+    private double quant(double num, double step) {
+        // compute the number of steps:
+        long steps = Math.round(num/step);
+
+        return step * steps;
+    }
     /*
      * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
      */
@@ -108,52 +114,103 @@ public class TeleopTest extends OpMode {
                 // RED Alliance
                 robot.boolBlueAlliance = false;
             }
+
+            // clean up after possible tests
+            if (robot.arm != null) {
+                // moving hooks puts them in a random state
+                if (bHookStateUnknown) {
+                    robot.arm.setHookState(false);
+                    bHookStateUnknown = false;
+                }
+
+                if (gamepad1.y) {
+                    // get the distance to target
+                    double d = robot.inchRangeMeasurement();
+
+                    // do a simple attack
+                    robot.arm.setLiftTargetHeight(8.0);
+
+                    telemetry.addData("eAttack", "Distanace %.2f Lift %.2f Arm %.2f",
+                            d,
+                            robot.arm.getLiftCurrentHeight(),
+                            robot.arm.getArmCurrentExtension());
+
+                    // if the distance is near and the height is safe...
+                    if (d < 6.0 && robot.arm.getLiftCurrentHeight() > 6.5) {
+
+                        // set arm just beyond
+                        robot.arm.setArmTargetExtension(d + 4.5);
+                    }
+                }
+
+                if (gamepad1.a) {
+                    // retract the arm
+                    robot.arm.setArmTargetExtension(robot.arm.ARM_EXTENT_MIN);
+
+                    // when the arm is nearly retracted
+                    if (robot.arm.getArmCurrentExtension() < robot.arm.ARM_EXTENT_MIN + 1.0) {
+                        // set the lift height to 0
+                        robot.arm.setLiftTargetHeight(robot.arm.LIFT_HEIGHT_MIN);
+                    }
+                }
+            }
         } else {
             // left bumper modifier
 
-            // provide instructions
-            telemetry.addData("help", "hooks: use left and right sticks");
+            // This shift is used to calibrate the robot
 
-            // test the servos and the arm.
-            // map joysticks [-1,1] to [0,1]; a 0.5 should not slam either hook...
-            double hookLeft = 0.5 * (gamepad1.left_stick_y + 1.0);
-            double hookRight = 0.5 * (gamepad1.right_stick_y + 1.0);
-
-            // command the hooks -- if we have the hooks
+            // if the robot has an arm,
             if (robot.arm != null) {
-                // we have an SCHSArm
+
+                // Calibrate the HOOKS
+
+                // Hooks are in a bad state when this code exits; remember that to fix up later
+                bHookStateUnknown = true;
+
+                // provide instructions
+                telemetry.addData("help", "hooks: use left and right sticks");
+
+                // test the servos and the arm.
+                // map joysticks [-1,1] to [0,1]; a 0.5 should not slam either hook...
+                double hookLeft = 0.5 * (gamepad1.left_stick_y + 1.0);
+                double hookRight = 0.5 * (gamepad1.right_stick_y + 1.0);
+
+                // command the hooks -- if we have the hooks
                 robot.arm.leftHook.setPosition(hookLeft);
                 robot.arm.rightHook.setPosition(hookRight);
-            }
-            // tell the user what the position commands are
-            telemetry.addData("hooks", "left %.3f, right %.3f", hookLeft, hookRight);
 
-            // provide instructions
-            telemetry.addData("help", "lift: use left trigger; arm: use right trigger");
+                // tell the user what the position commands are
+                telemetry.addData("hooks", "left %.3f, right %.3f", hookLeft, hookRight);
 
-            // map the triggers to reasonable positions
-            double inchLift = 24.0 * (gamepad1.left_trigger);
-            double inchArm = 12.0 * (gamepad1.right_trigger);
-            int ticksLift = -666;
-            int ticksRight = -666;
+                // Calibrate the ARM
 
-            // command the arm -- if we have an arm
-            if (robot.arm != null) {
-                // use my inch-based methods to move the arm
+                // provide instructions
+                telemetry.addData("help", "lift: use left trigger; arm: use right trigger");
+
+                // map the triggers to d4etermine the positions in inches
+                double inchLift = 24.0 * (gamepad1.left_trigger);
+                double inchArm = 12.0 * (gamepad1.right_trigger);
+
+                // let's quantized the moves
+                inchLift = quant(inchLift, 1.0);
+                inchArm = quant(inchArm, 1.0);
+
+                // command the arm
                 robot.arm.setLiftTargetHeight(inchLift);
                 robot.arm.setArmTargetExtension(inchArm);
 
                 // get the current encoder values
-                ticksLift = (int)robot.arm.getLiftPos();
-                ticksRight = (int)robot.arm.getExtendPos();
+                int ticksLift = (int)robot.arm.getLiftPos();
+                int ticksRight = (int)robot.arm.getExtendPos();
+
+                // report the findings
+                telemetry.addData("Lift", "%.2f inch \u2192 %d ticks", inchLift, ticksLift);
+                telemetry.addData("Arm", "%.2f inch \u2192 %d ticks", inchArm, ticksRight);
+
+                // TODO Calibrate the grabber
+                // SCHSArm.grabServo
             }
 
-            // report the findings
-            telemetry.addData("Lift", "%.2f inch \u2192 %d ticks", inchLift, ticksLift);
-            telemetry.addData("Arm", "%.2f inch \u2192 %d ticks", inchArm, ticksRight);
-
-            // grabber
-            // SCHSArm.grabServo
         }
 
         // Report the Alliance

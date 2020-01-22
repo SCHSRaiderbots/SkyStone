@@ -248,10 +248,10 @@ public class SCHSArm {
     /*
      * Some constants for converting lift ticks to inches
      */
-    private final double LIFT_TICKS_PER_INCH = 139.77;
-    private final double LIFT_INCH_OFFSET = 3.7;
-    private final double LIFT_HEIGHT_MIN = 3.7;
-    private final double LIFT_HEIGHT_MAX = 20.0;
+    private final double LIFT_INCH_OFFSET = 5.0;
+    private final double LIFT_TICKS_PER_INCH = 700.0 / (10.75 - LIFT_INCH_OFFSET);
+    final double LIFT_HEIGHT_MIN = LIFT_INCH_OFFSET;
+    final double LIFT_HEIGHT_MAX = 20.0;
 
     /**
      * Set the target height of lift in inches.
@@ -315,11 +315,11 @@ public class SCHSArm {
     /*
      * Some constants for converting arm ticks to inches
      */
-    private final double ARM_TICKS_PER_INCH = 80.0;
     private final double ARM_INCH_OFFSET = 0.0;
+    private final double ARM_TICKS_PER_INCH = (640.0 / (7.5 - ARM_INCH_OFFSET));
     // TODO: determine arm extend limits
-    private final double ARM_EXTENT_MIN = 0.0;
-    private final double ARM_EXTENT_MAX = 8.0;
+    final double ARM_EXTENT_MIN = 0.0;
+    final double ARM_EXTENT_MAX = 10.0;
 
     /**
      * Set the target extension of the arm in inches.

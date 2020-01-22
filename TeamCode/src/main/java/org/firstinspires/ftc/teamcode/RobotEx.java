@@ -34,7 +34,7 @@ public class RobotEx extends SCHSDrive {
 
     // report the distance from the front of the chassis
     // this value adjusts for the placement and offset of the sensor
-    private double inchDistanceOffset = 0.0;
+    private double inchDistanceOffset = -0.4;
 
     // the touch sensor is used to discriminate robots
     //   belief is the sensor will exist on the 2019 robot but not the 2020 robot
@@ -43,6 +43,9 @@ public class RobotEx extends SCHSDrive {
 
     DcMotorEx motorLeft = null;
     DcMotorEx motorRight = null;
+    // the commanded RunMode
+    //   I'm using this for some checking
+    DcMotor.RunMode runmode = null;
 
     // which Alliance?
     boolean boolBlueAlliance = true;
@@ -110,6 +113,7 @@ public class RobotEx extends SCHSDrive {
      * @param mode DcMotor.RunMode for the drive motors
      */
     void setDriveMode(DcMotor.RunMode mode) {
+        runmode = mode;
         motorLeft.setMode(mode);
         motorRight.setMode(mode);
     }
@@ -179,15 +183,16 @@ public class RobotEx extends SCHSDrive {
     double y1 = 0.0;
 
     void lfReynoldsStart() {
-        motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
-        motorRight.setTargetPosition(motorRight.getCurrentPosition());
+        // motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
+        // motorRight.setTargetPosition(motorRight.getCurrentPosition());
+        motorLeft.setVelocity(0.0);
+        motorRight.setVelocity(0.0);
 
-        motorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // run in velocity mode
+        setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // 0.50 seems to work
-        motorLeft.setPower(1.0);
-        motorRight.setPower(1.0);
+        setDrivePower(0.5, 0.5);
     }
 
     void lfReynoldsLoop() {
@@ -247,19 +252,26 @@ public class RobotEx extends SCHSDrive {
         //  400 also works
         double f = thetaAim * 400;
 
-        motorLeft.setVelocity(400-f);
-        motorRight.setVelocity(400+f);
+        // TODO
+        //    400 works for 2019 bot but too slow for 2020 bot
+        //    try 800 for 2020 bot
+        double mxv = 400;
+
+        // set motor velocities
+        motorLeft.setVelocity(mxv-f);
+        motorRight.setVelocity(mxv+f);
     }
 
     void lfReynoldsStop() {
-        motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
-        motorRight.setTargetPosition(motorRight.getCurrentPosition());
+        // set the target position to the current position to stop the carnage
+        // motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
+        // motorRight.setTargetPosition(motorRight.getCurrentPosition());
 
-        motorLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // set the power to 0
+        setDrivePower(0.0, 0.0);
 
-        motorLeft.setPower(1.0);
-        motorRight.setPower(1.0);
-    }
+        // and do not use encoder
+        setDriveMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+   }
 
 }
