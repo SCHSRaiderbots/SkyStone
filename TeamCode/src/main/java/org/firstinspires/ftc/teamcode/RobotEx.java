@@ -200,7 +200,7 @@ public class RobotEx extends SCHSDrive {
         double dx = x1 - x0;
         double dy = y1 - y0;
 
-        // make a unit vector
+        // make a unit vector of the desired direction
         double L = Math.hypot(dx, dy);
         double ux = dx/L;
         double uy = dy/L;
@@ -211,17 +211,20 @@ public class RobotEx extends SCHSDrive {
 
         // Log.d("CWR", "Pose " + xPoseInches + " " + yPoseInches);
 
-        // compute the dot product to get the length along the line
+        // compute the dot product to get the length along the desired path
         double dot = ux * dxBot + uy * dyBot;
 
         // if dot > L, we are off the target
 
         // make a guess at the desired dL for bot to progress
+        // TODO: should this be a function of speed?
         double dL = 12.0;
 
-        // if dot + dL > L, we are off the target
+        // if dot + dL > L, we are off the target, but we would want to keep the heading
+        // if we are approaching the target, then we would want to slow down.
 
-        // here is an aiming point on the path
+        // calculate an aiming point on the path
+        //   we want the robot to head here
         double x2 = x0 + (dot + dL) * ux;
         double y2 = y0 + (dot + dL) * uy;
 
@@ -231,6 +234,7 @@ public class RobotEx extends SCHSDrive {
         // the aiming correction is
         double thetaAim = Math.atan2(y2-yPoseInches, x2-xPoseInches) - thetaPose;
 
+        // TODO: Use AngleUnit.normalizeRadians()
         // reduce the angle
         while (thetaAim > Math.PI) thetaAim -= 2 * Math.PI;
         while (thetaAim < -Math.PI) thetaAim += 2 * Math.PI;
@@ -238,8 +242,8 @@ public class RobotEx extends SCHSDrive {
         // Log.d("CWR", "thetaAim = " + thetaAim);
 
         // over the distance L, want to correct by some fraction of that angle
-        double wb = 9.0;
-        double distCorr = wb * thetaAim;
+        // double wb = 9.0;
+        // double distCorr = wb * thetaAim;
 
         // Log.d("CWR", "distCorr = " + distCorr);
 
@@ -252,10 +256,12 @@ public class RobotEx extends SCHSDrive {
         //  400 also works
         double f = thetaAim * 400;
 
-        // TODO
+        // TODO have a maximum drive speed as a parameter
         //    400 works for 2019 bot but too slow for 2020 bot
         //    try 800 for 2020 bot
         double mxv = 400;
+
+        // TODO limit acceleration
 
         // set motor velocities
         motorLeft.setVelocity(mxv-f);
