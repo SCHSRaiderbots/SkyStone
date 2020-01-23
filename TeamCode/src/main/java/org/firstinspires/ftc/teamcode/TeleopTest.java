@@ -75,13 +75,19 @@ public class TeleopTest extends OpMode {
         Log.d(TAG, "init() complete");
     }
 
-
+    /**
+     * Quantize a number to specific steps
+     * @param num the number to round
+     * @param step the quantization step size
+     * @return num rounded to nearest step
+     */
     private double quant(double num, double step) {
         // compute the number of steps:
         long steps = Math.round(num/step);
 
         return step * steps;
     }
+
     /*
      * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
      */
@@ -105,7 +111,8 @@ public class TeleopTest extends OpMode {
             telemetry.addData("help", "press left bumper for more");
 
             // Be able to set the Alliance
-            //   The X button is blue and the B button is red
+            //   The X button is blue alliance and the B button is red alliance
+            // TODO: put alliance selection on the driver checklist
             if (gamepad1.x) {
                 // BLUE Alliance
                 robot.boolBlueAlliance = true;
@@ -425,6 +432,9 @@ public class TeleopTest extends OpMode {
 
         // pass message to robot
         robot.stop();
+
+        // TODO: it may be important to retract the hooks at stop time.
+        // if we are touching the foundation, then we may void a score.
 
         Log.d(TAG, "stop() complete");
     }
