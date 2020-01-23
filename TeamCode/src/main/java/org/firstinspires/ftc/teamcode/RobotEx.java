@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -41,8 +40,10 @@ public class RobotEx extends SCHSDrive {
     private DigitalChannel digitalTouch = null;
     String robotIdentity = "unknown";
 
+    // These variables are private in the superclass
     DcMotorEx motorLeft = null;
     DcMotorEx motorRight = null;
+
     // the commanded RunMode
     //   I'm using this for some checking
     DcMotor.RunMode runmode = null;
@@ -55,6 +56,7 @@ public class RobotEx extends SCHSDrive {
         super.init(hwmap, telem);
 
         // TODO: do not access motors directly; use methods
+        // it would be good to clean this up sooner rather than later
         motorLeft = super.motorLeft;
         motorRight = super.motorRight;
 
