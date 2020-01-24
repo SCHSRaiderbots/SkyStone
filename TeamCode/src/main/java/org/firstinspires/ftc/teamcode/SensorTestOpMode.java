@@ -3,14 +3,13 @@ package org.firstinspires.ftc.teamcode;
 import android.graphics.Color;
 
 import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gyroscope;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
@@ -19,11 +18,11 @@ import java.util.Locale;
 /**
  * Recreated by GLR 8 October 2019
  */
-@TeleOp(name="SensorTest", group="Test")
+@TeleOp(name="Test: SensorTest", group="Test")
+@Disabled
 public class SensorTestOpMode extends LinearOpMode {
     private Gyroscope imu;
     private DcMotor motorLeft;
-    private DigitalChannel digitalTouch;
     private DistanceSensor sensorDistance;
     private DistanceSensor sensorRange2m;
     private ColorSensor sensorColor;
@@ -33,7 +32,6 @@ public class SensorTestOpMode extends LinearOpMode {
         // these throw errors if the device does not exist
         imu = hardwareMap.get(Gyroscope.class, "imu");
         motorLeft = hardwareMap.get(DcMotor.class, "leftMotor");
-        digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
         sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
         sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
         // can use as an ordinary distance sensor
@@ -46,9 +44,6 @@ public class SensorTestOpMode extends LinearOpMode {
 
         // scale values
         final double SCALE_FACTOR = 255;
-
-        // set digital channel to input
-        digitalTouch.setMode(DigitalChannel.Mode.INPUT);
 
         // issue a telemetry report
         telemetry.addData("Status", "initialized");
@@ -63,9 +58,6 @@ public class SensorTestOpMode extends LinearOpMode {
         // run until stopped
         while (opModeIsActive()) {
             telemetry.addData("Status", "running");
-
-            // touch sensor status
-            telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
 
             // measure distance in cm
             telemetry.addData("distance",

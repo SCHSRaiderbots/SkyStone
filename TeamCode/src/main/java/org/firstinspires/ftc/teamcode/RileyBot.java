@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -55,7 +56,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * RileyBot -- the team's 2018 Robot repurposed for testing.
  */
 
-@TeleOp(name="Riley", group="Test")
+@TeleOp(name="Test: Riley", group="Test")
+@Disabled
 public class RileyBot extends OpMode
 {
     // Declare OpMode members.
@@ -66,14 +68,6 @@ public class RileyBot extends OpMode
 
     // is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
     private ElapsedTime runtime = new ElapsedTime();
-
-    // TODO: gyroscope mess
-    // I thought I had this working, but apparently lost...
-    // private Gyroscope imu;
-    private BNO055IMU imu;
-    // State used for updating telemetry
-    private Orientation angles;
-    private Acceleration gravity;
 
     // drive motors
     // abstract to a class (eg, Robot) where attributes can be static and shared by other Opmodes
@@ -157,13 +151,6 @@ public class RileyBot extends OpMode
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
 
-        // imu = hardwareMap.get(Gyroscope.class, "imu");
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-
-        // start initializing
-        telemetry.addData("IMU", "initialize");
-        imu.initialize(parameters);
-
         // the Arm
         motorArm = hardwareMap.get(DcMotorEx.class, "mineralTurnArm");
         motorArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -224,16 +211,6 @@ public class RileyBot extends OpMode
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
         schsdrive.init_loop();
-
-        // look at the imu
-        if (imu.isGyroCalibrated()) {
-            telemetry.addData("IMU", "calibrated");
-        } else {
-            telemetry.addData("IMU", "calibrating");
-        }
-
-        // report digital touch sensor
-        // telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
 
         /*
         // report color
@@ -324,30 +301,6 @@ public class RileyBot extends OpMode
                 schsdrive.xPoseInches,
                 schsdrive.yPoseInches,
                 schsdrive.thetaPoseDegrees);
-
-        // query the imu
-        // Acquiring the angles is relatively expensive; we don't want
-        // to do that in each of the three items that need that info, as that's
-        // three times the necessary expense.
-        angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-        // gravity  = imu.getGravity();
-
-        // telemetry.addData("imu status", imu.getSystemStatus().toShortString());
-        // telemetry.addData("imu calib", imu.getCalibrationStatus().toString());
-
-        telemetry.addData("imu", "heading %.1f roll %.1f pitch %.1f",
-                angles.firstAngle,
-                angles.secondAngle,
-                angles.thirdAngle);
-
-        /*
-        telemetry.addData("gravity", gravity.toString());
-        telemetry.addData("gravmag", "%0.3",
-                Math.sqrt(gravity.xAccel * gravity.xAccel +
-                        gravity.yAccel * gravity.yAccel +
-                        gravity.zAccel * gravity.zAccel));
-
-         */
 
         // variable for each drive wheel to save power level for telemetry
         double leftPower;

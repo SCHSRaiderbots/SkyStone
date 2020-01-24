@@ -51,7 +51,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Has an attack mode that uses distance sensor to run up to a stone
  */
 
-@TeleOp(name="testbot", group="Test")
+@TeleOp(name="Test: Testbot", group="Test")
 public class TeleopBasic extends OpMode
 {
     // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html
@@ -157,13 +157,13 @@ public class TeleopBasic extends OpMode
     public void init_loop() {
         telemetry.addData("init", "looping; look for config info");
 
-        // update drive chassis
-        robot.init_loop();
-
         // update statistics for loop period
         // TODO why is this loop taking 100 ms?
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
+
+        // update drive chassis
+        robot.init_loop();
 
         // look at the imu
         if (imu.isGyroCalibrated()) {
@@ -288,7 +288,7 @@ public class TeleopBasic extends OpMode
         }
         /**/
 
-        // for debugging drive motors
+        // Debug drive motors
 
         // spin wheels 10 turns
         telemetry.addLine("Press X for 10 turns");
@@ -372,11 +372,12 @@ public class TeleopBasic extends OpMode
         //   In other words, I think Opmode supplies a reasonable time.
         runtime.reset();
 
-        robot.start();
-
         // reset timer statistics
         cLoop = 0;
         timeLoop = time;
+
+        // start the robot
+        robot.start();
 
         // may want to set the robot pose here...
         //   but more likely the Pose should carry over from last Opmode or
@@ -449,11 +450,7 @@ public class TeleopBasic extends OpMode
         drive = drive * Math.abs(drive);
         turn = turn * Math.abs(turn);
 
-        // TODO set Power is not linear with rwe
-        // running using encoder causes attack to fail
-        // OOPS, this causes attack to fail
-        // robot.setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        // calculate the drive powers
         double leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
         double rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
 
@@ -474,11 +471,19 @@ public class TeleopBasic extends OpMode
                 // attack is finished; resume normal driving
                 bAttack = false;
 
+                // but report current distance
+                distAttack = robot.inchRangeMeasurement();
+
                 Log.d(TAG, "Attack finished");
             }
         } else {
+            // Operator controlled driving
+
             // Send calculated power to wheels
             robot.setDrivePower(leftPower, rightPower);
+
+            // try running without encoders
+            robot.setDriveMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         // if there is an arm
