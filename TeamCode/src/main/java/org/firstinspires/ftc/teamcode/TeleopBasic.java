@@ -35,8 +35,6 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -47,62 +45,31 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 /**
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
+ * A Basic Teleop Mode
  *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
+ * Uses IMU to compare odometry angles
+ * Has an attack mode that uses distance sensor to run up to a stone
  */
 
 @TeleOp(name="testbot", group="Test")
-public class BasicIterative extends OpMode
+public class TeleopBasic extends OpMode
 {
-    // Declare OpMode members.
-
     // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html
-    private static final String TAG = "testbot";
     // so use Log.d(TAG, <string>) to log debugging messages
+    private static final String TAG = "testbot";
 
     // TODO: is this necessary? Opmode.time and Opmode.getRuntime() (submillisecond accuracy)
     private ElapsedTime runtime = new ElapsedTime();
 
-    // TODO: gyroscope mess
-    // I thought I had this working, but apparently lost...
     // private Gyroscope imu;
     private BNO055IMU imu;
     // State used for updating telemetry
     private Orientation angles;
     private Acceleration gravity;
 
-    // drive motors
-    // abstract to a class (eg, Robot) where attributes can be static and shared by other Opmodes
-    //   the class can have methods such as .setDrivePower()
-    private DcMotorEx leftDrive = null;
-    private DcMotorEx rightDrive = null;
-
-    // arm motor
-    // TODO: safe to remove
-    private DcMotorEx motorArm = null;
-
-    // elevator motor
-    // TODO: safe to remove
-    private DcMotorEx motorElevator = null;
-
-    // REV 2m distance sensor and attack mode
-    // Also Rev2mDistanceSensor
-    // *** private DistanceSensor sensorRange2m;
+    // Attack mode
     private double distAttack = 0.0;
     private boolean bAttack = false;
-
-    // Color distance sensor
-    //*** private DistanceSensor sensorDistance;
-    //*** private ColorSensor sensorColor;
-
-    // REV touch sensor as digital channel
-    private DigitalChannel digitalTouch;
 
     // try complicated initialization
     private int markovElevator = -1;
@@ -111,11 +78,8 @@ public class BasicIterative extends OpMode
     private int cLoop = 0;
     private double timeLoop = 0;
 
-    // SCHSDrive (has drive motors and other stuff)
-    private SCHSDrive schsdrive = null;
-
-    // SCHSArm (has lift, extend, and hooks)
-    private SCHSArm schsarm = null;
+    // RobotEx (has drive motors, arm, and other stuff)
+    RobotEx robot = null;
 
     // for tests
     private boolean brun = false;
@@ -123,7 +87,6 @@ public class BasicIterative extends OpMode
 
     /**
      * Code to run ONCE when the driver hits INIT
-     * TODO: Zero the arm position
      */
     @Override
     public void init() {
@@ -131,23 +94,13 @@ public class BasicIterative extends OpMode
         telemetry.addData("Status", "Initializing");
 
         // the robot drive
-        schsdrive = new SCHSDrive();
-        schsdrive.init(hardwareMap, telemetry);
+        robot = new RobotEx();
+        robot.init(hardwareMap, telemetry);
 
         // set the pose for testing
-        schsdrive.setPoseInches(0,0,0);
+        robot.setPoseInches(0,0,0);
 
-        // TODO stop using local copies
-        leftDrive = schsdrive.motorLeft;
-        rightDrive = schsdrive.motorRight;
-
-        // for I2C busses
-        // for glr
-        //   I2C-Bus-0
-        //     "imu"
-        //     "sensorColorRange", Rev Color Sensor v3.
-        //   I2C-Bus-3
-        //      "rev2meter", REV 2M Distance Sensor
+        // Set up the IMU
 
         // parameters for the imu
         // Set up the parameters with which we will use our IMU. Note that integration
@@ -165,10 +118,6 @@ public class BasicIterative extends OpMode
         // parameters.loggingTag          = "IMU";
         // parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
-        // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
-
         // imu = hardwareMap.get(Gyroscope.class, "imu");
         imu = hardwareMap.get(BNO055IMU.class, "imu");
 
@@ -176,25 +125,17 @@ public class BasicIterative extends OpMode
         telemetry.addData("IMU", "initialize");
         imu.initialize(parameters);
 
-        // use the arm abstraction now
-        schsarm = new SCHSArm();
-        // The arm motor
-        motorArm = schsarm.extendMotor;
-        // The elevator motor
-        motorElevator = schsarm.liftMotor;
+        // possibly initialize the arm
+        if (robot.arm != null) {
+            // there is an arm
 
-        // set hooks to known state
-        schsarm.setHookState(false);
+            // Zero the arm position
+            //   this should be done in autonomous, but may be a disaster during teleop.
+            robot.arm.resetArmEncoders();
 
-        // find the REV 2m distance sensor
-        // *** sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
-
-        // The color/distance sensor
-        //*** sensorColor = hardwareMap.get(ColorSensor.class, "sensorColorRange");
-        //*** sensorDistance = hardwareMap.get(DistanceSensor.class, "sensorColorRange");
-
-        // touch sensor
-        digitalTouch = hardwareMap.get(DigitalChannel.class, "digitalTouch");
+            // set hooks to known state
+            robot.arm.setHookState(false);
+        }
 
         // elevator initialization state
         markovElevator = -1;
@@ -217,7 +158,7 @@ public class BasicIterative extends OpMode
         telemetry.addData("init", "looping; look for config info");
 
         // update drive chassis
-        schsdrive.init_loop();
+        robot.init_loop();
 
         // update statistics for loop period
         // TODO why is this loop taking 100 ms?
@@ -230,9 +171,6 @@ public class BasicIterative extends OpMode
         } else {
             telemetry.addData("IMU", "calibrating");
         }
-
-        // report digital touch sensor
-        telemetry.addData("Touch", (digitalTouch.getState()) ? "no" : "yes");
 
         /* ***
         // report color
@@ -283,136 +221,140 @@ public class BasicIterative extends OpMode
         // this is always "false" (even with distance = 819cm (8 meters out)
         // telemetry.addData("did time out", Boolean.toString(sensorTimeOfFlight.didTimeoutOccur()));
 */
-        /* */
-        // do complicated initialization of elevator
-        switch (markovElevator) {
-            case -1:
-                if (gamepad1.a) {
-                    // if the button is pressed, start initialization
 
-                    // move the elevator up to clear elevator motor
-                    schsarm.setLiftTargetHeight(10.0);
+        // if the robot has an arm
+        if (robot.arm != null) {
+            // do complicated initialization of elevator
+            switch (markovElevator) {
+                case -1:
+                    if (gamepad1.a) {
+                        // if the button is pressed, start initialization
 
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
+                        // move the elevator up to clear elevator motor
+                        robot.arm.setLiftTargetHeight(10.0);
 
-            case 0:
-                // the elevator should be rising
-                // when it gets high enough, start the next step
-                if (schsarm.getLiftCurrentHeight() > 6.0) {
-                    // extend the arm
-                    schsarm.setArmTargetExtension(4.0);
+                        // advance the state
+                        markovElevator++;
+                    }
+                    break;
 
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
+                case 0:
+                    // the elevator should be rising
+                    // when it gets high enough, start the next step
+                    if (robot.arm.getLiftCurrentHeight() > 6.0) {
+                        // extend the arm
+                        robot.arm.setArmTargetExtension(4.0);
 
-            case 1:
-                // the arm is extending
-                // when it has gone far enough, start the next step
-                if (schsarm.getArmCurrentExtension() > 3.5) {
-                    // should be able to slowly lower the elevator onto the limit switch
-                    // just bring it to 4.0 for now
-                    schsarm.setLiftTargetHeight(4.0);
+                        // advance the state
+                        markovElevator++;
+                    }
+                    break;
 
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
+                case 1:
+                    // the arm is extending
+                    // when it has gone far enough, start the next step
+                    if (robot.arm.getArmCurrentExtension() > 3.5) {
+                        // should be able to slowly lower the elevator onto the limit switch
+                         robot.arm.setLiftTargetHeight(robot.arm.LIFT_HEIGHT_MIN);
 
-            case 2:
-                // elevator is lowering onto switch
-                if (schsarm.getLiftCurrentHeight() < 4.5) {
-                    // figure we are done.
-                    // send Elevator back up
-                    schsarm.setLiftTargetHeight(10.0);
+                        // advance the state
+                        markovElevator++;
+                    }
+                    break;
 
-                    // advance the state
-                    markovElevator++;
-                }
-                break;
+                case 2:
+                    // elevator is lowering onto switch
+                    if (robot.arm.getLiftCurrentHeight() < robot.arm.LIFT_HEIGHT_MIN + 1.0) {
+                        // figure we are done.
+                        // send Elevator back up
+                        robot.arm.setLiftTargetHeight(10.0);
 
-            case 3:
-                // elevator is rising again
-                if (schsarm.getLiftCurrentHeight() > 6.0) {
-                    // retract arm
-                    schsarm.setArmTargetExtension(0.0);
+                        // advance the state
+                        markovElevator++;
+                    }
+                    break;
 
-                    // terminate the calibration
-                    markovElevator = -1;
-                }
-                break;
+                case 3:
+                    // elevator is rising again
+                    if (robot.arm.getLiftCurrentHeight() > 6.0) {
+                        // retract arm
+                        robot.arm.setArmTargetExtension(0.0);
+
+                        // terminate the calibration
+                        markovElevator = -1;
+                    }
+                    break;
+            }
         }
         /**/
 
         // for debugging drive motors
+
+        // spin wheels 10 turns
+        telemetry.addLine("Press X for 10 turns");
         if (!bspin) {
-            // not spinning -- look to start
-            bspin = true;
+            // not spinning
 
+            // should we start?
             if (gamepad1.x) {
+                // set spin mode
+                bspin = true;
+
                 // make the motors turn 10 revolutions
-                int ticks = (int)(10 * schsdrive.ticksPerWheelRev);
-                DcMotorEx leftDrive = schsdrive.motorLeft;
-                DcMotorEx rightDrive = schsdrive.motorRight;
+                int ticks = (int)(10 * robot.ticksPerWheelRev);
 
-                schsdrive.motorLeft.setTargetPosition(
-                        schsdrive.motorLeft.getCurrentPosition() + ticks);
-                schsdrive.motorRight.setTargetPosition(
-                        schsdrive.motorRight.getCurrentPosition() + ticks);
+                robot.motorLeft.setTargetPosition(
+                        robot.motorLeft.getCurrentPosition() + ticks);
+                robot.motorRight.setTargetPosition(
+                        robot.motorRight.getCurrentPosition() + ticks);
 
-                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                leftDrive.setPower(0.8);
-                rightDrive.setPower(0.8);
+                robot.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.setDrivePower(0.8, 0.8);
             }
         } else {
-            if (! schsdrive.motorLeft.isBusy() && ! schsdrive.motorRight.isBusy()) {
-                DcMotorEx leftDrive = schsdrive.motorLeft;
-                DcMotorEx rightDrive = schsdrive.motorRight;
-
-                // we are done
+            // we are spinning the wheels; check if they have stopped
+            if (! robot.motorLeft.isBusy() && ! robot.motorRight.isBusy()) {
+                // the motors have stopped, so we are done
                 bspin = false;
 
-                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // restore the mode
+                robot.setDrivePower(0.0, 0.0);
+                robot.setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
         }
 
+        // drive forward 48 inches
+        telemetry.addLine("Press Y to move 48 inches");
         if (!brun) {
-            // try running
-            brun = true;
+            // not running
+
+            // should we start running?
             if (gamepad1.y) {
+                // set running mode
+                brun = true;
+
                 // make the motors move 48 inches (two tiles)
-                int ticks = schsdrive.ticksFromInches(48.0);
-                DcMotorEx leftDrive = schsdrive.motorLeft;
-                DcMotorEx rightDrive = schsdrive.motorRight;
+                int ticks = robot.ticksFromInches(48.0);
 
-                schsdrive.motorLeft.setTargetPosition(
-                        schsdrive.motorLeft.getCurrentPosition() + ticks);
-                schsdrive.motorRight.setTargetPosition(
-                        schsdrive.motorRight.getCurrentPosition() + ticks);
+                robot.motorLeft.setTargetPosition(
+                        robot.motorLeft.getCurrentPosition() + ticks);
+                robot.motorRight.setTargetPosition(
+                        robot.motorRight.getCurrentPosition() + ticks);
 
-                leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                leftDrive.setPower(0.8);
-                rightDrive.setPower(0.8);
+                // command the motors
+                robot.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.setDrivePower(0.8, 0.8);
             }
         } else {
-            if (! schsdrive.motorLeft.isBusy() && ! schsdrive.motorRight.isBusy()) {
-                DcMotorEx leftDrive = schsdrive.motorLeft;
-                DcMotorEx rightDrive = schsdrive.motorRight;
-
-                // we are done
+            // we are running a set diestance
+            // check if the run is finished
+            if (! robot.motorLeft.isBusy() && ! robot.motorRight.isBusy()) {
+                // we have reached the desired position, so we are done
                 brun = false;
 
-                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                // command the motors
+                robot.setDrivePower(0.0, 0.0);
+                robot.setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
         }
     }
@@ -430,7 +372,7 @@ public class BasicIterative extends OpMode
         //   In other words, I think Opmode supplies a reasonable time.
         runtime.reset();
 
-        schsdrive.start();
+        robot.start();
 
         // reset timer statistics
         cLoop = 0;
@@ -456,13 +398,13 @@ public class BasicIterative extends OpMode
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
         // update robot position
-        schsdrive.loop();
+        robot.loop();
 
         // report position in meters and degrees
         telemetry.addData("pose", "%8.2f %8.2f %8.2f",
-                schsdrive.xPoseInches,
-                schsdrive.yPoseInches,
-                schsdrive.thetaPoseDegrees);
+                robot.xPoseInches,
+                robot.yPoseInches,
+                robot.thetaPoseDegrees);
 
         // query the imu
         // Acquiring the angles is relatively expensive; we don't want
@@ -488,17 +430,6 @@ public class BasicIterative extends OpMode
 
          */
 
-        // variable for each drive wheel to save power level for telemetry
-        double leftPower;
-        double rightPower;
-
-        // Drive should be abstracted to a class
-        //   drive commands are often nonlinear
-        //   sharing same nonlinearity across all Opmodes presents consistent interface to the driver
-        // Choose to drive using either Tank Mode, or POV Mode
-        // Comment out the method that's not used.  The default below is POV.
-        //   Uh, that's poor coding; have an attribute choose between the modes
-        //      static boolean bTankMode = false;
 
         // POV Mode uses left stick to go forward, and right stick to turn.
         // - This uses basic math to combine motions and is easier to drive straight.
@@ -513,8 +444,18 @@ public class BasicIterative extends OpMode
         //       need to check that x values are not reversed
         double drive = -gamepad1.left_stick_y;
         double turn  =  gamepad1.right_stick_x;
-        leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
-        rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+
+        // apply square law
+        drive = drive * Math.abs(drive);
+        turn = turn * Math.abs(turn);
+
+        // TODO set Power is not linear with rwe
+        // running using encoder causes attack to fail
+        // OOPS, this causes attack to fail
+        // robot.setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        double leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+        double rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
 
         // Tank Mode uses one stick to control each wheel.
         // - This requires no math, but it is hard to drive forward slowly and keep straight.
@@ -523,74 +464,86 @@ public class BasicIterative extends OpMode
 
         if (bAttack) {
             // monitor if done
-            if (!leftDrive.isBusy() && !rightDrive.isBusy()) {
+            if (!robot.motorLeft.isBusy() && !robot.motorRight.isBusy()) {
                 // the attack is done
-                leftDrive.setPower(0.0);
-                rightDrive.setPower(0.0);
+                // robot.setDrivePower(0.0, 0.0);
 
                 // restore normal driving mode
-                leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.setDriveMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
                 // attack is finished; resume normal driving
                 bAttack = false;
+
                 Log.d(TAG, "Attack finished");
             }
         } else {
             // Send calculated power to wheels
-            leftDrive.setPower(leftPower);
-            rightDrive.setPower(rightPower);
+            robot.setDrivePower(leftPower, rightPower);
         }
 
-        // simple servo hacks
-        if (gamepad1.right_bumper) {
-            telemetry.addData("grab", "released");
-            schsarm.setGrabState(false);
-        } else {
-            telemetry.addData("grab", "gripping");
-            schsarm.setGrabState(true);
+        // if there is an arm
+        if (robot.arm != null) {
+            // set arm position hack
+            // it is taking too long for isBusy() to report success, so just set the desired position.
+            // set 0 to 12 inches (method will clip)
+            robot.arm.setArmTargetExtension(gamepad1.right_trigger * 12.0);
+
+            // set elevator height
+            // set 0 to 30 inches (method will clip)
+            robot.arm.setLiftTargetHeight(gamepad1.left_trigger * 30.0);
+
+            // operate the grabber
+            if (gamepad1.right_bumper) {
+                telemetry.addData("grab", "released");
+                robot.arm.setGrabState(false);
+            } else {
+                telemetry.addData("grab", "gripping");
+                robot.arm.setGrabState(true);
+            }
+
+            // control the hooks
+            if (gamepad1.left_bumper) {
+                robot.arm.setHookState(true);
+            } else {
+                robot.arm.setHookState(false);
+            }
         }
 
-        // set arm position hack
-        // it is taking too long for isBusy() to report success, so just set the desired position.
-        // set 0 to 12 inches (method will clip)
-        schsarm.setArmTargetExtension(gamepad1.right_trigger * 12.0);
-
-        // set elevator height
-        // set 0 to 30 inches (method will clip)
-        schsarm.setLiftTargetHeight(gamepad1.left_trigger * 30.0);
-
-        // control the hooks
-        if (gamepad1.left_bumper) {
-            schsarm.setHookState(true);
-        } else {
-            schsarm.setHookState(false);
-        }
-
-        // try an attack mode
+        // check for an attack mode
+        telemetry.addLine("Press dpad_down for attack");
         if (gamepad1.dpad_down) {
             // run just once
             if (!bAttack) {
                 Log.d(TAG, "Attack start");
 
-                // calculate the attack distance
-                distAttack = 30; // ***  sensorRange2m.getDistance(DistanceUnit.CM);
-                // should only attack if distance is reasonable
-                if (distAttack < 60) {
-                    // distance is less than 40 cm.
-                    int cEncoder = schsdrive.ticksFromMeters((distAttack - 5) * 0.01);
+                // measure the attack distance
+                distAttack = robot.inchRangeMeasurement();
+
+                // attack if distance is reasonable
+                if (distAttack < 30.0) {
+                    // distance is reasonable
+                    // calculate distance to move
+                    int cEncoder = robot.ticksFromInches((distAttack - 3.0));
+
+                    // Log.d(TAG, "Current run mode is " + robot.motorLeft.getMode());
 
                     // set the target positions
-                    leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + cEncoder);
-                    rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + cEncoder);
+                    // Log.d(TAG, "Set attack distance");
+                    robot.motorLeft.setTargetPosition(robot.motorLeft.getCurrentPosition() + cEncoder);
+                    robot.motorRight.setTargetPosition(robot.motorRight.getCurrentPosition() + cEncoder);
 
-                    leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    // use 0.8 for Riley; 0.3 for 2020 Bot
+                    Log.d(TAG, "Set attack drive power");
+                    robot.setDrivePower(0.8, 0.8);
 
-                    leftDrive.setPower(0.3);
-                    rightDrive.setPower(0.3);
+                    // Log.d(TAG, "Set attack run mode");
+                    robot.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                    // remember we are attacking
+                    bAttack = true;
+                } else {
+                    Log.d(TAG, "Attack declines");
                 }
-                bAttack = true;
             }
         }
 
@@ -600,7 +553,7 @@ public class BasicIterative extends OpMode
         // (i think init sets time to zero, but it may be even earlier)
         // telemetry.addData("time", time);
         // telemetry.addData("getRuntime()", getRuntime());
-        telemetry.addData("Attack", "%.2f cm", distAttack);
+        telemetry.addData("Attack", "%.2f in", distAttack);
     }
 
     /*
@@ -610,15 +563,14 @@ public class BasicIterative extends OpMode
     public void stop() {
         Log.d(TAG, "stop()");
 
-        schsdrive.stop();
+        // turn off the robot
+        robot.stop();
 
-        // turn off the drive motors
-        //   abstract to a common class (eg, Robot)
-        leftDrive.setPower(0);
-        rightDrive.setPower(0);
-
-        // make sure hooks are in known state
-        schsarm.setHookState(false);
+        // if there is an arm, clean it up
+        if (robot.arm != null) {
+            // make sure hooks are in known state
+            robot.arm.setHookState(false);
+        }
 
         Log.d(TAG, "stop() complete");
     }
