@@ -8,26 +8,20 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-@Autonomous(name="Forward 24 inches - Riley", group="Test")
+@Autonomous(name="Test: Forward 24 inches", group="Test")
 public class AutoForward24 extends OpMode {
     // Declare OpMode members.
 
     // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html
-    private static final String TAG = "testbot";
     // so use Log.d(TAG, <string>) to log debugging messages
-
-    // drive motors
-    // abstract to a class (eg, Robot) where attributes can be static and shared by other Opmodes
-    //   the class can have methods such as .setDrivePower()
-    private DcMotorEx leftDrive = null;
-    private DcMotorEx rightDrive = null;
+    private static final String TAG = "Forward 24 inches";
 
     // average period statistics
     private int cLoop = 0;
     private double timeLoop = 0;
 
     // SCHSDrive (has drive motors and other stuff)
-    private SCHSDrive schsdrive = null;
+    private RobotEx robot = null;
 
     private int iState = 0;
 
@@ -40,16 +34,11 @@ public class AutoForward24 extends OpMode {
         telemetry.addData("Status", "Initializing");
 
         // the robot drive
-        schsdrive = new SCHSDrive();
-        schsdrive.init(hardwareMap, telemetry);
-        // use 2019 values
-        schsdrive.setRobot2019();
+        robot = new RobotEx();
+        robot.init(hardwareMap, telemetry);
 
         // set the pose for testing
-        schsdrive.setPoseInches(0,0,0);
-
-        leftDrive = schsdrive.motorLeft;
-        rightDrive = schsdrive.motorRight;
+        robot.setPoseInches(0,0,0);
 
         // update statistics vars
         cLoop = 0;
@@ -69,12 +58,11 @@ public class AutoForward24 extends OpMode {
         telemetry.addData("init", "looping; look for config info");
 
         // update drive chassis
-        schsdrive.init_loop();
+        robot.init_loop();
 
         // update statistics for loop period
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
-
     }
 
     /*
@@ -84,16 +72,13 @@ public class AutoForward24 extends OpMode {
     public void start() {
         Log.d(TAG, "start()");
 
-        schsdrive.start();
+        robot.start();
 
-        leftDrive.setTargetPosition(leftDrive.getCurrentPosition());
-        rightDrive.setTargetPosition(rightDrive.getCurrentPosition());
+        robot.motorLeft.setTargetPosition(robot.motorLeft.getCurrentPosition());
+        robot.motorRight.setTargetPosition(robot.motorRight.getCurrentPosition());
 
-        leftDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightDrive.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        leftDrive.setPower(1.0);
-        rightDrive.setPower(1.0);
+        robot.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.setDrivePower(0.5, 0.5);
 
         // reset timer statistics
         cLoop = 0;
@@ -107,36 +92,36 @@ public class AutoForward24 extends OpMode {
      */
     @Override
     public void loop() {
-        int ticks = schsdrive.ticksFromInches(24.0);
+        int ticks = robot.ticksFromInches(24.0);
 
         // update statistics for loop period
         cLoop++;
         telemetry.addData("average period", "%.3f ms", 1000*(time-timeLoop) / cLoop);
 
         // update robot position
-        schsdrive.loop();
+        robot.loop();
 
         // report position in meters and degrees
         telemetry.addData("pose", "%8.2f %8.2f %8.2f",
-                schsdrive.xPoseInches,
-                schsdrive.yPoseInches,
-                schsdrive.thetaPoseDegrees);
+                robot.xPoseInches,
+                robot.yPoseInches,
+                robot.thetaPoseDegrees);
 
         telemetry.addData("velocity", "%.3f %.3f ticks/second",
-                leftDrive.getVelocity(),
-                rightDrive.getVelocity());
+                robot.motorLeft.getVelocity(),
+                robot.motorRight.getVelocity());
 
         telemetry.addData("state", " %3d", iState);
 
         switch (iState) {
             case 0:
-                leftDrive.setTargetPosition(leftDrive.getCurrentPosition() + ticks);
-                rightDrive.setTargetPosition(rightDrive.getCurrentPosition() + ticks);
+                robot.motorLeft.setTargetPosition(robot.motorLeft.getCurrentPosition() + ticks);
+                robot.motorRight.setTargetPosition(robot.motorRight.getCurrentPosition() + ticks);
                 iState++;
                 break;
 
             case 1:
-                if (!leftDrive.isBusy() && !rightDrive.isBusy()) {
+                if (!robot.motorLeft.isBusy() && !robot.motorRight.isBusy()) {
                     telemetry.addLine("forward finished");
 
                     // ticks = schsdrive.ticksFromMeters(0.5 * Math.PI * schsdrive.distWheel);
@@ -149,14 +134,14 @@ public class AutoForward24 extends OpMode {
                 break;
 
             case 2:
-                if (!leftDrive.isBusy() && !rightDrive.isBusy()) {
+                if (!robot.motorLeft.isBusy() && !robot.motorRight.isBusy()) {
                     telemetry.addLine("turn finished");
 
                     ticks=0;
 
                     // drive back
-                    leftDrive.setTargetPosition(leftDrive.getCurrentPosition() - ticks);
-                    rightDrive.setTargetPosition(rightDrive.getCurrentPosition() - ticks);
+                    robot.motorLeft.setTargetPosition(robot.motorLeft.getCurrentPosition() - ticks);
+                    robot.motorRight.setTargetPosition(robot.motorRight.getCurrentPosition() - ticks);
                     iState++;
                 }
                 break;
@@ -173,7 +158,7 @@ public class AutoForward24 extends OpMode {
     public void stop() {
         Log.d(TAG, "stop()");
 
-        schsdrive.stop();
+        robot.stop();
 
         Log.d(TAG, "stop() complete");
     }

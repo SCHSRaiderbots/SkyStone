@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.util.Range;
  *
  * Use the RobotEx drive chassis
  */
-@TeleOp(name="DualBot Test", group="Test")
+@TeleOp(name="Test: DualBot", group="Test")
 public class TeleopTest extends OpMode {
 
     // for Log.d() and friends, see https://developer.android.com/reference/android/util/Log.html

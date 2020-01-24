@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -75,7 +76,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@Autonomous(name="Auto Drive By Gyro - Linear", group="Test")
+@Autonomous(name="Test: Auto Drive By Gyro - Linear", group="Test")
+@Disabled
 public class AutoCourse extends LinearOpMode {
 
     /* Declare OpMode members. */
