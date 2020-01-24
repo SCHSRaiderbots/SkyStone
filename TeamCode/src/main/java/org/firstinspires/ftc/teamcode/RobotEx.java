@@ -64,10 +64,7 @@ public class RobotEx extends SCHSDrive {
         telemetry = telem;
 
         // find the REV Robotics 2m distance sensor
-        // TODO: or more exotic sensor; this may be the source of the I2C 0x52 error message
-        // can use as an ordinary distance sensor
         sensorRange2m = hardwareMap.get(DistanceSensor.class, "rev2meter");
-        // Rev2mDistanceSensor sensorTimeOfFlight = (Rev2mDistanceSensor)sensorRange2m;
 
         // try to discriminate the two robots by looking for a particular sensor
         // touch sensor

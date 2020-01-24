@@ -35,7 +35,7 @@ public class TeleopTest extends OpMode {
     private RobotEx robot = null;
 
     // start faking some action
-    private enum OpCode {OC_NORMAL, OC_ATTACK, OC_HEAD, OC_LINE, OC_POINT, OC_TURN};
+    private enum OpCode {OC_NORMAL, OC_ATTACK, OC_HEAD, OC_LINE, OC_POINT, OC_TURN}
 
     private OpCode opcode = OpCode.OC_NORMAL;
     private int istate = 0;
@@ -272,6 +272,8 @@ public class TeleopTest extends OpMode {
 
         // report the task state
         telemetry.addData("task: ", "opcode %s, istate %d", opcode.toString(), istate);
+
+        telemetry.addLine("A follows line.");
 
         // dispatch on opcode
         switch (opcode) {

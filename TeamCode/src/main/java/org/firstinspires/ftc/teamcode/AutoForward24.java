@@ -6,8 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-
 @Autonomous(name="Test: Forward 24 inches", group="Test")
 public class AutoForward24 extends OpMode {
     // Declare OpMode members.
