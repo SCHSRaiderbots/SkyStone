@@ -176,10 +176,10 @@ public class RobotEx extends SCHSDrive {
 
 
     // Craig W. Reynolds ad hoc line follower (from memory)
-    double x0 = 0.0;
-    double y0 = 0.0;
-    double x1 = 120.0;
-    double y1 = 0.0;
+    private double x0 = 0.0;
+    private double y0 = 0.0;
+    private double x1 = 120.0;
+    private double y1 = 0.0;
 
     void lfReynoldsStart() {
         // motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
@@ -204,7 +204,7 @@ public class RobotEx extends SCHSDrive {
         double ux = dx/L;
         double uy = dy/L;
 
-        // compute vector to robot
+        // compute vector from start of line to robot's current position
         double dxBot = xPoseInches - x0;
         double dyBot = yPoseInches - y0;
 

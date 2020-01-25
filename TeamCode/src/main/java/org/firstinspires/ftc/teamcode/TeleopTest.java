@@ -415,11 +415,6 @@ public class TeleopTest extends OpMode {
 
         }
 
-        if (istate < 0) {
-
-        } else {
-        }
-
         // Show the elapsed game time
         //   time and getRuntime() are high precision, but they are from the start of the opmode
         telemetry.addData("Status", "time: " + time);
