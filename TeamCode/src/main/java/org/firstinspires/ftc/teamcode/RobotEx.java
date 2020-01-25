@@ -181,6 +181,21 @@ public class RobotEx extends SCHSDrive {
     private double x1 = 120.0;
     private double y1 = 0.0;
 
+    /**
+     * A hack to set the line segment.
+     * Will try using this in a psuedo-autonomous routine
+     * @param x0p initial point x coordinate
+     * @param y0p initial point y coordinate
+     * @param x1p final point x coordinate
+     * @param y1p final point y coordinate
+     */
+    void setReynoldsLine(double x0p, double y0p, double x1p, double y1p) {
+        x0 = x0p;
+        y0 = y0p;
+        x1 = x1p;
+        y1 = y1p;
+    }
+
     void lfReynoldsStart() {
         // motorLeft.setTargetPosition(motorLeft.getCurrentPosition());
         // motorRight.setTargetPosition(motorRight.getCurrentPosition());
