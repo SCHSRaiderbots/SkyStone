@@ -2,11 +2,13 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Hardware;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
@@ -28,11 +30,13 @@ public class SCHSDetection {
     private TFObjectDetector tfod;
     private VuforiaLocalizer.Parameters parameters;
 
+    private DistanceSensor distSensor;
+
     public SCHSDetection() {
         skyPos = 0;
     }
 
-    public void iniitialize(HardwareMap hardwareMap) {
+    public void initialize(HardwareMap hardwareMap) {
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
         initVuforia(hardwareMap);
@@ -50,6 +54,8 @@ public class SCHSDetection {
         if (tfod != null) {
             tfod.activate();
         }
+
+        distSensor = hardwareMap.get(DistanceSensor.class, "rev2meter");
     }
 
     public int detectSkyPos(){
@@ -141,5 +147,9 @@ public class SCHSDetection {
         tfodParameters.minimumConfidence = 0.8;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
+    }
+
+    public double findDist() {
+        return (distSensor.getDistance(DistanceUnit.INCH));
     }
 }

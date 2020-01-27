@@ -96,7 +96,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
         rileyChassis = new SCHSDrive();
         rileyChassis.initialize(hardwareMap);
         rileyEnv = new SCHSDetection();
-        rileyEnv.iniitialize(hardwareMap);
+        rileyEnv.initialize(hardwareMap);
         rileyArm = new SCHSArm();
         rileyArm.initialize(hardwareMap);
 

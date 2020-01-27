@@ -95,7 +95,7 @@ public class SCHSControllerDeposit extends OpMode {
         rileyChassis = new SCHSDrive();
         rileyChassis.initialize(hardwareMap);
         rileyEnv = new SCHSDetection();
-        rileyEnv.iniitialize(hardwareMap);
+        rileyEnv.initialize(hardwareMap);
         rileyArm = new SCHSArm();
         rileyArm.initialize(hardwareMap);
 
@@ -318,7 +318,7 @@ public class SCHSControllerDeposit extends OpMode {
                 break;
 	case STATE_STONES_LOWER_ARM_MB:
 		if (pathComplete(ARM, false, false)) {
-			startPath(dropLiftArmPathMB);
+			startPath(dropLiftArmPath);
 			newState(State.STATE_STONES_CLOSE_STONE);
 		} else {}
 		break;

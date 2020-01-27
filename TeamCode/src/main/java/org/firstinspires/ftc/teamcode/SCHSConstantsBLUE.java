@@ -99,6 +99,20 @@ class SCHSConstantsBLUE {
             new SCHSPathSeg(4.8*TURN_VALUE_90, -(4.8*TURN_VALUE_90), POWER_FULL) //diff from red constants, not completing turn at 3.5*
     };
 
+    static final SCHSPathSeg[] driveToFD = {
+            new SCHSPathSeg(16, 16, POWER_FULL)
+    };
+
+    static final SCHSPathSeg[] parkUnderBridgeAfterFD = {
+            new SCHSPathSeg(ARM, 12, 0.4, "yes"), //start extending arm
+            new SCHSPathSeg(-4, -4, 0.5), //back 4
+            new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5), // turn left
+            new SCHSPathSeg(18, 18, 0.5), //forward 18
+            new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5), //turn right
+            new SCHSPathSeg(12, 12, 0.5), //forward 12
+            new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5), //turn left
+    };
+
     static final SCHSPathSeg[] arcTurnFDPath = {
     };
 

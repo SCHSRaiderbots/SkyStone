@@ -21,6 +21,8 @@ class SCHSConstants {
     static final double INCREMENT = 0.01;
     static final int CYCLE_MS = 50;
 
+    //constant for picking up block w/dist sensor
+    static final double BLOCK_NUM = 0;
 
     // derived robot parameters
     // The CoreHex motor has 4 ticks per revolution and is geared down by 72
@@ -41,11 +43,13 @@ class SCHSConstants {
 
     //static final double COUNTS_PER_INCH = (288)/(3.54331*(Math.PI)); //for core hex motor
     static final double COUNTS_PER_INCH = (COUNTS_PER_REV)/(3.54331*(Math.PI)*2);
-    static final double ARM_FACTOR = 80;
+    //extend arm 288 counts = 8.25 in (from front of bot) -> 34.909090909090909090909090909091 counts = 1 inch
+    static final double ARM_FACTOR = 34.91;
     static final double LIFT_FACTOR = 139.77;
     static final double TURN_VALUE_90 = 532/(COUNTS_PER_INCH); //BEFORE: 254, left 495, right -569 turn right, avg532
     static final double TURN_VALUE_MID_BLOCK = 700/COUNTS_PER_INCH; //left -635, right 768 turn left, avg701.5
     static final double TURN_VALUE_LEFT_BLOCK = 805/COUNTS_PER_INCH; //left -708, right 901 turn left, avg804.5
+    static final double GRAB_BLOCK_WIDTH = 5.0; //5 ->
 
     //Detection Constants, Left,Mid,Right correspond to red side
     static final int LEFT_POS = 1;
@@ -112,16 +116,16 @@ class SCHSConstants {
     };
 
     static final SCHSPathSeg[] pickMBStoneArmPath = {
-            new SCHSPathSeg(ARM, 12.5, 0.9, "yes"), //extend out 7.5 in -> 12.5
+            new SCHSPathSeg(ARM, 12.5, 0.9, "yes"), //extend out 7.5 in -> 12.5 //needs to be changed w/dist sensor
     };
 
-    static final SCHSPathSeg[] dropLiftArmPathMB = {
+    static final SCHSPathSeg[] dropLiftArmPath = {
 	    new SCHSPathSeg(LIFT, -4, 0.9, "yes")
     };
 
     static final SCHSPathSeg[] retrieveStoneArmPath = { //
             new SCHSPathSeg(LIFT, 6.5, 0.9,"yes"), //lift 5 up, change to 6 -> 6.5
-            new SCHSPathSeg(ARM, -4, 0.9, "yes"), //retract 4",
+            //new SCHSPathSeg(ARM, -4, 0.9, "yes"), //retract 4",
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
@@ -155,6 +159,7 @@ class SCHSConstants {
 
     static final SCHSPathSeg[] startBotPath = {
             new SCHSPathSeg( 15, 15, 0.5),  // Forward 15 in
+            new SCHSPathSeg(ARM, 4, 0.5, "yes"), //extend 4
     };
 
     static final SCHSPathSeg[] positionToFD = {
@@ -167,6 +172,20 @@ class SCHSConstants {
     static final SCHSPathSeg[] moveFD = {
         new SCHSPathSeg(0.5*TURN_VALUE_90, -0.5*TURN_VALUE_90, POWER_FULL), //turn right
         new SCHSPathSeg(20,20,POWER_FULL)
+    };
+
+    static final SCHSPathSeg[] driveToFD = {
+        new SCHSPathSeg(16, 16, POWER_FULL)
+    };
+
+    static final SCHSPathSeg[] parkUnderBridgeAfterFD = {
+            new SCHSPathSeg(ARM, 12, 0.4, "yes"), //start extending arm
+            new SCHSPathSeg(-4, -4, 0.5), //back 4
+            new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5), // turn right
+            new SCHSPathSeg(18, 18, 0.5), //forward 18
+            new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5), //turn left
+            new SCHSPathSeg(12, 12, 0.5), //forward 12
+            new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5), //turn right
     };
 
     static final SCHSPathSeg[] moveToBridge = {

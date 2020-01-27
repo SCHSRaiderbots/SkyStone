@@ -143,8 +143,9 @@ public class SCHSArm {
         if (armPart == LIFT ){
             liftMotor.setTargetPosition(liftEncoderTarget+= encoder);
         } else if (armPart == ARM){
-            extendMotor.setTargetPosition(armEncoderTarget+= encoder);
-            Log.d("SCHS:addEncoderTarget()", "armEnconderTarget = " + armEncoderTarget);
+            //extendMotor.setTargetPosition(armEncoderTarget+= encoder);
+            extendMotor.setTargetPosition(encoder);
+            Log.d("SCHS:addEncoderTarget()", "encoder pos = " + encoder);
         }
     }
 
@@ -185,7 +186,18 @@ public class SCHSArm {
             //grabServo.setPosition(0.002);
             //Log.d("SCHS: moveServo()", "current Position after turn3:" + grabServo.getPosition());
         //}
+    }
 
+    public void openGrabber() {
+        Log.d("SCHS: openGrabber()", "current Position before open:" + grabServo.getPosition());
+        grabServo.setPosition(Servo.MAX_POSITION);
+        Log.d("SCHS: openGrabber()", "current Position after open:" + grabServo.getPosition());
+    }
+
+    public void closeGrabber() {
+        Log.d("SCHS: closeGrabber()", "current Position before close:" + grabServo.getPosition());
+        grabServo.setPosition(Servo.MIN_POSITION);
+        Log.d("SCHS: closeGrabber()", "current Position after close:" + grabServo.getPosition());
     }
 
     /**

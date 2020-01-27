@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
@@ -144,6 +145,8 @@ public class SCHSDrive {
         motorLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         motorRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        resetEncoders();
+
         // 16 December 2019: PIDF coefficients could not be set to 5,0,0,0 in logcat
         //   PIDF(rue) = 9.999847412109375, 2.9999542236328125, 0.0, 0.0
         //   PIDF(r2p) = 9.999847412109375, 0.04998779296875, 0.0, 0.0
@@ -177,6 +180,7 @@ public class SCHSDrive {
     /* added from master */
     public void initialize(HardwareMap hardwareMap) {
         init(hardwareMap, null);
+
     }
 
     /**

@@ -259,7 +259,7 @@ public class SCHSCarDriveJan15 extends OpMode {
 
         turn = gamepad1.left_stick_x;
 
-        if (gamepad1.a && gamepad1.x) {
+        if (gamepad1.x) {
 
             // a and x buttons are pressed
             //turn faster
@@ -281,7 +281,7 @@ public class SCHSCarDriveJan15 extends OpMode {
 
         //get power values; rPower is negative lPower so robot can turn like tank
         lPower = gamepad1.left_stick_x;
-        lPower = Math.pow(lPower, 2); //squared inputs for precise turning
+        lPower = lPower * 0.2; //squared inputs for precise turning
         rPower = -lPower;
 
         leftMotor.setPower(lPower);
@@ -543,7 +543,7 @@ public class SCHSCarDriveJan15 extends OpMode {
 
         elevatorMotor.setTargetPosition(targetPosition);
         elevatorMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        elevatorMotor.setPower(armPower * 1.2);
+        elevatorMotor.setPower(armPower * 1.5);
 
 
         //TARGET POSITION NOT SET EXCEPTION has been fixed

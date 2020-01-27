@@ -8,56 +8,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import static android.os.SystemClock.sleep;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.ARM;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.ARM_FACTOR;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.COUNTS_PER_INCH;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.DRIVE;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.LEFT_POS;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.LIFT;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.LIFT_FACTOR;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.MID_POS;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.RIGHT_POS;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.arcTurnPushPull;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.back2LBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.back2MBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.back2RBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.backBlocksFirst;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.backFromFDPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.backToBlocksPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.deliver2BlockPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.deliverBlockPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.dropBlockFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.extendArmPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.extendInPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.extendOutPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.goToLBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.goToMBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.goToRBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.liftArm;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.liftArmInitial;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.liftBlockFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.moveFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.parkBridgePath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.parkUnderBridgePath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.pickStoneArmPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.positionToFD;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.pushFDPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2LBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2MBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreat2RBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatFromFDPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatLBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatMBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retreatRBPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.retrieveStoneArmPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.startBotExtendPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.stoneDownPath;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.testPathRun;
-import static org.firstinspires.ftc.teamcode.SCHSConstants.turnFDPath;
 
-@Autonomous(name="SCHSControllerExtend", group="SCHS")
+import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.*;
+
+@Autonomous(name="SCHSController", group="SCHS")
 //@Disabled
-public class SCHSControllerExtend extends OpMode {
+public class SCHSControllerFOUNDATION_BLUE extends OpMode {
 
     private SCHSDrive rileyChassis = null;
     private boolean isInitialized = false;
@@ -68,11 +24,17 @@ public class SCHSControllerExtend extends OpMode {
     private double leftDist;
     private double rightDist;
     private boolean isArcTurn;
+    private double blockDist = 0;
+    private SCHSPathSeg[] armStonePath;
+    double currArmPos;
 
     private enum State {
         STATE_STONES_INITIAL,
-        STATE_STONES_EXTEND_ARM,
-        STATE_STOP,
+        STATE_STONES_DROP_HOOKS,
+        STATE_STONES_LIFT_HOOKS,
+        STATE_STONES_PULL_FD,
+        STATE_STONES_PARK_BRIDGE,
+        STATE_STOP
     }
 
     private State currState; //current state machine
@@ -88,12 +50,15 @@ public class SCHSControllerExtend extends OpMode {
     public void init() {
         rileyChassis = new SCHSDrive();
         rileyChassis.initialize(hardwareMap);
+
         rileyEnv = new SCHSDetection();
         rileyEnv.initialize(hardwareMap);
+
         rileyArm = new SCHSArm();
         rileyArm.initialize(hardwareMap);
 
         //moved resetting encoders to init
+        // TODO: Reset encoders should happen in SCHSDrive.initialize() and SCHSArm.initialize()
         rileyChassis.resetEncoders();
         rileyArm.resetArmEncoders();
 
@@ -103,10 +68,10 @@ public class SCHSControllerExtend extends OpMode {
         msStuckDetectInit = 20000;
         msStuckDetectInitLoop = 20000;
 
-
         /* added to raise arm above block during init */
         startPath(liftArmInitial);
-        rileyArm.closeServo(rileyArm.grabServo);
+        //rileyArm.closeServo(rileyArm.grabServo);
+        rileyArm.openGrabber();
     }
 
     //@Override
@@ -126,42 +91,60 @@ public class SCHSControllerExtend extends OpMode {
         rileyArm.setArmPower(0, LIFT);
         rileyArm.setArmPower(0, ARM);
         //rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         runtime.reset();
         newState(State.STATE_STONES_INITIAL);
-        //newState(State.STATE_STONES_DROP_HOOKS);
-        //newState(State.STATE_STONES_PARK_BRIDGE);
     }
 
     @Override
     public void loop() {
-        // Send the current state info (state and time) back to first line of driver station telemetry.
-        //telemetry.addData("0", String.format("%4.1f ", currStateTime.time()) + currState.toString());
 
         switch (currState) {
-
-
             case STATE_STONES_INITIAL:
                 Log.d("SCHS", "inside STATES_STONES_INITIAL");
                 telemetry.addLine("inside STATES_STONES_INITIAL");
                 if (rileyChassis.encodersAtZero()){
                     Log.d("SCHS", "inside STATES_STONES_INITIAL if case");
-                    telemetry.addLine("STATES_STONES_INITIAL");
-                    skyPos = rileyEnv.detectSkyPos(); //scan blocks
-                    telemetry.addLine("skyPos:" + skyPos);
-                    Log.d("SCHS: DETECT_SKYSTONE", "skyPos:" + skyPos);
-                    newState(State.STATE_STONES_EXTEND_ARM);
+                    startPath(driveToFD);
+                    newState(State.STATE_STONES_DROP_HOOKS);
                 } else {
                     Log.d("SCHS", "inside STATES_STONES_INITIAL else case");
                     telemetry.addLine("inside initial else");
                 }
                 break;
 
-            case STATE_STONES_EXTEND_ARM:
-                Log.d("SCHS", "inside STATE_STONES_EXTEND_ARM");
-                if(rileyChassis.encodersAtZero()) {
-                    startPath(extendArmPath);
-                    newState(State.STATE_STOP);
-                } else {}
+            case STATE_STONES_DROP_HOOKS:
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_DROP_HOOKS");
+                    rileyArm.closeHook(rileyArm.rightHook);
+                    rileyArm.openServo(rileyArm.leftHook);
+                    sleep(2000);
+                    newState(State.STATE_STONES_PULL_FD);
+                } else {
+                }
+                break;
+
+            case STATE_STONES_PULL_FD:
+                Log.d("SCHS", "inside STATE_STONES_PULL_FD");
+                startPath(arcTurnPushPull);
+                newState(State.STATE_STONES_LIFT_HOOKS);
+            break;
+
+            case STATE_STONES_LIFT_HOOKS:
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
+                    rileyArm.openHook(rileyArm.rightHook);
+                    rileyArm.closeServo(rileyArm.leftHook);
+                    sleep(2000);
+                    newState(State.STATE_STONES_PARK_BRIDGE);
+                } else {
+                }
+                break;
+
+            case STATE_STONES_PARK_BRIDGE:
+                Log.d("SCHS","inside STATE_STONES_PARK_BRIDGE");
+                startPath(parkUnderBridgeAfterFD);
+                newState(State.STATE_STOP);
                 break;
 
             case STATE_STOP:
@@ -233,8 +216,9 @@ public class SCHSControllerExtend extends OpMode {
             } else if (currPath[currSeg].armPart == ARM) { //extend arm
                 telemetry.addLine("SCHS: startseg(): move arm extend before");
                 Log.d("SCHS: startseg():", "move arm extend before");
-                extend = (int) (currPath[currSeg].extendDist * ARM_FACTOR);
-                Log.d("SCHS: startseg():", "extend length = " + extend);
+                //extend = (int) (currPath[currSeg].extendDist * ARM_FACTOR);
+                extend = ((int) (currPath[currSeg].extendDist * ARM_FACTOR));
+                Log.d("SCHS: startseg():", "extend length (inch) = " + extend / ARM_FACTOR);
                 rileyArm.addEncoderTarget(extend, ARM);
                 rileyArm.setArmPower(currPath[currSeg].extendSpeed, ARM);
                 rileyArm.setArmMode(DcMotor.RunMode.RUN_TO_POSITION, ARM);
@@ -334,7 +318,7 @@ public class SCHSControllerExtend extends OpMode {
                 if ((leftDist > 3300 || rightDist > 3300) && !isArcTurn) {
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
-                } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))){
+                } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))) {
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
                 } else{
