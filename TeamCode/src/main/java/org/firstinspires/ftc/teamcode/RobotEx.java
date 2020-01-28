@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import android.util.Log;
 
+import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
@@ -51,9 +52,47 @@ public class RobotEx extends SCHSDrive {
     // which Alliance?
     boolean boolBlueAlliance = true;
 
+    // assume the firmware is OK
+    boolean boolFirmware = true;
+
     public void init(HardwareMap hwmap, Telemetry telem) {
         // call the superclass to init its items
         super.init(hwmap, telem);
+
+        // TODO: Move this to SCHSDrive.java
+        {
+            // look at all the Lynx Modules
+            for (LynxModule module : hardwareMap.getAll(LynxModule.class)) {
+                // look at the version
+                String version = module.getNullableFirmwareVersionString();
+
+                // HW: 20, Maj: 1, Min: 8, Eng: 2
+                Log.d("FIRMWARE", version);
+
+                if (version == null) {
+                    // nothing to do but cry
+                    boolFirmware = false;
+                } else {
+                    // split the string into parts
+                    //  firmware string -> HW 20 Maj 1 Min 8 Eng 2
+                    String[] parts = version.split("[ :,]+");
+
+                    // turn subversions into integers
+                    int major = Integer.parseInt(parts[3]);
+                    int minor = Integer.parseInt(parts[5]);
+                    int eng = Integer.parseInt(parts[7]);
+
+                    // combine the subversion info to make a simple number
+                    int comb = (major << 16) | (minor << 8) | eng;
+
+                    // test against 1.8.2
+                    if (comb < 0x010802) {
+                        Log.d("FIRMWARE", "..fails");
+                        boolFirmware = false;
+                    }
+                }
+            }
+        }
 
         // TODO: do not access motors directly; use methods
         // it would be good to clean this up sooner rather than later
@@ -90,6 +129,10 @@ public class RobotEx extends SCHSDrive {
     public void init_loop() {
         // call the superclass
         super.init_loop();
+
+        if (!boolFirmware) {
+            telemetry.addLine("Out of date FIRMWARE!");
+        }
     }
 
     public void start() {
