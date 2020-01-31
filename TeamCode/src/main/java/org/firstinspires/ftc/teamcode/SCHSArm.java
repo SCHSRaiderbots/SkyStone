@@ -145,6 +145,7 @@ public class SCHSArm {
         } else if (armPart == ARM){
             //extendMotor.setTargetPosition(armEncoderTarget+= encoder);
             extendMotor.setTargetPosition(encoder);
+            armEncoderTarget = extendMotor.getTargetPosition();
             Log.d("SCHS:addEncoderTarget()", "encoder pos = " + encoder);
         }
     }

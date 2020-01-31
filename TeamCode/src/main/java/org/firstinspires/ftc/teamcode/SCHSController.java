@@ -144,7 +144,7 @@ public class SCHSController extends OpMode {
 
         runtime.reset();
         newState(State.STATE_STONES_INITIAL);
-        //newState(State.STATE_STONES_PARK_BRIDGE);
+        //newState(State.STATE_STONES_FIND_DIST);
     }
 
     @Override
@@ -378,7 +378,7 @@ case STATE_STONES_LOWER_ARM_MB:
                 break;
 
             case STATE_STONES_RETREAT:
-                if (pathComplete(LIFT, true, false)){ //isBothArmLift false -> true
+                if (pathComplete(ARM, false, false)){ //isBothArmLift false -> true
                     //if (pathComplete(DRIVE, false)) {
                     Log.d("SCHS","inside STATES_STONES_RETREAT");
                     telemetry.addLine("STATES_STONES_RETREAT");
@@ -472,7 +472,8 @@ case STATE_STONES_LOWER_ARM_MB:
                         sleep(2000);
                         Log.d("SCHS","inside STATES_STONES_DROP_STONE, round 1");
                         telemetry.addLine("STATES_STONES_DROP_STONE, round 1");
-                        newState((State.STATE_STONES_LIFT_ARM));
+                        //newState((State.STATE_STONES_LIFT_ARM));
+                        newState((State.STATE_STONES_DROP_HOOKS));
                     } else {
                         Log.d("SCHS","inside STATES_STONES_DROP_STONE, round 2");
                         telemetry.addLine("STATES_STONES_DROP_STONE, round 2");
@@ -486,20 +487,21 @@ case STATE_STONES_LOWER_ARM_MB:
             case STATE_STONES_LIFT_ARM:
                 Log.d("SCHS","inside STATE_STONES_LIFT_ARM");
                 startPath(liftArm);
-                newState(State.STATE_STONES_DROP_HOOKS);
+                //newState(State.STATE_STONES_DROP_HOOKS);
+                newState(State.STATE_STONES_PULL_FD);
                 break;
 
             case STATE_STONES_DROP_HOOKS:
-                if (pathComplete(LIFT, false, false)) {
+                //if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_DROP_HOOKS");
                     //rileyArm.closeServo(rileyArm.rightHook);
                     rileyArm.closeHook(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
                     sleep(2000);
-                    //newState(State.STATE_STONES_GO_TO_BS);
-                    newState(State.STATE_STONES_PULL_FD);
-                } else {
-                }
+                    newState(State.STATE_STONES_LIFT_ARM);
+                    //newState(State.STATE_STONES_PULL_FD);
+                /*} else {
+                }*/
                 break;
 
             case STATE_STONES_GO_TO_BS:
@@ -509,10 +511,14 @@ case STATE_STONES_LOWER_ARM_MB:
                 break;
 
             case STATE_STONES_PULL_FD:
+                if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_PULL_FD");
                     startPath(arcTurnPushPull);
                     //newState(State.STATE_STONES_PUSH_FD);
                     newState(State.STATE_STONES_LIFT_HOOKS);
+                } else {
+                    Log.d("SCHS", "inside STATE_STONES_PULL_FD else");
+                }
                 break;
 
             case STATE_STONES_PUSH_FD:
@@ -526,7 +532,7 @@ case STATE_STONES_LOWER_ARM_MB:
                 break;
 
             case STATE_STONES_LIFT_HOOKS:
-                if ((pathComplete(DRIVE, false, false)) || runtime.seconds() >= 28) {
+                if ((pathComplete(DRIVE, false, false)) || runtime.seconds() >= 29.5) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
                     //rileyArm.openServo(rileyArm.rightHook);
                     rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
@@ -894,12 +900,12 @@ case STATE_STONES_LOWER_ARM_MB:
                 }
             } else if (roboPart == LIFT) {
                 Log.d("SCHS:", "inside moveComplete() for LIFT");
-                return (Math.abs(rileyArm.getLiftPos() - rileyArm.getLiftEncoderTarget()) < 25); //10, change to 25
+                return (Math.abs(rileyArm.getLiftPos() - rileyArm.getLiftEncoderTarget()) <= 25); //10, change to 25
             } else if (roboPart == ARM) {
                 Log.d("SCHS:", "inside moveComplete() for ARM");
                 Log.d("SCHS:", "rileyArm getExtendPos = " +rileyArm.getExtendPos());
                 Log.d("SCHS:", "rileyArm getArmEncoderTarget = " +rileyArm.getArmEncoderTarget());
-                return (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10);
+                return (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) <= 25); //10->25
             } else if (isBothArmDrive) {
                 Log.d("SCHS:", "inside moveComplete() arm + drive");
                 if(roboPart == ARM || roboPart == DRIVE) {

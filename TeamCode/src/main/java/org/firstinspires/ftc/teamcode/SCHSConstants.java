@@ -165,7 +165,7 @@ class SCHSConstants {
 
     static final SCHSPathSeg[] positionToFD = {
         new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5), //turn left
-        new SCHSPathSeg(34, 34, POWER_FULL), //18 -> 34
+        new SCHSPathSeg(36, 36, POWER_FULL), //18 -> 34 -> 36
         new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5), //turn right
         //new SCHSPathSeg(2, 2, POWER_FULL),
     };
