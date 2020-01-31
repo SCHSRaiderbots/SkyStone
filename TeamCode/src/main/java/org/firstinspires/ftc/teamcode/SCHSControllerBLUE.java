@@ -275,7 +275,7 @@ public class SCHSControllerBLUE extends OpMode {
                 break;
 
             case STATE_STONES_GO_TO_SKYSTONE:
-                if (pathComplete(DRIVE, false, false)){ //change isBothArmDrive true -> false
+                if (pathComplete(DRIVE, false, false)){ //change isBothArmDrive true -> false -> true
                     Log.d("SCHS", "inside STATES_STONES_GO_TO_SKYSTONE");
                     telemetry.addLine("STATES_STONES_GO_TO_SKYSTONE");
                     if (skyPos == LEFT_POS) {
@@ -380,8 +380,8 @@ public class SCHSControllerBLUE extends OpMode {
                         Log.d("SCHS", "inside STATES_STONES_RETREAT else case");
                         telemetry.addData("STATE_STONES_ RETREAT: AAAAAAAAHHHH! WRONG SKY POS! skypos:", skyPos);
                     }
-                    newState(State.STATE_STONES_ARM_DOWN);
-                    //newState((State.STATE_STONES_DELIVER));
+                    //newState(State.STATE_STONES_ARM_DOWN);
+                    newState((State.STATE_STONES_DELIVER));
                 } else {
                 }
                 break;
@@ -404,7 +404,7 @@ public class SCHSControllerBLUE extends OpMode {
 
 
             case STATE_STONES_DELIVER:
-                if (pathComplete(LIFT, false, false)){
+                if (pathComplete(DRIVE, false, false)){
                     rileyChassis.isMoveDone = false;
                     Log.d("SCHS:", "STATE_STONES_DELIVER");
                     telemetry.addLine("STATES_STONES_DELIVER");
@@ -507,7 +507,7 @@ public class SCHSControllerBLUE extends OpMode {
                 break;
 
             case STATE_STONES_LIFT_HOOKS:
-                if (pathComplete(DRIVE, false, false)) {
+                if ((pathComplete(DRIVE, false, false)) || runtime.seconds() >= 28) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
                     //rileyArm.openServo(rileyArm.rightHook);
 		    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
@@ -860,7 +860,7 @@ public class SCHSControllerBLUE extends OpMode {
                 Log.d("SCHS", "finished moveComplete():" + ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                         (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)));
 
-                if ((leftDist > 3300 || rightDist > 3300) && !isArcTurn) {
+                if ((leftDist > 3000 || rightDist > 3000) && !isArcTurn) { //long dist tolerance 3300-> 3000
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
                 } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))){

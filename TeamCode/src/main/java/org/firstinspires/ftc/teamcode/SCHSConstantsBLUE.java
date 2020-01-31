@@ -100,7 +100,7 @@ class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] driveToFD = {
-            new SCHSPathSeg(16, 16, POWER_FULL)
+            new SCHSPathSeg(36, 36, 0.5) //power full - > 0.5, 16-> 36
     };
 
     static final SCHSPathSeg[] parkUnderBridgeAfterFD = {
@@ -152,8 +152,9 @@ class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] retrieveStoneArmPath = { //
-            new SCHSPathSeg(LIFT, 6.5, 0.9,"yes"), //lift 5 up, change to 6 -> 6.5
-            new SCHSPathSeg(ARM, -4, 0.9, "yes"), //retract 4",
+            //new SCHSPathSeg(LIFT, 6.5, 0.9,"yes"), //lift 5 up, change to 6 -> 6.5
+            new SCHSPathSeg(ARM, 7.5, 0.9, "yes") //8.5 -> 7.5
+            //new SCHSPathSeg(ARM, -4, 0.9, "yes"), //retract 4",
     };
 
     static final SCHSPathSeg[] stoneDownPath = {
@@ -187,6 +188,7 @@ class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] startBotPath = {
             new SCHSPathSeg( 15, 15, 0.5),  // Forward 15 in
+            new SCHSPathSeg(ARM, 4, 0.5, "yes"), //extend 4
     };
 
     static final SCHSPathSeg[] positionToFD = {
@@ -236,7 +238,7 @@ class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] deliverBlockPath = {
-            new SCHSPathSeg( 72.25,72.25, POWER_FULL), //74.75 -> 72.25
+            new SCHSPathSeg( 69,69, POWER_FULL), //74.75 -> 72.25 -> 69
     };
 
     static final SCHSPathSeg[] liftBlockFD = {
@@ -259,7 +261,7 @@ class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] turnFDPath = {
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
-            new SCHSPathSeg( 16, 16, 0.5), //forward 12 -> 16
+            new SCHSPathSeg( 12, 12, 0.5), //forward 12 -> 16 -> 12
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {

@@ -11,7 +11,7 @@ import static android.os.SystemClock.sleep;
 
 import static org.firstinspires.ftc.teamcode.SCHSConstantsBLUE.*;
 
-@Autonomous(name="SCHSController", group="SCHS")
+@Autonomous(name="SCHSControllerFOUNDATION_BLUE", group="SCHS")
 //@Disabled
 public class SCHSControllerFOUNDATION_BLUE extends OpMode {
 
@@ -131,7 +131,7 @@ public class SCHSControllerFOUNDATION_BLUE extends OpMode {
             break;
 
             case STATE_STONES_LIFT_HOOKS:
-                if (pathComplete(DRIVE, false, false)) {
+                if ((pathComplete(DRIVE, false, false)) || currStateTime.seconds() >= 5) {
                     Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
                     rileyArm.openHook(rileyArm.rightHook);
                     rileyArm.closeServo(rileyArm.leftHook);
