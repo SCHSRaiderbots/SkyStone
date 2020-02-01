@@ -21,7 +21,8 @@ class SCHSConstantsBLUE {
     static final double INCREMENT = 0.01;
     static final int CYCLE_MS = 50;
 
-
+//constant for picking up block w/dist sensor
+	static final double BLOCK_NUM = 0;
     // robot parameters
     // abstract to a class (eg, Robot) where static parameters describe the robot
     // the wheel diameters
@@ -65,11 +66,12 @@ class SCHSConstantsBLUE {
 
     //static final double COUNTS_PER_INCH = (288)/(3.54331*(Math.PI)); //for core hex motor
     static final double COUNTS_PER_INCH = (COUNTS_PER_REV)/(3.54331*(Math.PI)*2);
-    static final double ARM_FACTOR = 80;
+    static final double ARM_FACTOR = 34.91;
     static final double LIFT_FACTOR = 139.77;
     static final double TURN_VALUE_90 = 532/(COUNTS_PER_INCH); //BEFORE: 254, left 495, right -569 turn right, avg532
     static final double TURN_VALUE_MID_BLOCK = 700/COUNTS_PER_INCH; //left -635, right 768 turn left, avg701.5
     static final double TURN_VALUE_LEFT_BLOCK = 805/COUNTS_PER_INCH; //left -708, right 901 turn left, avg804.5
+    static final double GRAB_BLOCK_WIDTH = 5.0;
 
     //Detection Constants, Left,Mid,Right correspond to red side
     static final int LEFT_POS = 1;
@@ -147,7 +149,7 @@ class SCHSConstantsBLUE {
             new SCHSPathSeg(ARM, 12.5, 0.9, "yes"), //extend out 7.5 in -> 12.5
     };
 
-    static final SCHSPathSeg[] dropLiftArmPathMB = {
+    static final SCHSPathSeg[] dropLiftArmPath = {
             new SCHSPathSeg(LIFT, -4, 0.9, "yes")
     };
 
@@ -188,13 +190,18 @@ class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] startBotPath = {
             new SCHSPathSeg( 15, 15, 0.5),  // Forward 15 in
-            new SCHSPathSeg(ARM, 4, 0.5, "yes"), //extend 4
+            //new SCHSPathSeg(ARM, 4, 0.5, "yes"), //extend 4
     };
 
     static final SCHSPathSeg[] positionToFD = {
 	    new SCHSPathSeg(TURN_VALUE_90, -TURN_VALUE_90, 0.5), // turn right
 	    new SCHSPathSeg(34, 34, POWER_FULL), //18 -> 34
 	    new SCHSPathSeg(-TURN_VALUE_90, TURN_VALUE_90, 0.5), //turn left
+    };
+
+    static final SCHSPathSeg[] moveFD = {
+            new SCHSPathSeg(0.5*TURN_VALUE_90, -0.5*TURN_VALUE_90, POWER_FULL), //turn right
+            new SCHSPathSeg(20,20,POWER_FULL)
     };
 
     /* new pathseg to extend during first movement */
@@ -221,7 +228,7 @@ class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] retreatMBPath = {
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
+            new SCHSPathSeg( -1.06 * TURN_VALUE_90, 1.06 * TURN_VALUE_90, 0.5),  // left 90
             new SCHSPathSeg( 12, 12, 0.9), //forward 12, power 0.5 -> 0.9
     };
 
@@ -233,7 +240,7 @@ class SCHSConstantsBLUE {
     };
 
     static final SCHSPathSeg[] retreatRBPath = {
-            new SCHSPathSeg( -TURN_VALUE_90, TURN_VALUE_90, 0.5),  // left 90
+            new SCHSPathSeg( -1.12 * TURN_VALUE_90, 1.12 * TURN_VALUE_90, 0.5),  // left 90
             new SCHSPathSeg( 20, 20, 0.9), //forward 20, power 0.5 -> 0.9
     };
 
@@ -261,7 +268,7 @@ class SCHSConstantsBLUE {
 
     static final SCHSPathSeg[] turnFDPath = {
             new SCHSPathSeg( TURN_VALUE_90, -TURN_VALUE_90, 0.5), //right 90
-            new SCHSPathSeg( 12, 12, 0.5), //forward 12 -> 16 -> 12
+            new SCHSPathSeg( 20, 20, 0.5), //forward 12 -> 16 -> 12 -> 16 -> 20
     };
 
     static final SCHSPathSeg[] backBlocksFirst = {
@@ -343,7 +350,7 @@ class SCHSConstantsBLUE {
 
     static final double POS_2_LEFT_MIN = 135;
     static final double POS_2_LEFT_MAX = 235;
-    static final double POS_2_RIGHT_MIN = 400;
+    static final double POS_2_RIGHT_MIN = 350;
     static final double POS_2_RIGHT_MAX = 500;
 
     static final double POS_1_LEFT_MIN = -50;

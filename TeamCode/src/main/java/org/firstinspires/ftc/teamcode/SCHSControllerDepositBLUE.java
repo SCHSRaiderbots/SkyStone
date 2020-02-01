@@ -23,6 +23,9 @@ public class SCHSControllerDepositBLUE extends OpMode {
     private double leftDist;
     private double rightDist;
     private boolean isArcTurn;
+    private double blockDist = 0;
+    private SCHSPathSeg[] armStonePath;
+    double currArmPos;
 
     private enum State {
         STATE_FD_INITIAL,
@@ -67,6 +70,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
 	STATE_STONES_BACK_FROM_FD,
 	STATE_STONES_LIFT_DOWN_BRIDGE,
 	STATE_STONES_MOVE_TO_BRIDGE,
+
+	STATE_STONES_FIND_DIST,
 
         STATE_FD_TEST,
         STATE_EXTEND_TEST,
@@ -113,7 +118,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
 
         /* added to raise arm above block during init */
         startPath(liftArmInitial);
-	rileyArm.closeServo(rileyArm.grabServo);
+	    rileyArm.openGrabber();
     }
 
     //@Override
@@ -132,7 +137,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
         rileyChassis.setDrivePower(0,0);
         rileyArm.setArmPower(0, LIFT);
         rileyArm.setArmPower(0, ARM);
-        //rileyChassis.setDriveMode(DcMotor.RunMode.RUN_TO_POSITION);
+        
+	rileyChassis.setPoseInches(-36, -63, 90);
         runtime.reset();
         newState(State.STATE_STONES_INITIAL);
         //newState(State.STATE_TEST_3);
@@ -140,12 +146,13 @@ public class SCHSControllerDepositBLUE extends OpMode {
 
     @Override
     public void loop() {
+        rileyChassis.loop();
         // Send the current state info (state and time) back to first line of driver station telemetry.
         //telemetry.addData("0", String.format("%4.1f ", currStateTime.time()) + currState.toString());
 
         switch (currState) {
             case STATE_FD_INITIAL:
-                if (rileyChassis.encodersAtZero()){
+                if (rileyChassis.encodersAtZero()) {
                     telemetry.addLine("SCHS: startseg(): move arm extend" + rileyArm.getExtendPos());
                     Log.d("SCHS: startseg():", "move arm extend" + rileyArm.getExtendPos());
                     //startPath(testPath);
@@ -159,22 +166,19 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_FD_TEST:
-                if (pathComplete(ARM, false, false))
-                {
+                if (pathComplete(ARM, false, false)) {
                     //startPath(testPath2);
                     telemetry.addLine("SCHS: startseg(): move arm extend" + rileyArm.getExtendPos());
                     Log.d("SCHS: startseg():", "move arm extend" + rileyArm.getExtendPos());
                     newState(State.STATE_STOP);      // Next State:
-                }
-                else
-                {
+                } else {
                     telemetry.addLine("SCHS: STATE_FD_TEST else");
                     Log.d("SCHS:", "STATE_FD_TEST else");
                 }
                 break;
 
             case STATE_TEST_INITIAL:
-                if(rileyChassis.encodersAtZero()) {
+                if (rileyChassis.encodersAtZero()) {
                     //rileyArm.closeServo();
                     rileyArm.closeServo(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
@@ -196,8 +200,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
 
 
             case STATE_TEST_2_INITIAL:
-                if (pathComplete(DRIVE, false, false))
-                {
+                if (pathComplete(DRIVE, false, false)) {
                     rileyArm.openServo(rileyArm.rightHook);
                     rileyArm.closeServo(rileyArm.leftHook);
                     sleep(1000);
@@ -205,9 +208,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                     //sleep(1000);
                     newState(State.STATE_STOP);
 
-                }
-                else
-                {
+                } else {
                 }
                 break;
 
@@ -219,15 +220,12 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_FD_GO_TO_FOUNDATION:
-                if (pathComplete(ARM, false, false))
-                {
+                if (pathComplete(ARM, false, false)) {
                     //rileyChassis.setDrivePower(0, 0);
                     rileyArm.setArmPower(0, LIFT);
                     rileyArm.setArmPower(0, ARM);
                     newState(State.STATE_STOP);      // Next State:
-                }
-                else
-                {
+                } else {
                     // Display Diagnostic data for this state.
                     /*telemetry.addData("1", String.format("%d of %d. L %5d:%5s - R %5d:%5d ",
                             currSeg, currPath.length,
@@ -245,7 +243,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
             case STATE_STONES_INITIAL:
                 Log.d("SCHS", "inside STATES_STONES_INITIAL");
                 telemetry.addLine("inside STATES_STONES_INITIAL");
-                if (rileyChassis.encodersAtZero()){
+                if (rileyChassis.encodersAtZero()) {
                     Log.d("SCHS", "inside STATES_STONES_INITIAL if case");
                     telemetry.addLine("STATES_STONES_INITIAL");
                     skyPos = rileyEnv.detectSkyPos(); //scan blocks
@@ -258,9 +256,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 }
                 break;
 
-            //case STATE_STONES_DETECT_SKYSTONE
             case STATE_STONES_FIRST_MOVE:
-                if (rileyChassis.encodersAtZero()){
+                if (rileyChassis.encodersAtZero()) {
                     telemetry.addLine("STATES_STONES_FIRST");
                     Log.d("SCHS: DETECT_SKYSTONE", "inside STATES_STONES_FIRST");
                     //startPath(startBotPath);
@@ -276,7 +273,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_GO_TO_SKYSTONE:
-                if (pathComplete(DRIVE, false, false)) {//change isBothArmDrive true -> false
+                if (pathComplete(DRIVE, false, false)) { //change isBothArmDrive true -> false
                     Log.d("SCHS", "inside STATES_STONES_GO_TO_SKYSTONE");
                     telemetry.addLine("STATES_STONES_GO_TO_SKYSTONE");
                     if (skyPos == LEFT_POS) {
@@ -295,39 +292,52 @@ public class SCHSControllerDepositBLUE extends OpMode {
                         Log.d("SCHS", "inside STATES_STONES_GO_TO_SKYSTONE else");
                         telemetry.addData("AAAAAAAAHHHH! WRONG SKY POS! skypos:", skyPos);
                     }
-                    newState((State.STATE_STONES_PICK_STONE));
-                    //newState(State.STATE_STONES_RETREAT);
+                    newState(State.STATE_STONES_FIND_DIST);
                 } else {
+                }
+                break;
+
+            case STATE_STONES_FIND_DIST:
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATES_STONES_FIND_STONE");
+                    blockDist = rileyEnv.findDist();
+                    Log.d("SCHS", "blockDist = " + blockDist);
+                    armStonePath = new SCHSPathSeg[]{new SCHSPathSeg(ARM, blockDist + GRAB_BLOCK_WIDTH, 0.9, "yes")};
+                    startPath(armStonePath);
+                    newState(State.STATE_STONES_PICK_STONE);
+                } else {
+                    Log.d("SCHS", "inside STATES_STONES_FIND_DIST else");
                 }
                 break;
 
             case STATE_STONES_PICK_STONE:
-                if (pathComplete(DRIVE, false, false)){
+                if (pathComplete(ARM, false, false)) {
                     Log.d("SCHS", "inside STATES_STONES_PICK_STONE");
                     telemetry.addLine("inside STATES_STONES_PICK_STONE");
-                    if (skyPos == 1 || skyPos == 3) {
-                        startPath(pickStoneArmPath);
-			newState(State.STATE_STONES_CLOSE_STONE);
-                    
-		    } else {
-                        startPath(pickMBStoneArmPath);
-			newState(State.STATE_STONES_LOWER_ARM_MB);
-                    }
-                    //pick up blocks
+                    Log.d("SCHS", "inside STATES_STONES_PICK_STONE if skypos");
+                    startPath(dropLiftArmPath);
+                    newState(State.STATE_STONES_CLOSE_STONE);
+                }
+                //pick up blocks
+                else {
+                    Log.d("SCHS", "inside STATES_STONES_PICK_STONE else");
+                }
+                break;
+
+            case STATE_STONES_LOWER_ARM_MB:
+                if (pathComplete(ARM, false, false)) {
+                    startPath(dropLiftArmPath);
+                    newState(State.STATE_STONES_CLOSE_STONE);
                 } else {
                 }
                 break;
-	    case STATE_STONES_LOWER_ARM_MB:
-		if (pathComplete(ARM, false, false)) {
-			startPath(dropLiftArmPathMB);
-			newState(State.STATE_STONES_CLOSE_STONE);
-		} else {}
-		break;
+
 
             case STATE_STONES_CLOSE_STONE:
-                if (pathComplete(LIFT, false, false)){
+                if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS", "inside STATES_STONES_CLOSE_STONE");
-                    rileyArm.openServo(rileyArm.grabServo);
+                    //rileyArm.openServo(rileyArm.grabServo);
+                    rileyArm.closeGrabber();
                     sleep(2000);
                     newState(State.STATE_STONES_RETRIEVE_STONE);
                 } else {
@@ -337,7 +347,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
             case STATE_STONES_RETRIEVE_STONE:
                 startPath(retrieveStoneArmPath);
                 Log.d("SCHS:", "inside STATES_STONES_RETRIEVE_STONE");
-                if (!isRoundTwo){
+                if (!isRoundTwo) {
                     Log.d("SCHS:", "STATES_STONES_RETRIEVE_STONE, round one");
                     telemetry.addLine("STATES_STONES_RETRIEVE_STONE, round one");
                     newState((State.STATE_STONES_RETREAT));
@@ -359,9 +369,9 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT:
-                if (pathComplete(LIFT, true, false)){ //isBothArmLift false -> true
+                if (pathComplete(ARM, false, false)) { //isBothArmLift false -> true
                     //if (pathComplete(DRIVE, false)) {
-                    Log.d("SCHS","inside STATES_STONES_RETREAT");
+                    Log.d("SCHS", "inside STATES_STONES_RETREAT");
                     telemetry.addLine("STATES_STONES_RETREAT");
                     if (skyPos == LEFT_POS) {
                         Log.d("SCHS: STONES_RETREAT", "left pos");
@@ -379,8 +389,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
                         Log.d("SCHS", "inside STATES_STONES_RETREAT else case");
                         telemetry.addData("STATE_STONES_ RETREAT: AAAAAAAAHHHH! WRONG SKY POS! skypos:", skyPos);
                     }
-                    newState(State.STATE_STONES_ARM_DOWN);
-                    //newState((State.STATE_STONES_DELIVER));
+                    //newState(State.STATE_STONES_ARM_DOWN);
+                    newState((State.STATE_STONES_DELIVER));
                 } else {
                 }
                 break;
@@ -388,7 +398,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
             case STATE_STONES_ARM_DOWN:
                 if (pathComplete(DRIVE, false, false)) {
                     startPath(stoneDownPath);
-                    if (!isRoundTwo){
+                    if (!isRoundTwo) {
                         Log.d("SCHS:", "STATES_STONES_ARM_DOWN, round 1");
                         telemetry.addLine("STATES_STONES_ARM_DOWN, round 1");
                         newState((State.STATE_STONES_DELIVER));
@@ -403,7 +413,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
 
 
             case STATE_STONES_DELIVER:
-                if (pathComplete(LIFT, false, false)){
+                if (pathComplete(DRIVE, false, false)) {
                     rileyChassis.isMoveDone = false;
                     Log.d("SCHS:", "STATE_STONES_DELIVER");
                     telemetry.addLine("STATES_STONES_DELIVER");
@@ -419,21 +429,20 @@ public class SCHSControllerDepositBLUE extends OpMode {
                     Log.d("SCHS", "inside STATE_STONES_LIFT_FD");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD);
+                }
+                break;
 
-	    	}
-	    	break;
-
-	    case STATE_STONES_ALIGN_FD:
-		if (pathComplete(LIFT, false, false)) {
-			Log.d("SCHS", "inside STATE_STONES_ALIGN_FD");
-			startPath(positionToFD);
-			newState(State.STATE_STONES_DROP_STONE);
-		} else {
+            case STATE_STONES_ALIGN_FD:
+                if (pathComplete(LIFT, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_ALIGN_FD");
+                    startPath(positionToFD);
+                    newState(State.STATE_STONES_DROP_STONE);
+                } else {
                 }
                 break;
 
             case STATE_STONES_TURN_FD:
-                if (pathComplete(LIFT, false, false)){
+                if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS:", "STATE_STONES_TURN_FD");
                     startPath(turnFDPath);
                     newState(State.STATE_STONES_DROP_STONE);
@@ -442,19 +451,20 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_DROP_STONE:
-                if (pathComplete(DRIVE, false, false)){
-                    Log.d("SCHS","inside STATES_STONES_DROP_STONE");
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATES_STONES_DROP_STONE");
                     telemetry.addLine("STATES_STONES_DROP_STONE");
                     //drop blocks
-                    if (!isRoundTwo){
-                        //rileyArm.openServo(rileyArm.grabServo);
-                        rileyArm.closeServo(rileyArm.grabServo);
+                    if (!isRoundTwo) {
+
+                        //rileyArm.closeServo(rileyArm.grabServo);
+                        rileyArm.openGrabber();
                         sleep(2000);
-                        Log.d("SCHS","inside STATES_STONES_DROP_STONE, round 1");
+                        Log.d("SCHS", "inside STATES_STONES_DROP_STONE, round 1");
                         telemetry.addLine("STATES_STONES_DROP_STONE, round 1");
                         newState((State.STATE_STONES_LIFT_ARM));
                     } else {
-                        Log.d("SCHS","inside STATES_STONES_DROP_STONE, round 2");
+                        Log.d("SCHS", "inside STATES_STONES_DROP_STONE, round 2");
                         telemetry.addLine("STATES_STONES_DROP_STONE, round 2");
                         startPath(extendOutPath);
                         newState(State.STATE_STONES_SECOND_DROP);
@@ -464,49 +474,50 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_LIFT_ARM:
-                Log.d("SCHS","inside STATE_STONES_LIFT_ARM");
-                startPath(SCHSConstants.liftArm);
+                Log.d("SCHS", "inside STATE_STONES_LIFT_ARM");
+                startPath(liftArm);
                 newState(State.STATE_STONES_DEPOSIT_PARK);
                 break;
 
             case STATE_STONES_DEPOSIT_PARK:
-                if (pathComplete(SCHSConstants.LIFT, false, false)) {
+                if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_DEPOSIT_PARK");
                     startPath(parkAfterDepositionPath);
                     newState(State.STATE_STOP);
-                } else {}
+                } else {
+                }
                 break;
 
             case STATE_STONES_DROP_HOOKS:
                 if (pathComplete(LIFT, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_DROP_HOOKS");
                     //rileyArm.closeServo(rileyArm.rightHook);
-		    rileyArm.closeHook(rileyArm.rightHook);
+                    rileyArm.closeHook(rileyArm.rightHook);
                     rileyArm.openServo(rileyArm.leftHook);
                     sleep(2000);
-		    
-		    newState(State.STATE_STONES_PULL_FD);
+
+                    newState(State.STATE_STONES_PULL_FD);
                 } else {
                 }
                 break;
 
-	    case STATE_STONES_GO_TO_BS:
-		Log.d("SCHS", "inside STATE_STONES_GO_TO_BS");
-		//startPath(moveFD);
-		newState(State.STATE_STONES_LIFT_HOOKS);
-		break;
+            case STATE_STONES_GO_TO_BS:
+                Log.d("SCHS", "inside STATE_STONES_GO_TO_BS");
+                startPath(moveFD);
+                newState(State.STATE_STONES_LIFT_HOOKS);
+                break;
 
             case STATE_STONES_PULL_FD:
-                Log.d("SCHS","inside STATE_STONES_PULL_FD");
+                Log.d("SCHS", "inside STATE_STONES_PULL_FD");
                 startPath(arcTurnFDPath);
                 //newState(State.STATE_STONES_PUSH_FD);
-		newState(State.STATE_STONES_LIFT_HOOKS);
+                newState(State.STATE_STONES_LIFT_HOOKS);
                 break;
 
             case STATE_STONES_PUSH_FD:
-                if (pathComplete(DRIVE,false,false)) {
-                    Log.d("SCHS","inside STATE_STONES_PUSH_FD");
-		    sleep(1000);
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_PUSH_FD");
+                    sleep(1000);
                     startPath(pushFDPath);
                     newState(State.STATE_STONES_LIFT_HOOKS);
                 } else {
@@ -514,55 +525,55 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_LIFT_HOOKS:
-                if (pathComplete(DRIVE, false, false)) {
-                    Log.d("SCHS","inside STATE_STONES_LIFT_HOOK");
+                if ((pathComplete(DRIVE, false, false)) || runtime.seconds() >= 29.5) {
+                    Log.d("SCHS", "inside STATE_STONES_LIFT_HOOK");
                     //rileyArm.openServo(rileyArm.rightHook);
-		    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
+                    rileyArm.openHook(rileyArm.rightHook); // added in to increase lift
                     rileyArm.closeServo(rileyArm.leftHook);
                     sleep(2000);
-		    newState(State.STATE_STONES_BACK_FROM_FD);
-		} else {
-		}
-		break;
+                    newState(State.STATE_STONES_BACK_FROM_FD);
+                } else {
+                }
+                break;
 
-	    case STATE_STONES_BACK_FROM_FD:
-		Log.d("SCHS", "inside STATE_STONES_BACK_FROM_FD");
-		startPath(retreatFromFDPath);
-		newState(State.STATE_STONES_PARK_BRIDGE);
-		break;
+            case STATE_STONES_BACK_FROM_FD:
+                Log.d("SCHS", "inside STATE_STONES_BACK_FROM_FD");
+                startPath(retreatFromFDPath);
+                newState(State.STATE_STONES_PARK_BRIDGE);
+                break;
 
-	    case STATE_STONES_LIFT_DOWN_BRIDGE:
-		if (pathComplete(DRIVE, false, false)) {
-			Log.d("SCHS", "inside STATE_STONES_LIFT_DOWN_BRIDGE");
-			//startPath(bridgeDownPath);
-			newState(State.STATE_STONES_PARK_BRIDGE);
+            case STATE_STONES_LIFT_DOWN_BRIDGE:
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_LIFT_DOWN_BRIDGE");
+                    //startPath(bridgeDownPath);
+                    newState(State.STATE_STONES_PARK_BRIDGE);
                 } else {
                 }
                 break;
 
             case STATE_STONES_PARK_BRIDGE:
-		if (pathComplete(DRIVE, false, false)){
-                Log.d("SCHS","inside STATE_STONES_PARK_BRIDGE");
-                startPath(parkBridgePath);
-                newState(State.STATE_STONES_MOVE_TO_BRIDGE);
-		} else {
-		}
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_PARK_BRIDGE");
+                    startPath(parkBridgePath);
+                    newState(State.STATE_STONES_MOVE_TO_BRIDGE);
+                } else {
+                }
                 break;
 
-	    case STATE_STONES_MOVE_TO_BRIDGE:
-		if (pathComplete(DRIVE, false, false)) {
-			Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
-			startPath(parkUnderBridgePath);
-			newState(State.STATE_STOP);
-		} else {
-		
-		}
-		break;
+            case STATE_STONES_MOVE_TO_BRIDGE:
+                if (pathComplete(DRIVE, false, false)) {
+                    Log.d("SCHS", "inside STATE_STONES_MOVE_TO_BRIDGE");
+                    startPath(parkUnderBridgePath);
+                    newState(State.STATE_STOP);
+                } else {
+
+                }
+                break;
 
 
             case STATE_STONES_DROP_FD:
                 if (pathComplete(DRIVE, false, false)) {
-                    Log.d("SCHS","inside STATE_STONES_DROP_FD");
+                    Log.d("SCHS", "inside STATE_STONES_DROP_FD");
                     startPath(dropBlockFD);
                     newState(State.STATE_STONES_BACK_TO_BLOCKS);
                 } else {
@@ -570,8 +581,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_SECOND_DROP:
-                if (pathComplete(ARM, false, false)){
-                    Log.d("SCHS","inside STATES_STONES_SECOND_DROP");
+                if (pathComplete(ARM, false, false)) {
+                    Log.d("SCHS", "inside STATES_STONES_SECOND_DROP");
                     rileyArm.openServo(rileyArm.grabServo);
                     sleep(2000);
                     newState(State.STATE_STONES_EXTEND_IN);
@@ -580,14 +591,14 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_EXTEND_IN:
-                Log.d("SCHS","inside STATES_STONES_EXTEND_IN");
+                Log.d("SCHS", "inside STATES_STONES_EXTEND_IN");
                 startPath(extendInPath);
                 newState(State.STATE_STONES_BACK_FD);
                 break;
 
             case STATE_STONES_RETREAT_FROM_FD:
                 if (pathComplete(LIFT, false, false)) {
-                    Log.d("SCHS","inside STATES_STONES_RETREAT_FROM_FD");
+                    Log.d("SCHS", "inside STATES_STONES_RETREAT_FROM_FD");
                     telemetry.addLine("STATES_STONES_RETREAT_FROM_FD");
                     isRoundTwo = true;
                     startPath(backBlocksFirst);
@@ -599,7 +610,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
             case STATE_STONES_BACK_TO_BLOCKS:
                 if (pathComplete(LIFT, true, false)) {
                     rileyChassis.isMoveDone = false;
-                    Log.d("SCHS","inside STATES_STONES_BACK_TO_BLOCKS");
+                    Log.d("SCHS", "inside STATES_STONES_BACK_TO_BLOCKS");
                     startPath(backToBlocksPath);
                     newState((State.STATE_STONES_GO_TO_SECOND));
                 } else {
@@ -608,7 +619,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
 
             case STATE_STONES_GO_TO_SECOND:
                 //if (pathComplete(LONG_DRIVE, false)){
-                if (pathComplete(DRIVE, false, false)){
+                if (pathComplete(DRIVE, false, false)) {
                     if (skyPos == LEFT_POS) {
                         Log.d("SCHS:", "STATE_STONES_GO_TO_2nd left pos");
                         telemetry.addLine("STATES_STONES_GO_TO_SECOND, left pos");
@@ -631,7 +642,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_RETREAT_SECOND:
-                if (pathComplete(LIFT, true, false)){
+                if (pathComplete(LIFT, true, false)) {
                     telemetry.addLine("STATES_STONES_RETREAT_SECOND");
                     if (skyPos == LEFT_POS) {
                         Log.d("SCHS:", "STATE_STONES_RETREAT_SECOND left pos");
@@ -654,7 +665,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_DELIVER_SECOND:
-                if (pathComplete(LIFT, false, false)){
+                if (pathComplete(LIFT, false, false)) {
                     rileyChassis.isMoveDone = false;
                     Log.d("SCHS:", "STATE_STONES_DELIVER_SECOND");
                     telemetry.addLine("STATES_STONES_DELIVER_SECOND");
@@ -666,7 +677,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
 
             case STATE_STONES_LIFT_FD_2:
                 //if(pathComplete(LONG_DRIVE, false)){
-                if(pathComplete(DRIVE, false, false)){
+                if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS:", "STATE_STONES_LIFT_FD_2");
                     startPath(liftBlockFD);
                     newState(State.STATE_STONES_TURN_FD_2);
@@ -683,7 +694,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_BACK_FD:
-                if (pathComplete(ARM, false, false)){
+                if (pathComplete(ARM, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_BACK_FD");
                     telemetry.addLine("STATES_STONES_BACK_FD");
                     startPath(backFromFDPath);
@@ -693,7 +704,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 break;
 
             case STATE_STONES_DROP_FD_2:
-                if (pathComplete(DRIVE, false, false)){
+                if (pathComplete(DRIVE, false, false)) {
                     Log.d("SCHS", "inside STATE_STONES_DROP_FD_2");
                     startPath(stoneDownPath);
                     newState(State.STATE_STOP);
@@ -769,8 +780,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
             } else if (currPath[currSeg].armPart == ARM) { //extend arm
                 telemetry.addLine("SCHS: startseg(): move arm extend before");
                 Log.d("SCHS: startseg():", "move arm extend before");
-                extend = (int) (currPath[currSeg].extendDist * ARM_FACTOR);
-                Log.d("SCHS: startseg():", "extend length = " + extend);
+                extend = ((int) (currPath[currSeg].extendDist * ARM_FACTOR));
+                Log.d("SCHS: startseg():", "extend length (inch) = " + extend / ARM_FACTOR);
                 rileyArm.addEncoderTarget(extend, ARM);
                 rileyArm.setArmPower(currPath[currSeg].extendSpeed, ARM);
                 rileyArm.setArmMode(DcMotor.RunMode.RUN_TO_POSITION, ARM);
@@ -838,7 +849,8 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 //rileyArm.useConstantSpeed(LIFT);
                 //rileyArm.useConstantSpeed(ARM);
 
-                return true;
+    
+		return true;
             }
         }
         Log.d("SCHS: moveComplete", "moveComplete() false");
@@ -867,7 +879,7 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 Log.d("SCHS", "finished moveComplete():" + ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 20) &&
                         (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 20)));
 
-                if ((leftDist > 3300 || rightDist > 3300) && !isArcTurn) {
+                if ((leftDist > 3000 || rightDist > 3000) && !isArcTurn) { //long dist tolerance 3300-> 3000
                     return ((Math.abs(rileyChassis.getLeftPosition() - rileyChassis.getLeftEncoderTarget()) < 60) &&
                             (Math.abs(rileyChassis.getRightPosition() - rileyChassis.getRightEncoderTarget()) < 60));
                 } else if (((Math.abs(leftDist) < 1870) && (Math.abs(leftDist) > 1855)) || ((Math.abs(rightDist) < 1870) && (Math.abs(rightDist) > 1855))){
@@ -883,12 +895,12 @@ public class SCHSControllerDepositBLUE extends OpMode {
                 }
             } else if (roboPart == LIFT) {
                 Log.d("SCHS:", "inside moveComplete() for LIFT");
-                return (Math.abs(rileyArm.getLiftPos() - rileyArm.getLiftEncoderTarget()) < 25); //10, change to 25
+                return (Math.abs(rileyArm.getLiftPos() - rileyArm.getLiftEncoderTarget()) <= 25); //10, change to 25
             } else if (roboPart == ARM) {
                 Log.d("SCHS:", "inside moveComplete() for ARM");
                 Log.d("SCHS:", "rileyArm getExtendPos = " +rileyArm.getExtendPos());
                 Log.d("SCHS:", "rileyArm getArmEncoderTarget = " +rileyArm.getArmEncoderTarget());
-                return (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) < 10);
+                return (Math.abs(rileyArm.getExtendPos() - rileyArm.getArmEncoderTarget()) <= 25); //10->25
             } else if (isBothArmDrive) {
                 Log.d("SCHS:", "inside moveComplete() arm + drive");
                 if(roboPart == ARM || roboPart == DRIVE) {
